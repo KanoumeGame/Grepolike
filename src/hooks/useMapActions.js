@@ -163,6 +163,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
                 isCrossIsland: false,
             };
         } else if (mode === 'attack' && targetCity.isRuinTarget) {
+            console.log("[MapActions] Creating attack_ruin movement:", { targetCity, units, hero });
             movementData = {
                 type: 'attack_ruin',
                 originCityId: playerCity.id,

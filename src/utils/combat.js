@@ -189,6 +189,9 @@ export function getVillageTroops(villageData) {
     return troops;
 }
 export function resolveCombat(attackingUnits, defendingUnits, defendingResources, isNavalAttack, attackerPhalanx, attackerSupport, defenderPhalanx, defenderSupport, attackingHero, defendingHero) {
+    console.log("[Combat] Resolving combat. Naval Attack:", isNavalAttack);
+    console.log("[Combat] Attacking Units:", attackingUnits);
+    console.log("[Combat] Defending Units:", defendingUnits);
     let totalAttackerLosses = {};
     let totalDefenderLosses = {};
     let attackerWon = false;

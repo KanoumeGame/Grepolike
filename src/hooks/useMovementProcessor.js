@@ -364,6 +364,7 @@ export const useMovementProcessor = (worldId) => {
                             read: false,
                         };
                         batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), report);
+                        await batch.commit();
                         break;
                     }
                     const villageData = villageSnap.data();
@@ -433,6 +434,98 @@ export const useMovementProcessor = (worldId) => {
                             involvedParties: [movement.originOwnerId]
                         });
                     } else {
+                        batch.delete(movementDoc.ref);
+                    }
+                    await batch.commit();
+                    break;
+                }
+                case 'attack_ruin': {
+                    console.log("[MovementProcessor] Processing attack_ruin:", movement.id);
+                    const ruinRef = doc(db, 'worlds', worldId, 'ruins', movement.targetRuinId);
+                    const ruinSnap = await getDoc(ruinRef);
+                    console.log("[MovementProcessor] Fetched Ruin Snap:", ruinSnap.exists() ? ruinSnap.data() : "Does not exist");
+
+                    // Corrected logic: Ruin is attackable if it exists and its owner is 'ruins' or undefined/null
+                    const ruinData = ruinSnap.exists() ? ruinSnap.data() : null;
+                    const isAttackable = ruinData && (ruinData.ownerId === 'ruins' || !ruinData.ownerId);
+
+                    if (!isAttackable) {
+                        console.log("[MovementProcessor] Ruin not found or already conquered. Returning troops.");
+                        const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
+                        const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
+                        batch.update(movementDoc.ref, {
+                            status: 'returning',
+                            arrivalTime: returnArrivalTime,
+                            involvedParties: [movement.originOwnerId]
+                        });
+                        await batch.commit();
+                        break;
+                    }
+
+                    console.log("[MovementProcessor] Ruin Data:", ruinData);
+                    const result = resolveCombat(movement.units, ruinData.troops, {}, movement.isCrossIsland);
+                    console.log("[MovementProcessor] Combat Result:", result);
+
+                    if (result.attackerWon) {
+                        console.log("[MovementProcessor] Attacker won. Conquering ruin.");
+                        batch.update(ruinRef, {
+                            ownerId: movement.originOwnerId,
+                            ownerUsername: movement.originOwnerUsername
+                        });
+                        const playerRuinRef = doc(db, `users/${movement.originOwnerId}/games/${worldId}/conqueredRuins`, movement.targetRuinId);
+                        batch.set(playerRuinRef, {
+                            researchReward: ruinData.researchReward,
+                            conqueredAt: serverTimestamp()
+                        });
+                    }
+
+                    const attackerReport = {
+                        type: 'attack_ruin',
+                        title: `Attack on ${ruinData.name}`,
+                        timestamp: serverTimestamp(),
+                        outcome: result,
+                        reward: result.attackerWon ? ruinData.researchReward : null,
+                        attacker: {
+                            cityId: movement.originCityId,
+                            cityName: originCityState.cityName,
+                            units: movement.units,
+                            losses: result.attackerLosses
+                        },
+                        defender: {
+                            ruinName: ruinData.name,
+                            troops: ruinData.troops,
+                            losses: result.defenderLosses
+                        },
+                        read: false,
+                    };
+                    batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+
+                    const survivingAttackers = {};
+                    let anySurvivors = false;
+                    for (const unitId in movement.units) {
+                        const survivors = movement.units[unitId] - (result.attackerLosses[unitId] || 0) - (result.wounded[unitId] || 0);
+                        if (survivors > 0) {
+                            survivingAttackers[unitId] = survivors;
+                            anySurvivors = true;
+                        }
+                    }
+                    console.log("[MovementProcessor] Surviving Attackers:", survivingAttackers);
+                    console.log("[MovementProcessor] Wounded:", result.wounded);
+
+
+                    if (anySurvivors || (result.wounded && Object.keys(result.wounded).length > 0)) {
+                        console.log("[MovementProcessor] Troops are returning.");
+                        const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
+                        const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
+                        batch.update(movementDoc.ref, {
+                            status: 'returning',
+                            units: survivingAttackers,
+                            wounded: result.wounded || {},
+                            arrivalTime: returnArrivalTime,
+                            involvedParties: [movement.originOwnerId]
+                        });
+                    } else {
+                        console.log("[MovementProcessor] No survivors. Deleting movement.");
                         batch.delete(movementDoc.ref);
                     }
                     await batch.commit();
