@@ -8,5 +8,4 @@ Bugs:
 - fix security issues
 - bug when scout on a max cave it always fails
 - sometimes report is shown 2 times
-- fix bbcodes
 - fix cities sometimes dont show on map

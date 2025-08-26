@@ -1,11 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 // src/components/WorldSelectionScreen.js
 import React, { useState, useEffect} from 'react';
 import { collection, getDocs, doc, writeBatch, serverTimestamp, getDoc, deleteDoc, query, limit, onSnapshot } from 'firebase/firestore';
@@ -278,7 +270,7 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         <h2 className="font-title text-2xl mb-4">YOUR WORLDS</h2>
                         {joinedWorlds.length > 0 ? (
                             joinedWorlds.map(world => (
-                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center">
+                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
                                     <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
@@ -302,8 +294,8 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         <h2 className="font-title text-2xl mb-4">JOIN A NEW WORLD</h2>
                         {availableWorlds.length > 0 ? (
                             availableWorlds.map(world => (
-                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center">
-                                    <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
+                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
+                                    <div className="flex items-center cursor-pointer">
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
                                     </div>

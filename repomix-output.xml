@@ -50,6 +50,7 @@ firestore.indexes.json
 firestore.rules
 Fixed.txt
 Idees.txt
+LICENSE
 package.json
 public/index.html
 public/manifest.json
@@ -558,6 +559,8 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
+firestore-backup/
+
 # TernJS port file
 .tern-port
 
@@ -773,6 +776,20 @@ If the city becomes a ghost town, any player can send the other agent with troop
 for it to get conquered.
 
 For a player to found a city we need the second agent to go inside the city with at least one villager, the more the villager the less time it will take for the city to be found.
+</file>
+
+<file path="LICENSE">
+Copyright (c) 2025 Spolkip
+
+All rights reserved.
+
+This repository and its contents are the intellectual property of the copyright holder.
+Unauthorized copying, modification, distribution, or use of this code, in whole or in part,
+for any purpose, is strictly prohibited without prior written permission.
+
+
+For inquiries regarding licensing or permissions, please contact:
+spolkip@gmail.com
 </file>
 
 <file path="package.json">
@@ -4340,6 +4357,18 @@ export default WonderProgressModal;
 </file>
 
 <file path="src/components/AuthScreen.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 /* src/components/AuthScreen.css */
 .auth-screen-container {
     background-image: url('../images/login.png');
@@ -4418,6 +4447,18 @@ export default WonderProgressModal;
 </file>
 
 <file path="src/components/AuthScreen.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -5285,9 +5326,15 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
+<<<<<<< HEAD
+            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                <h3 className="font-title text-2xl text-white mb-4 flex-shrink-0">Admin Cheats</h3>
+                <div className="space-y-4 overflow-y-auto pr-2">
+=======
             <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600" onClick={e => e.stopPropagation()}>
                 <h3 className="font-title text-2xl text-white mb-4">Admin Cheats</h3>
                 <div className="space-y-4">
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                     {Object.keys(amounts).map(resource => (
                         <div key={resource} className="flex justify-between items-center">
                             <label className="text-white capitalize">{resource}</label>
@@ -5410,6 +5457,19 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
                         />
                     </div>
                 </div>
+<<<<<<< HEAD
+                <div className="mt-4 flex-shrink-0">
+                    <button onClick={handleFoundCity} className="btn btn-primary w-full py-2 bg-yellow-600 hover:bg-yellow-500">
+                        Found Second City
+                    </button>
+                    <button onClick={handleCheat} className="btn btn-primary w-full py-2 mt-2">
+                        Apply Cheats
+                    </button>
+                    <button onClick={handleForceRefresh} className="btn btn-secondary w-full py-2 mt-2 bg-blue-600 hover:bg-blue-500">
+                        Force Refresh Data
+                    </button>
+                </div>
+=======
                 <button onClick={handleFoundCity} className="btn btn-primary w-full py-2 mt-4 bg-yellow-600 hover:bg-yellow-500">
                     Found Second City
                 </button>
@@ -5419,12 +5479,17 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
                 <button onClick={handleForceRefresh} className="btn btn-secondary w-full py-2 mt-2 bg-blue-600 hover:bg-blue-500">
                     Force Refresh Data
                 </button>
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
             </div>
         </div>
     );
 };
 
+<<<<<<< HEAD
 export default AdminCheatMenu;
+=======
+export default AdminCheatMenu;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/components/city/BarracksMenu.css">
@@ -5855,7 +5920,11 @@ const BuildingSpot = ({ building, level, onClick, image }) => {
     const spotStyle = {
         top: `${position.y}px`,
         left: `${position.x}px`,
+<<<<<<< HEAD
+        width: isCityWall ? '200px' : '200px',
+=======
         width: isCityWall ? '2000px' : '200px',
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         height: isCityWall ? '150px' : '150px', // Increased height for the wall
         backgroundImage: level > 0 && image ? `url(${image})` : 'none',
         backgroundSize: 'contain',
@@ -9451,7 +9520,15 @@ const ResearchQueue = ({ researchQueue, onCancel }) => {
         const totalCompletionTimeString = totalCompletionTime ? new Date(totalCompletionTime).toLocaleTimeString() : 'N/A';
 
         return (
+<<<<<<< HEAD
             <div className="research-queue-tooltip" style={tooltipStyle}>
+=======
+            <div className="research-queue-tooltip" 
+                 style={tooltipStyle}
+                 onMouseEnter={() => clearTimeout(tooltipTimeoutRef.current)}
+                 onMouseLeave={handleMouseLeave}
+            >
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                 <h3 className="research-tooltip-title">{research.name}</h3>
                 <p className="text-sm mb-2">{research.description}</p>
                 <dl className="research-tooltip-info">
@@ -9754,6 +9831,22 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmAction, setConfirmAction] = useState(null);
     const senateRef = useRef(null);
+<<<<<<< HEAD
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+    if (senateRef.current) {
+        const rect = senateRef.current.getBoundingClientRect();
+        setPosition({
+        x: (window.innerWidth - rect.width) / 2,
+        y: (window.innerHeight - rect.height) / 2
+        });
+    }
+    }, []);
+
+=======
     const [position, setPosition] = useState({ 
         x: (window.innerWidth - 1000) / 2,
         y: (window.innerHeight - 650) / 2
@@ -9761,6 +9854,7 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const handleMouseDown = (e) => {
         if (e.target.classList.contains('senate-header') || e.target.parentElement.classList.contains('senate-header')) {
             setIsDragging(true);
@@ -9773,6 +9867,20 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
 
     const handleMouseMove = useCallback((e) => {
         if (isDragging) {
+<<<<<<< HEAD
+            const newX = e.clientX - dragStart.x;
+            const newY = e.clientY - dragStart.y;
+
+            // Clamp to visible window
+            const clampedX = Math.max(0, Math.min(newX, window.innerWidth - senateRef.current.offsetWidth));
+            const clampedY = Math.max(0, Math.min(newY, window.innerHeight - senateRef.current.offsetHeight));
+
+            setPosition({ x: clampedX, y: clampedY });
+        }
+    }, [isDragging, dragStart]);
+
+
+=======
             setPosition({
                 x: e.clientX - dragStart.x,
                 y: e.clientY - dragStart.y,
@@ -9780,6 +9888,7 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         }
     }, [isDragging, dragStart]);
 
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const handleMouseUp = () => {
         setIsDragging(false);
     };
@@ -9929,7 +10038,11 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             )}
             <div
                 ref={senateRef}
+<<<<<<< HEAD
+                className="senate-view-container text-white p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col absolute"
+=======
                 className="senate-view-container text-white p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col"
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                 onClick={e => e.stopPropagation()}
                 onMouseDown={handleMouseDown}
                 style={{ top: `${position.y}px`, left: `${position.x}px` }}
@@ -11148,6 +11261,18 @@ export default WorshipDisplay;
 </file>
 
 <file path="src/components/CityFounding.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/CityFounding.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, writeBatch, collection, query, where, limit, getDocs, serverTimestamp} from 'firebase/firestore';
@@ -11382,6 +11507,18 @@ export default CityFounding;
 </file>
 
 <file path="src/components/CityView.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from './shared/Modal';
@@ -11590,6 +11727,18 @@ export default CityView;
 </file>
 
 <file path="src/components/Game.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -17551,6 +17700,245 @@ export const ConstructingWonderTile = React.memo(_ConstructingWonderTile);
 
 <file path="src/components/map/TopBar.css">
 .top-bar-container {
+<<<<<<< HEAD
+  background: linear-gradient(rgba(245, 222, 179, 0.95), rgba(245, 222, 179, 0.95)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border-bottom: 2px solid #8b4513;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #4a2c2a;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  z-index: 30;
+}
+
+.top-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.top-bar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-bar-section.left {
+  justify-content: flex-start;
+  width: 44%;
+}
+
+.top-bar-section.center {
+  justify-content: center;
+}
+
+.top-bar-section.right {
+  justify-content: flex-end;
+}
+
+.city-name-container {
+  position: relative;
+}
+
+.city-name-button {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.125rem;
+  color: #4a2c2a;
+  transition: background-color 0.2s;
+}
+
+.city-name-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.city-name-input {
+  background: transparent;
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.125rem;
+  color: #4a2c2a;
+  text-align: center;
+  width: 200px;
+}
+
+.city-list-dropdown {
+  background: linear-gradient(rgba(245, 222, 179, 0.98), rgba(245, 222, 179, 0.98)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border: 2px solid #8b4513;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  z-index: 50;
+}
+
+.city-list-item {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  color: #4a2c2a;
+  transition: background-color 0.2s;
+}
+
+.city-list-item:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+.city-list-item.active {
+  background: rgba(251, 191, 36, 0.3);
+  font-weight: bold;
+}
+
+.weather-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+}
+
+.weather-icon {
+  font-size: 1.25rem;
+}
+
+.season,
+.weather {
+  font-weight: bold;
+}
+
+.separator {
+  color: #8b4513;
+}
+
+.activity-group,
+.resource-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resource-group {
+  gap: 0.75rem;
+}
+
+.resource-item,
+.activity-button {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.resource-item:hover,
+.activity-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.resource-icon,
+.activity-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.resource-icon {
+  margin-right: 0.5rem;
+}
+
+.resource-value {
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.activity-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: bold;
+  border-radius: 9999px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fff;
+}
+
+.glowing {
+  animation: glowing-icon 1.5s infinite;
+}
+
+@keyframes glowing-icon {
+  0% {
+    box-shadow: 0 0 4px #ef4444;
+  }
+  50% {
+    box-shadow: 0 0 8px #f87171, 0 0 4px #f87171;
+  }
+  100% {
+    box-shadow: 0 0 4px #ef4444;
+  }
+}
+
+.tooltip-wrapper {
+  position: relative;
+}
+
+.tooltip,
+.happiness-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: linear-gradient(rgba(245, 222, 179, 0.98), rgba(245, 222, 179, 0.98)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border: 2px solid #8b4513;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  padding: 0.75rem;
+  z-index: 50;
+  min-width: 200px;
+}
+
+.tooltip-title {
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: capitalize;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-text {
+  font-size: 0.875rem;
+  color: #4a2c2a;
+}
+
+.tooltip-timer {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  text-align: right;
+  color: #8b4513;
+}
+=======
     background-image: linear-gradient(rgba(245, 222, 179, 0.95), rgba(245, 222, 179, 0.95)), url('https://www.transparenttextures.com/patterns/cracks.png');
     background-color: #F5DEB3;
     border-bottom: 2px solid #8B4513;
@@ -17687,19 +18075,31 @@ export const ConstructingWonderTile = React.memo(_ConstructingWonderTile);
         text-shadow: 0 0 3px #ef4444;
     }
 }
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/components/map/TopBar.js">
+<<<<<<< HEAD
+import React, { useState, useEffect, useRef } from 'react';
+=======
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { useGame } from '../../contexts/GameContext';
 import woodImage from '../../images/resources/wood.png';
 import stoneImage from '../../images/resources/stone.png';
 import silverImage from '../../images/resources/silver.png';
 import populationImage from '../../images/resources/population.png';
+<<<<<<< HEAD
+import recruitmentIcon from '../../images/helmet.png';
+import tradeIcon from '../../images/trade.png';
+import movementIcon from '../../images/movement.png';
+import notesIcon from '../../images/notes_icon.png';
+=======
 import recruitmenticon from '../../images/helmet.png';
 import tradeicon from '../../images/trade.png';
 import movementicon from '../../images/movement.png';
 import notesicon from '../../images/notes_icon.png';
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import battlePointsImage from '../../images/battle_points.png';
 import './TopBar.css';
 import RecruitmentTooltip from '../city/RecruitmentToolTip';
@@ -17709,6 +18109,483 @@ import VipDisplay from '../VipDisplay';
 import PlatinumIcon from '../icons/PlatinumIcon';
 
 const CityListDropdown = ({ cities, onSelect, onClose, activeCityId }) => {
+<<<<<<< HEAD
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  return (
+    <div ref={dropdownRef} className="city-list-dropdown">
+      <ul>
+        {Object.values(cities).map((city) => (
+          <li key={city.id}>
+            <button
+              onClick={() => onSelect(city.id)}
+              className={`city-list-item ${city.id === activeCityId ? 'active' : ''}`}
+            >
+              {city.cityName}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const WeatherDisplay = ({ season, weather }) => {
+  const weatherIcons = {
+    Clear: '☀️',
+    Rainy: '🌧️',
+    Windy: '💨',
+    Foggy: '🌫️',
+    Stormy: '⛈️',
+  };
+  const seasonStyles = {
+    Spring: 'text-pink-600',
+    Summer: 'text-yellow-600',
+    Autumn: 'text-orange-600',
+    Winter: 'text-blue-600',
+  };
+
+  return (
+    <div className="weather-display">
+      <span className="weather-icon">{weatherIcons[weather] || '❓'}</span>
+      <span className={`season ${seasonStyles[season] || 'text-inherit'}`}>
+        {season}
+      </span>
+      <span className="separator">|</span>
+      <span className="weather">{weather}</span>
+    </div>
+  );
+};
+
+const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }) => {
+  if (!resource) return null;
+
+  if (resource === 'platinum') {
+    return (
+      <div className="tooltip">
+        <h4 className="tooltip-title">Platinum</h4>
+        <p className="tooltip-text">A premium currency for special advantages.</p>
+        <div className="tooltip-timer">{isLocked ? '🔒' : countdown}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tooltip">
+      <h4 className="tooltip-title">{resource}</h4>
+      <p className="tooltip-text">
+        Production: <span className="font-semibold">+{production}/hr</span>
+      </p>
+      <p className="tooltip-text">
+        Capacity: <span className="font-semibold">{capacity.toLocaleString()}</span>
+      </p>
+      <div className="tooltip-timer">{isLocked ? '🔒' : countdown}</div>
+    </div>
+  );
+};
+
+const TopBar = ({
+  view,
+  gameState,
+  availablePopulation,
+  happiness,
+  worldState,
+  productionRates,
+  movements,
+  onCancelTrain,
+  onCancelMovement,
+  combinedSlots,
+  onOpenMovements,
+  isUnderAttack,
+  onRenameCity,
+  onOpenNotes,
+  battlePoints,
+  onSwitchCity,
+  getWarehouseCapacity,
+}) => {
+  const { playerCities, activeCityId, playerGameData } = useGame();
+  const [isCityListOpen, setIsCityListOpen] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const [isTooltipLocked, setIsTooltipLocked] = useState(false);
+  const [lockCountdown, setLockCountdown] = useState(5);
+  const tooltipTimeoutRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
+  const activityTrackerRef = useRef(null);
+  const [isEditingCityName, setIsEditingCityName] = useState(false);
+  const [newCityName, setNewCityName] = useState('');
+
+  // Tooltip lock and countdown management
+  useEffect(() => {
+    if (activeTooltip && !isTooltipLocked) {
+      setLockCountdown(5);
+      countdownIntervalRef.current = setInterval(() => {
+        setLockCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownIntervalRef.current);
+            setActiveTooltip(null);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(countdownIntervalRef.current);
+  }, [activeTooltip, isTooltipLocked]);
+
+  // Handle clicks outside for tooltips and dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isTooltipLocked &&
+        activityTrackerRef.current &&
+        !activityTrackerRef.current.contains(event.target)
+      ) {
+        setIsTooltipLocked(false);
+        setActiveTooltip(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isTooltipLocked]);
+
+  const handleTooltipInteraction = (tooltip, lock = false) => {
+    if (isTooltipLocked && activeTooltip !== tooltip) {
+      setIsTooltipLocked(false);
+    }
+    clearTimeout(tooltipTimeoutRef.current);
+    if (lock) {
+      setIsTooltipLocked(true);
+      setActiveTooltip(tooltip);
+    } else if (!isTooltipLocked) {
+      setActiveTooltip(tooltip);
+      tooltipTimeoutRef.current = setTimeout(() => setActiveTooltip(null), 300);
+    }
+  };
+
+  const handleCityNameEdit = () => {
+    setNewCityName(gameState.cityName);
+    setIsEditingCityName(true);
+  };
+
+  const handleNameSubmit = async () => {
+    if (newCityName.trim() && newCityName.trim() !== gameState.cityName) {
+      try {
+        await onRenameCity(activeCityId, newCityName.trim());
+      } catch (error) {
+        console.error('Failed to rename city:', error);
+      }
+    }
+    setIsEditingCityName(false);
+  };
+
+  const getSafeDate = (timestamp) => {
+    if (!timestamp) return null;
+    return typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp);
+  };
+
+  const isTradeMovement = (m) => {
+    if (!m) return false;
+    if (m.type === 'trade') return true;
+    if (
+      m.status === 'returning' &&
+      m.resources &&
+      Object.values(m.resources).some((r) => r > 0) &&
+      (!m.units || Object.values(m.units).every((count) => count === 0))
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const recruitmentCount = Object.values(playerCities || {}).reduce((acc, city) => {
+    const activeUnitQueue = [
+      ...(city.barracksQueue || []),
+      ...(city.shipyardQueue || []),
+      ...(city.divineTempleQueue || []),
+    ].filter((item) => {
+      const endDate = getSafeDate(item.endTime);
+      return endDate && endDate > new Date();
+    });
+    const activeHealQueue = (city.healQueue || []).filter((item) => {
+      const endDate = getSafeDate(item.endTime);
+      return endDate && endDate > new Date();
+    });
+    return acc + activeUnitQueue.length + activeHealQueue.length;
+  }, 0);
+
+  const tradeCount = (movements || []).filter(isTradeMovement).length;
+  const movementCount = (movements || []).filter((m) => !isTradeMovement(m)).length;
+
+  const happinessTooltip = () => {
+    if (!gameState?.buildings) return `Happiness: ${happiness}%`;
+    const baseHappiness = (gameState.buildings.senate?.level || 0) * 5;
+    const workerCount = ['timber_camp', 'quarry', 'silver_mine'].reduce(
+      (acc, id) => acc + (gameState.buildings[id]?.workers || 0),
+      0
+    );
+    const happinessPenalty = workerCount * 3;
+    return `Happiness: ${happiness}%\nBase: ${baseHappiness}%\nWorker Penalty: -${happinessPenalty}%`;
+  };
+
+  if (!gameState) return null;
+  const { resources, cityName } = gameState;
+  const happinessIcon = happiness > 70 ? '😊' : happiness > 40 ? '😐' : '😠';
+
+  const resourcesData = [
+    {
+      type: 'wood',
+      image: woodImage,
+      value: Math.floor(resources.wood || 0),
+      color: 'text-yellow-800',
+      production: productionRates?.wood,
+      capacity: getWarehouseCapacity?.(gameState.buildings.warehouse.level),
+    },
+    {
+      type: 'stone',
+      image: stoneImage,
+      value: Math.floor(resources.stone || 0),
+      color: 'text-gray-600',
+      production: productionRates?.stone,
+      capacity: getWarehouseCapacity?.(gameState.buildings.warehouse.level),
+    },
+    {
+      type: 'silver',
+      image: silverImage,
+      value: Math.floor(resources.silver || 0),
+      color: 'text-blue-800',
+      production: productionRates?.silver,
+      capacity: getWarehouseCapacity?.(gameState.buildings.warehouse.level),
+    },
+    {
+      type: 'platinum',
+      image: <PlatinumIcon className="w-6 h-6 text-gray-200" />,
+      value: Math.floor(playerGameData?.platinum || 0),
+      color: 'text-gray-300',
+    },
+    {
+      type: 'population',
+      image: populationImage,
+      value: Math.floor(availablePopulation || 0),
+      color: 'text-red-800',
+    },
+    {
+      type: 'happiness',
+      icon: happinessIcon,
+      value: `${happiness}%`,
+      color: 'text-green-800',
+      tooltip: happinessTooltip(),
+    },
+  ];
+
+  return (
+    <div
+      className={`top-bar-container ${view === 'map' ? 'absolute top-0 left-0 right-0' : 'relative'}`}
+    >
+      <div className="top-bar-content">
+        {/* Left Section */}
+        <div className="top-bar-section left">
+          {worldState && (
+            <div
+              className="tooltip-wrapper"
+              onMouseEnter={() => handleTooltipInteraction('weather')}
+              onMouseLeave={() => handleTooltipInteraction(null)}
+              onClick={() => handleTooltipInteraction('weather', true)}
+            >
+              <WeatherDisplay season={worldState.season} weather={worldState.weather} />
+              {activeTooltip === 'weather' && (
+                <div className="tooltip">
+                  <h4 className="tooltip-title">Weather</h4>
+                  <p className="tooltip-text">Current conditions affect travel times.</p>
+                  <div className="tooltip-timer">{isTooltipLocked ? '🔒' : lockCountdown}</div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="resource-item" title="Battle Points">
+            <img src={battlePointsImage} alt="Battle Points" className="resource-icon" />
+            <span className="resource-value text-red-800">{battlePoints.toLocaleString()}</span>
+          </div>
+          <VipDisplay />
+        </div>
+
+        {/* Center Section: City Name */}
+        <div className="top-bar-section center">
+          <div className="city-name-container">
+            {isEditingCityName ? (
+              <input
+                type="text"
+                value={newCityName}
+                onChange={(e) => setNewCityName(e.target.value)}
+                onBlur={handleNameSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNameSubmit();
+                  if (e.key === 'Escape') setIsEditingCityName(false);
+                }}
+                autoFocus
+                className="city-name-input"
+              />
+            ) : (
+              <div className="city-name-wrapper">
+                <button
+                  className="city-name-button"
+                  onClick={() => setIsCityListOpen((prev) => !prev)}
+                  onDoubleClick={handleCityNameEdit}
+                  title="Click to switch city | Double-click to rename"
+                >
+                  {cityName}
+                </button>
+                {isCityListOpen && (
+                  <CityListDropdown
+                    cities={playerCities}
+                    onSelect={(cityId) => {
+                      onSwitchCity?.(cityId);
+                      setIsCityListOpen(false);
+                    }}
+                    onClose={() => setIsCityListOpen(false)}
+                    activeCityId={activeCityId}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Section */}
+        <div className="top-bar-section right" ref={activityTrackerRef}>
+          <div className="activity-group">
+            <div
+              className="tooltip-wrapper"
+              onMouseEnter={() => handleTooltipInteraction('recruitment')}
+              onMouseLeave={() => handleTooltipInteraction(null)}
+              onClick={() => handleTooltipInteraction('recruitment', true)}
+            >
+              <button className="activity-button">
+                <img src={recruitmentIcon} alt="Recruitment" className="activity-icon" />
+                {recruitmentCount > 0 && (
+                  <span className="activity-badge">{recruitmentCount}</span>
+                )}
+              </button>
+              {activeTooltip === 'recruitment' && (
+                <RecruitmentTooltip
+                  playerCities={playerCities}
+                  onCancelTrain={onCancelTrain}
+                  isLocked={isTooltipLocked}
+                  countdown={lockCountdown}
+                />
+              )}
+            </div>
+            
+            <div
+              className="tooltip-wrapper"
+              onMouseEnter={() => handleTooltipInteraction('trades')}
+              onMouseLeave={() => handleTooltipInteraction(null)}
+              onClick={() => handleTooltipInteraction('trades', true)}
+            >
+              <button className="activity-button">
+                <img src={tradeIcon} alt="Trade" className="activity-icon" />
+                {tradeCount > 0 && <span className="activity-badge">{tradeCount}</span>}
+              </button>
+              {activeTooltip === 'trades' && (
+                <TradesTooltip
+                  movements={movements}
+                  combinedSlots={combinedSlots}
+                  onCancel={onCancelMovement}
+                  isLocked={isTooltipLocked}
+                  countdown={lockCountdown}
+                />
+              )}
+            </div>
+            <div
+              className="tooltip-wrapper"
+              onMouseEnter={() => handleTooltipInteraction('movements')}
+              onMouseLeave={() => handleTooltipInteraction(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTooltipInteraction('movements', true);
+                onOpenMovements();
+              }}
+            >
+              <button className={`activity-button ${isUnderAttack ? 'glowing' : ''}`}>
+                <img src={movementIcon} alt="Movement" className="activity-icon" />
+                {movementCount > 0 && (
+                  <span className="activity-badge">{movementCount}</span>
+                )}
+              </button>
+              {activeTooltip === 'movements' && (
+                <MovementsTooltip
+                  movements={movements}
+                  combinedSlots={combinedSlots}
+                  onCancel={onCancelMovement}
+                  isLocked={isTooltipLocked}
+                  countdown={lockCountdown}
+                />
+              )}
+            </div>
+            <button
+              className="activity-button"
+              onClick={onOpenNotes}
+              title="Notes"
+            >
+              <img src={notesIcon} alt="Notes" className="activity-icon" />
+            </button>
+          </div>
+          <div className="resource-group">
+            {resourcesData.map((res) => (
+              <div
+                key={res.type}
+                className="resource-item tooltip-wrapper"
+                onMouseEnter={() =>
+                  res.tooltip && handleTooltipInteraction(res.type)
+                }
+                onMouseLeave={() => handleTooltipInteraction(null)}
+                onClick={() => res.tooltip && handleTooltipInteraction(res.type, true)}
+              >
+                {res.image ? (
+                  <img src={res.image} alt={res.type} className="resource-icon" />
+                ) : (
+                  <span className="resource-icon">{res.icon}</span>
+                )}
+                <span className={`resource-value ${res.color}`}>
+                  {res.value}
+                </span>
+                {activeTooltip === res.type && res.production !== undefined && (
+                  <ResourceTooltip
+                    resource={res.type}
+                    production={res.production}
+                    capacity={res.capacity}
+                    isLocked={isTooltipLocked}
+                    countdown={lockCountdown}
+                  />
+                )}
+                {activeTooltip === res.type && res.tooltip && (
+                  <div className="tooltip happiness-tooltip">
+                    <pre className="tooltip-text">{res.tooltip}</pre>
+                    <div className="tooltip-timer">
+                      {isTooltipLocked ? '🔒' : lockCountdown}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TopBar;
+=======
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -18207,6 +19084,7 @@ const TopBar = ({
 };
 
 export default TopBar;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/components/map/TradePanel.js">
@@ -18425,7 +19303,11 @@ const MapView = ({
     const { pan, zoom, viewportSize, borderOpacity, isPanning, handleMouseDown, goToCoordinates } = useMapInteraction(viewportRef, mapContainerRef, worldState, playerCity, centerOnCity);
     const { visibleSlots, visibleVillages, visibleRuins, invalidateChunkCache } = useMapData(currentUser, worldId, worldState, pan, zoom, viewportSize);
     const [message, setMessage] = useState('');
+<<<<<<< HEAD
     const { travelTimeInfo, setTravelTimeInfo, handleActionClick, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity } = useMapActions(openModal, closeModal, showCity, invalidateChunkCache, setMessage);
+=======
+    const { travelTimeInfo, setTravelTimeInfo, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity, handleActionClick } = useMapActions(openModal, closeModal, showCity, invalidateChunkCache, setMessage);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, calculateTotalPoints, getProductionRates, getWarehouseCapacity } = useCityState(worldId);
     const [cityPoints, setCityPoints] = useState({});
     const [scoutedCities, setScoutedCities] = useState({});
@@ -18584,6 +19466,10 @@ const MapView = ({
         conqueredVillages,
         conqueredRuins,
         cityGameState: gameState,
+<<<<<<< HEAD
+=======
+        viewportRef,
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     });
 
     const { availablePopulation, happiness, marketCapacity } = useMemo(() => {
@@ -19044,7 +19930,11 @@ const MapView = ({
     );
 };
 
+<<<<<<< HEAD
 export default MapView;
+=======
+export default MapView;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/components/messaging/MessagesView.css">
@@ -19560,6 +20450,17 @@ export default MessagesView;
 </file>
 
 <file path="src/components/Pouch.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 /* src/components/Pouch.css */
 .pouch-toggle-button-container {
     position: absolute;
@@ -19671,17 +20572,46 @@ export default MessagesView;
 </file>
 
 <file path="src/components/Pouch.js">
+<<<<<<< HEAD
 // src/components/Pouch.js
 import React from 'react';
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+// src/components/Pouch.js
+import React, { useState } from 'react';
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import itemsConfig from '../gameData/items.json';
 import { useItemActions } from '../hooks/actions/useItemActions';
 import './Pouch.css';
 
 const Pouch = ({ items, onClose }) => {
     const { activateItem } = useItemActions();
+<<<<<<< HEAD
 
     const handleUseItem = (itemId) => {
         activateItem(itemId);
+=======
+    const [isUsingItemId, setIsUsingItemId] = useState(null);
+
+    const handleUseItem = async (itemId) => {
+        if (isUsingItemId) return; // Prevent multiple clicks
+        setIsUsingItemId(itemId);
+        try {
+            await activateItem(itemId);
+        } catch (error) {
+            console.error("Failed to use item:", error);
+            // Optionally show an error message to the user
+        } finally {
+            setIsUsingItemId(null);
+        }
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     };
 
     return (
@@ -19696,13 +20626,27 @@ const Pouch = ({ items, onClose }) => {
                         Object.entries(items).map(([itemId, count]) => {
                             const item = itemsConfig[itemId];
                             if (!item) return null;
+<<<<<<< HEAD
+=======
+                            const isUsingThisItem = isUsingItemId === itemId;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                             return (
                                 <div key={itemId} className="item-card">
                                     <div className="item-info">
                                         <h4 className="item-name">{item.name} (x{count})</h4>
                                         <p className="item-description">{item.description}</p>
                                     </div>
+<<<<<<< HEAD
                                     <button onClick={() => handleUseItem(itemId)} className="use-item-btn">Use</button>
+=======
+                                    <button 
+                                        onClick={() => handleUseItem(itemId)} 
+                                        className="use-item-btn"
+                                        disabled={isUsingThisItem}
+                                    >
+                                        {isUsingThisItem ? 'Using...' : 'Use'}
+                                    </button>
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                                 </div>
                             );
                         })
@@ -20696,6 +21640,17 @@ export default QuestsModal;
 </file>
 
 <file path="src/components/QuestsButton.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 /* src/components/QuestsButton.css */
 .quests-button-container {
     position: absolute;
@@ -20758,6 +21713,17 @@ export default QuestsModal;
 </file>
 
 <file path="src/components/QuestsButton.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useMemo } from 'react';
 import './QuestsButton.css';
 import questSpritesheet from '../images/quests/quest_spritesheet.png';
@@ -20796,6 +21762,17 @@ export default QuestsButton;
 </file>
 
 <file path="src/components/ReportsView.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 .reports-container {
     background-image: url('../images/bg/reports_bg.png');
     background-size: 100% 100%;
@@ -20948,6 +21925,17 @@ export default QuestsButton;
 </file>
 
 <file path="src/components/ReportsView.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -21540,6 +22528,17 @@ export default ReportsView;
 </file>
 
 <file path="src/components/SelectionScreen.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/SelectionScreen.js
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -21730,6 +22729,17 @@ export default SelectionScreen;
 </file>
 
 <file path="src/components/shared/LoadingScreen.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React from 'react';
 
 /**
@@ -21752,6 +22762,17 @@ export default LoadingScreen;
 </file>
 
 <file path="src/components/shared/Modal.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React from 'react';
 
 const Modal = ({ message, title, children, onClose }) => {
@@ -21785,6 +22806,17 @@ export default Modal;
 </file>
 
 <file path="src/components/shared/Notification.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 /* src/components/shared/Notification.css */
 @keyframes slideInFromRight {
     from {
@@ -21890,6 +22922,17 @@ export default Modal;
 </file>
 
 <file path="src/components/shared/Notification.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useEffect, useState } from 'react';
 import './Notification.css';
 import buildingConfig from '../../gameData/buildings.json';
@@ -21908,7 +22951,11 @@ imageContexts.forEach(context => {
     });
 });
 
+<<<<<<< HEAD
 const Notification = ({ message, iconType, iconId, onClose }) => {
+=======
+const Notification = ({ id, message, iconType, iconId, onClose }) => {
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const [iconSrc, setIconSrc] = useState('');
 
     useEffect(() => {
@@ -21924,6 +22971,7 @@ const Notification = ({ message, iconType, iconId, onClose }) => {
         }
     }, [iconType, iconId]);
 
+<<<<<<< HEAD
     //  Automatically trigger the close function after the animation duration
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -21932,6 +22980,16 @@ const Notification = ({ message, iconType, iconId, onClose }) => {
 
         return () => clearTimeout(timer);
     }, [onClose]);
+=======
+    // Set a timer to automatically close the notification.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onClose(id);
+        }, 5500); // This duration should match the CSS animation timings
+
+        return () => clearTimeout(timer);
+    }, [id, onClose]);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 
     return (
         <div className="notification-wrapper">
@@ -21952,6 +23010,17 @@ export default Notification;
 </file>
 
 <file path="src/components/shared/SettingsModal.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -22363,6 +23432,17 @@ export default SettingsModal;
 </file>
 
 <file path="src/components/shared/TextEditor.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 .text-editor-container {
     background-color: #fdf6e7;
     border: 1px solid #d2b48c;
@@ -22457,6 +23537,10 @@ import './TextEditor.css';
 const MentionInput = ({ type, data, onSelect, onClose, buttonRef }) => {
     const [inputValue, setInputValue] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+<<<<<<< HEAD
+=======
+    const [coords, setCoords] = useState({ x: '', y: '' });
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const popupRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -22474,7 +23558,11 @@ const MentionInput = ({ type, data, onSelect, onClose, buttonRef }) => {
     useEffect(() => {
         if (type === 'player' || type === 'city' || type === 'alliance') {
             if (inputValue.length > 0) {
+<<<<<<< HEAD
                 const filtered = data.filter(item => item.toLowerCase().startsWith(inputValue.toLowerCase()));
+=======
+                const filtered = data.filter(item => item.name.toLowerCase().startsWith(inputValue.toLowerCase()));
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                 setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
             } else {
                 setSuggestions([]);
@@ -22499,20 +23587,73 @@ const MentionInput = ({ type, data, onSelect, onClose, buttonRef }) => {
     }, [onClose]);
 
     const handleSubmit = (value) => {
+<<<<<<< HEAD
         if (value.trim()) {
             onSelect(value.trim());
+=======
+        if (type === 'island') {
+            if (coords.x && coords.y) {
+                onSelect(coords);
+            }
+        } else if (value) {
+            onSelect(value);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         }
     };
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+<<<<<<< HEAD
             handleSubmit(inputValue);
+=======
+            if (type === 'island') {
+                handleSubmit(coords);
+            } else {
+                let itemToSubmit = null;
+                if (suggestions.length > 0) {
+                    itemToSubmit = suggestions[0];
+                } else {
+                    itemToSubmit = data.find(item => item.name.toLowerCase() === inputValue.toLowerCase());
+                }
+    
+                if (itemToSubmit) {
+                    handleSubmit(itemToSubmit);
+                }
+            }
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         } else if (e.key === 'Escape') {
             onClose();
         }
     };
 
+<<<<<<< HEAD
+=======
+    if (type === 'island') {
+        return (
+            <div ref={popupRef} className="mention-input-popup" style={popupStyle()}>
+                <input
+                    ref={inputRef}
+                    type="number"
+                    value={coords.x}
+                    onChange={(e) => setCoords(c => ({ ...c, x: e.target.value }))}
+                    onKeyDown={handleKeyDown}
+                    placeholder="X coordinate"
+                    className="mention-input"
+                />
+                <input
+                    type="number"
+                    value={coords.y}
+                    onChange={(e) => setCoords(c => ({ ...c, y: e.target.value }))}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Y coordinate"
+                    className="mention-input mt-1"
+                />
+            </div>
+        );
+    }
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     return (
         <div ref={popupRef} className="mention-input-popup" style={popupStyle()}>
             <input
@@ -22527,8 +23668,13 @@ const MentionInput = ({ type, data, onSelect, onClose, buttonRef }) => {
             {(type === 'player' || type === 'city' || type === 'alliance') && suggestions.length > 0 && (
                 <ul className="mention-suggestions">
                     {suggestions.map(item => (
+<<<<<<< HEAD
                         <li key={item} onClick={() => handleSubmit(item)}>
                             {item}
+=======
+                        <li key={item.id} onClick={() => handleSubmit(item)}>
+                            {item.name}
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                         </li>
                     ))}
                 </ul>
@@ -22587,9 +23733,15 @@ const TextEditor = ({ value, onChange }) => {
                 alliancesQuery
             ]);
 
+<<<<<<< HEAD
             const playersData = playersSnapshot.docs.map(doc => doc.data().username);
             const citiesData = citiesSnapshot.docs.map(doc => doc.data().cityName);
             const alliancesData = alliancesSnapshot.docs.map(doc => doc.data().name);
+=======
+            const playersData = playersSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().username }));
+            const citiesData = citiesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().cityName, ownerId: doc.data().ownerId, x: doc.data().x, y: doc.data().y }));
+            const alliancesData = alliancesSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name, tag: doc.data().tag }));
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 
             setPlayers(playersData);
             setCities(citiesData);
@@ -22611,6 +23763,7 @@ const TextEditor = ({ value, onChange }) => {
         const end = textarea.selectionEnd;
         let selectedText = value.substring(start, end);
         
+<<<<<<< HEAD
         //  If no text is selected, use the parameter as the content
         if (!selectedText && param) {
             selectedText = param;
@@ -22624,12 +23777,44 @@ const TextEditor = ({ value, onChange }) => {
 
         const closeTag = `[/${tag}]`;
         const newText = `${value.substring(0, start)}${openTag}${selectedText}${closeTag}${value.substring(end)}`;
+=======
+        let openTag = `[${tag}`;
+        let content = selectedText;
+
+        if (typeof param === 'object' && param !== null) {
+            // For complex tags like player, city, alliance
+            if (param.id) openTag += ` id=${param.id}`;
+            if (param.ownerId) openTag += ` owner=${param.ownerId}`;
+            if (param.x) openTag += ` x=${param.x}`;
+            if (param.y) openTag += ` y=${param.y}`;
+            openTag += ']';
+            if (!content) content = param.name;
+        } else if (param) {
+            // For simple tags with a parameter like color, size, url
+            if (tag === 'url') {
+                openTag += `=${selectedText}]`;
+                content = param; // The param becomes the display text
+            } else {
+                openTag += `=${param}]`;
+            }
+        } else {
+            // For simple tags without parameters like b, i, u
+            openTag += ']';
+        }
+
+        const closeTag = `[/${tag}]`;
+        const newText = `${value.substring(0, start)}${openTag}${content}${closeTag}${value.substring(end)}`;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         
         onChange(newText);
 
         setTimeout(() => {
             textarea.focus();
+<<<<<<< HEAD
             const newCursorPos = start + openTag.length + selectedText.length + closeTag.length;
+=======
+            const newCursorPos = start + openTag.length + (content || '').length + closeTag.length;
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
             textarea.setSelectionRange(newCursorPos, newCursorPos);
         }, 0);
     };
@@ -22647,8 +23832,25 @@ const TextEditor = ({ value, onChange }) => {
         });
     };
 
+<<<<<<< HEAD
     const handleMentionSelect = (name) => {
         applyFormat(mentionState.type, name);
+=======
+    const handleMentionSelect = (selectedItem) => {
+        const { type } = mentionState;
+        if (type === 'island') {
+            applyFormat('island', { x: selectedItem.x, y: selectedItem.y, name: `Island (${selectedItem.x},${selectedItem.y})` });
+        } else {
+            let params = { 
+                id: selectedItem.id, 
+                name: selectedItem.name,
+                ownerId: selectedItem.ownerId,
+                x: selectedItem.x,
+                y: selectedItem.y
+            };
+            applyFormat(type, params);
+        }
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         setMentionState({ visible: false, type: null, buttonRef: null });
     };
     
@@ -22706,6 +23908,17 @@ export default TextEditor;
 </file>
 
 <file path="src/components/SharedNoteView.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/SharedNoteView.js
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -22780,6 +23993,17 @@ export default SharedNoteView;
 </file>
 
 <file path="src/components/SharedReportView.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/SharedReportView.js
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -23104,6 +24328,17 @@ export default SharedReportView;
 </file>
 
 <file path="src/components/SideInfoPanel.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React from 'react';
 import WorshipDisplay from './city/WorshipDisplay';
 import TroopDisplay from './TroopDisplay';
@@ -23139,6 +24374,17 @@ export default SideInfoPanel;
 </file>
 
 <file path="src/components/Temple.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
 import godsConfig from '../gameData/gods.json';
@@ -23207,6 +24453,17 @@ export default Temple;
 </file>
 
 <file path="src/components/TroopDisplay.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/TroopDisplay.js
 import React, { useState, useEffect, useRef } from 'react';
 import unitConfig from '../gameData/units.json';
@@ -23414,6 +24671,17 @@ export default TroopDisplay;
 </file>
 
 <file path="src/components/VipDisplay.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 .vip-container {
     @apply flex items-center gap-2 p-1 rounded-full;
     background: rgba(0,0,0,0.1);
@@ -23443,6 +24711,17 @@ export default TroopDisplay;
 </file>
 
 <file path="src/components/VipDisplay.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -23593,6 +24872,17 @@ export default VipDisplay;
 </file>
 
 <file path="src/components/WorldSelectionScreen.css">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 /* src/components/WorldSelectionScreen.css */
 .world-selection-container {
     background-image: url('../images/world_selection_screen.png');
@@ -23658,6 +24948,17 @@ export default VipDisplay;
 </file>
 
 <file path="src/components/WorldSelectionScreen.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/components/WorldSelectionScreen.js
 import React, { useState, useEffect} from 'react';
 import { collection, getDocs, doc, writeBatch, serverTimestamp, getDoc, deleteDoc, query, limit, onSnapshot } from 'firebase/firestore';
@@ -23930,7 +25231,11 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         <h2 className="font-title text-2xl mb-4">YOUR WORLDS</h2>
                         {joinedWorlds.length > 0 ? (
                             joinedWorlds.map(world => (
+<<<<<<< HEAD
+                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
+=======
                                 <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center">
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                                     <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
@@ -23954,8 +25259,13 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         <h2 className="font-title text-2xl mb-4">JOIN A NEW WORLD</h2>
                         {availableWorlds.length > 0 ? (
                             availableWorlds.map(world => (
+<<<<<<< HEAD
+                                <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
+                                    <div className="flex items-center cursor-pointer">
+=======
                                 <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center">
                                     <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
                                     </div>
@@ -24002,6 +25312,17 @@ export default WorldSelectionScreen;
 </file>
 
 <file path="src/contexts/AllianceContext.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { createContext, useContext } from 'react';
 
 const AllianceContext = createContext();
@@ -24012,6 +25333,17 @@ export default AllianceContext;
 </file>
 
 <file path="src/contexts/AllianceProvider.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/contexts/AllianceProvider.js
 import React, { useState, useEffect } from 'react';
 import { doc, onSnapshot } from "firebase/firestore";
@@ -24073,6 +25405,17 @@ export const AllianceProvider = ({ children }) => {
 </file>
 
 <file path="src/contexts/AuthContext.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { onAuthStateChanged, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
@@ -24169,6 +25512,17 @@ export const AuthProvider = ({ children }) => {
 </file>
 
 <file path="src/contexts/GameContext.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/contexts/GameContext.js
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { doc, onSnapshot, collection, writeBatch, updateDoc, getDoc } from "firebase/firestore";
@@ -24425,6 +25779,17 @@ export const GameProvider = ({ children, worldId }) => {
 </file>
 
 <file path="src/contexts/NotificationContext.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/contexts/NotificationContext.js
 import { createContext, useContext } from 'react';
 
@@ -24436,6 +25801,17 @@ export default NotificationContext;
 </file>
 
 <file path="src/contexts/NotificationProvider.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import React, { useState, useCallback, useRef } from 'react';
 import NotificationContext from './NotificationContext';
 import Notification from '../components/shared/Notification';
@@ -24445,13 +25821,18 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const recentNotifications = useRef(new Set());
 
+<<<<<<< HEAD
     const addNotification = useCallback((message, iconType, iconId) => { //  Add iconType and iconId
         //  Prevent the same notification from appearing in rapid succession
+=======
+    const addNotification = useCallback((message, iconType, iconId) => {
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         if (recentNotifications.current.has(message)) {
             return;
         }
 
         const id = uuidv4();
+<<<<<<< HEAD
         //  Add icon details to the notification object
         setNotifications(prev => [...prev, { id, message, iconType, iconId }]);
         recentNotifications.current.add(message);
@@ -24460,6 +25841,14 @@ export const NotificationProvider = ({ children }) => {
         setTimeout(() => {
             recentNotifications.current.delete(message);
         }, 2000); // 2-second cooldown for the same message
+=======
+        setNotifications(prev => [...prev, { id, message, iconType, iconId }]);
+        recentNotifications.current.add(message);
+
+        setTimeout(() => {
+            recentNotifications.current.delete(message);
+        }, 2000);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     }, []);
 
     const removeNotification = useCallback((id) => {
@@ -24473,10 +25862,18 @@ export const NotificationProvider = ({ children }) => {
                 {notifications.map(notification => (
                     <Notification
                         key={notification.id}
+<<<<<<< HEAD
                         message={notification.message}
                         iconType={notification.iconType}
                         iconId={notification.iconId}
                         onClose={() => removeNotification(notification.id)}
+=======
+                        id={notification.id}
+                        message={notification.message}
+                        iconType={notification.iconType}
+                        iconId={notification.iconId}
+                        onClose={removeNotification}
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                     />
                 ))}
             </div>
@@ -24486,6 +25883,17 @@ export const NotificationProvider = ({ children }) => {
 </file>
 
 <file path="src/firebase/config.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/firebase/config.js
 import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
@@ -24719,7 +26127,11 @@ export default app;
 
 <file path="src/gameData/BuildingLayout.json">
 [
+<<<<<<< HEAD
+  { "id": "city_wall", "name": "City Wall", "position": { "x": 800, "y": 650 } },
+=======
   { "id": "city_wall", "name": "City Wall", "position": { "x": 0, "y": 650 } },
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
   { "id": "senate", "name": "Senate", "position": { "x": 1105, "y": 360 } },
   { "id": "timber_camp", "name": "Lumber Mill", "position": { "x": 200, "y": 470 } },
   { "id": "quarry", "name": "Stone Quarry", "position": { "x":750, "y": 70 } },
@@ -26515,6 +27927,17 @@ export default app;
 </file>
 
 <file path="src/hooks/actions/useAdminActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { collection, doc, query, where, limit, getDocs, setDoc as firestoreSetDoc, runTransaction, writeBatch, deleteField } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useGame } from '../../contexts/GameContext';
@@ -26766,6 +28189,17 @@ export const useAdminActions = ({
 </file>
 
 <file path="src/hooks/actions/useAgentActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
 import { db } from '../../firebase/config';
@@ -26823,6 +28257,17 @@ export const useAgentActions = (cityGameState, saveGameState, setMessage) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useAllianceActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -27095,6 +28540,17 @@ export const useAllianceActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceBank.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
 import { db } from '../../firebase/config';
@@ -27285,6 +28741,17 @@ export const useAllianceBankActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceDiplomacy.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useAllianceDiplomacy.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -27478,6 +28945,17 @@ export const useAllianceDiplomacyActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceManagement.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useAllianceManagement.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -27885,6 +29363,17 @@ export const useAllianceManagementActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceResearch.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useAllianceResearch.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -28004,6 +29493,18 @@ export const useAllianceResearchActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useAllianceWonderActions.js">
+<<<<<<< HEAD
+=======
+
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useAllianceWonderActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -28166,6 +29667,17 @@ export const useAllianceWonderActions = (playerAlliance) => {
 </file>
 
 <file path="src/hooks/actions/useBuildingActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 import { v4 as uuidv4 } from 'uuid';
 import buildingConfig from '../../gameData/buildings.json';
 import researchConfig from '../../gameData/research.json';
@@ -28602,8 +30114,20 @@ export const useBuildingActions = ({
 </file>
 
 <file path="src/hooks/actions/useDivineActions.js">
+<<<<<<< HEAD
 // src/hooks/actions/useDivineActions.js
 
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+// src/hooks/actions/useDivineActions.js
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 export const useDivineActions = ({
     cityGameState, setCityGameState, saveGameState,
     closeModal, setMessage
@@ -28661,6 +30185,17 @@ export const useDivineActions = ({
 </file>
 
 <file path="src/hooks/actions/useHeroActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useHeroActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -28912,6 +30447,17 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
 </file>
 
 <file path="src/hooks/actions/useItemActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useItemActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -28982,6 +30528,17 @@ export const useItemActions = () => {
 </file>
 
 <file path="src/hooks/actions/usePremiumActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/usePremiumActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -29077,6 +30634,17 @@ export const usePremiumActions = () => {
 </file>
 
 <file path="src/hooks/actions/useResearchActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useResearchActions.js
 import researchConfig from '../../gameData/research.json';
 
@@ -29201,6 +30769,17 @@ export const useResearchActions = ({
 </file>
 
 <file path="src/hooks/actions/useUnitActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useUnitActions.js
 import { v4 as uuidv4 } from 'uuid';
 import { doc, runTransaction } from 'firebase/firestore';
@@ -29596,6 +31175,17 @@ export const useUnitActions = ({
 </file>
 
 <file path="src/hooks/actions/useWorkerActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/actions/useWorkerActions.js
 import { useGame } from '../../contexts/GameContext';
 
@@ -29743,6 +31333,17 @@ export const useWorkerActions = ({ cityGameState, saveGameState, getMaxWorkerSlo
 </file>
 
 <file path="src/hooks/useCityActions.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/useCityActions.js
 import { useAdminActions } from './actions/useAdminActions';
 import { useBuildingActions } from './actions/useBuildingActions';
@@ -29819,6 +31420,17 @@ export const useCityActions = (props) => {
 </file>
 
 <file path="src/hooks/useCityModalManager.js">
+<<<<<<< HEAD
+=======
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 // src/hooks/useCityModalManager.js
 import { useState } from 'react';
 
@@ -31108,7 +32720,10 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 <file path="src/hooks/useMapClickHandler.js">
 import { calculateDistance } from '../utils/travel';
 import { getVillageTroops } from '../utils/combat';
+<<<<<<< HEAD
 import { useGame } from '../contexts/GameContext';
+=======
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 
 export const useMapClickHandler = ({
     playerCity,
@@ -31120,8 +32735,14 @@ export const useMapClickHandler = ({
     setMessage,
     conqueredVillages,
     conqueredRuins,
+<<<<<<< HEAD
 }) => {
     const { gameState: cityGameState } = useGame();
+=======
+    cityGameState,
+    viewportRef,
+}) => {
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 
     const onCitySlotClick = (e, slotData) => {
         if (!playerCity) {
@@ -31137,11 +32758,30 @@ export const useMapClickHandler = ({
              const distance = calculateDistance(playerCity, slotData);
              setTravelTimeInfo({ distance });
             const cityData = slotData;
+<<<<<<< HEAD
             const rect = e.currentTarget.getBoundingClientRect();
             const position = {
                 x: rect.left + rect.width / 2,
                 y: rect.top + rect.height / 2,
             };
+=======
+            let position;
+            if (e && e.currentTarget) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                position = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                };
+            } else if (viewportRef && viewportRef.current) {
+                const rect = viewportRef.current.getBoundingClientRect();
+                position = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                };
+            } else {
+                position = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+            }
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
             const modalData = { ...cityData, position };
             openModal('city', modalData);
         } else {
@@ -32469,14 +34109,29 @@ export const useMovementProcessor = (worldId) => {
                             read: false,
                         };
                         batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failedScoutAttackerReport);
+<<<<<<< HEAD
                         const newDefenderCave = { ...targetCityState.cave, silver: (targetCityState.cave?.silver || 0) + result.silverGained };
                         batch.update(targetCityRef, { cave: newDefenderCave });
+=======
+                        
+                        // Update the defender's cave based on the silver they lost countering the spy.
+                        if (result.silverLostByDefender > 0) {
+                            const newDefenderCave = { ...targetCityState.cave, silver: (targetCityState.cave?.silver || 0) - result.silverLostByDefender };
+                            batch.update(targetCityRef, { cave: newDefenderCave });
+                        }
+
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                         const spyCaughtReport = {
                             type: 'spy_caught',
                             title: `Caught a spy from ${originCityState.cityName}!`,
                             timestamp: serverTimestamp(),
+<<<<<<< HEAD
                             originCity: originCityState.cityName,
                             silverGained: result.silverGained,
+=======
+                            originCityName: originCityState.cityName,
+                            silverGained: 0, // No silver is gained
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                             read: false,
                         };
                         batch.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), spyCaughtReport);
@@ -32659,7 +34314,11 @@ export const useMovementProcessor = (worldId) => {
         const interval = setInterval(processMovements, 5000);
         return () => clearInterval(interval);
     }, [worldId, processMovement]);
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/hooks/useQuestTracker.js">
@@ -32680,7 +34339,11 @@ const getWarehouseCapacity = (level) => {
 
 export const useQuestTracker = (cityState) => {
     const { currentUser } = useAuth();
+<<<<<<< HEAD
     const { worldId, activeCityId } = useGame(); // Get worldId and activeCityId from context
+=======
+    const { worldId, activeCityId, playerCities } = useGame(); // Get worldId and activeCityId from context
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     const [questProgress, setQuestProgress] = useState(null);
     const [questEvents, setQuestEvents] = useState({});
     const [quests, setQuests] = useState([]);
@@ -32718,11 +34381,16 @@ export const useQuestTracker = (cityState) => {
 
     // Update quest status when cityState or progress changes
     useEffect(() => {
+<<<<<<< HEAD
         if (!cityState || !questProgress) {
+=======
+        if (!playerCities || !questProgress) {
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
             setQuests([]);
             return;
         }
 
+<<<<<<< HEAD
         const updatedQuests = Object.entries(allQuests)
             .filter(([id]) => questProgress.active?.[id])
             .map(([id, questData]) => {
@@ -32760,6 +34428,34 @@ export const useQuestTracker = (cityState) => {
                     }
                 }
 
+=======
+        const checkQuestCompletion = (quest, cities) => {
+            switch (quest.type) {
+                case 'building':
+                    return Object.values(cities).some(city => city.buildings[quest.targetId]?.level >= quest.targetLevel);
+                case 'units':
+                    const totalCount = Object.values(cities).reduce((total, city) => {
+                        return total + Object.entries(city.units || {}).reduce((sum, [unitId, count]) => {
+                            if (getGenericUnitType(unitId) === quest.targetId || unitId === quest.targetId) {
+                                return sum + count;
+                            }
+                            return sum;
+                        }, 0);
+                    }, 0);
+                    return totalCount >= quest.targetCount;
+                case 'attack_village':
+                case 'attack_player':
+                    return (questEvents[quest.type] || 0) >= quest.targetCount;
+                default:
+                    return false;
+            }
+        };
+
+        const updatedQuests = Object.entries(allQuests)
+            .filter(([id]) => questProgress.active?.[id])
+            .map(([id, questData]) => {
+                const isComplete = questProgress.completed[id] || checkQuestCompletion(questData, playerCities);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
                 return {
                     id,
                     ...questData,
@@ -32769,8 +34465,12 @@ export const useQuestTracker = (cityState) => {
             });
 
         setQuests(updatedQuests);
+<<<<<<< HEAD
 
     }, [cityState, questProgress, questEvents]);
+=======
+    }, [playerCities, questProgress, questEvents]);
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 
     const claimReward = useCallback(async (questId) => {
         if (isClaiming) return;
@@ -33881,6 +35581,11 @@ export const parseBBCode = (text) => {
     html = html.replace(/\[alliance id=([^\]]+)\](.*?)\[\/alliance\]/gs, '<span class="bbcode-action" data-action-type="alliance_profile" data-action-id="$1">$2</span>');
     // [city id=cityId owner=ownerId x=x y=y]City Name[/city]
     html = html.replace(/\[city id=([^ ]+) owner=([^ ]+) x=([\d.]+) y=([\d.]+)\](.*?)\[\/city\]/gs, '<span class="bbcode-action" data-action-type="city_link" data-action-id="$1" data-action-owner-id="$2" data-action-coords-x="$3" data-action-coords-y="$4">$5</span>');
+<<<<<<< HEAD
+=======
+    // [island x=x y=y]Island Name[/island]
+    html = html.replace(/\[island x=([\d.]+) y=([\d.]+)\](.*?)\[\/island\]/gs, '<span class="bbcode-action" data-action-type="go_to_city" data-action-coords-x="$1" data-action-coords-y="$2">$3</span>');
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
     // [attack attacker="Player A" attacker_city="City A" defender="Player B" defender_city="City B"]...[/attack]
     html = html.replace(/\[attack attacker="([^"]*)" attacker_city="([^"]*)" defender="([^"]*)" defender_city="([^"]*)"\](.*?)\[\/attack\]/gs, '<b>Attack Report</b><br/>Attacker: $1 ($2)<br/>Defender: $3 ($4)');
     // [trade from_player="Player A" from_city="CityA" to_player="Player B" to_city="CityB"]...[/trade]
@@ -33888,7 +35593,11 @@ export const parseBBCode = (text) => {
     // [scout attacker="Player A" attacker_city="City A" attacker_alliance="AllyA" defender="Player B" defender_city="City B" defender_alliance="AllyB"]...[/scout]
     html = html.replace(/\[scout attacker="([^"]*)" attacker_city="([^"]*)" attacker_alliance="([^"]*)" defender="([^"]*)" defender_city="([^"]*)" defender_alliance="([^"]*)"\](.*?)\[\/scout\]/gs, '<b>Scout Report</b><br/>Scout from: $1 ($2) [$3]<br/>Scouted: $4 ($5) [$6]');
     return html;
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="src/utils/combat.js">
@@ -34246,6 +35955,7 @@ export function resolveVillageRetaliation(playerUnits) {
  * @returns {object} An object containing the scouting outcome.
  */
 export function resolveScouting(targetGameState, attackingSilver) {
+<<<<<<< HEAD
     const defenderCaveSilver = targetGameState.cave?.silver || 0; // Get silver in cave
     const defenderSecurityBonus = defenderCaveSilver * 2; // Example: defender gets 2x bonus from silver in cave
     const attackerEspionagePower = attackingSilver;
@@ -34258,10 +35968,22 @@ export function resolveScouting(targetGameState, attackingSilver) {
 
     if (success) {
         // If scouting is successful, return a report of target's resources and units
+=======
+    const defenderCaveSilver = targetGameState.cave?.silver || 0;
+    const attackerEspionagePower = attackingSilver;
+
+    // The success of the scout is determined by comparing the attacker's silver with the defender's.
+    // A random factor is included to make it less predictable.
+    const success = (attackerEspionagePower * (0.9 + Math.random() * 0.2)) > (defenderCaveSilver * (0.9 + Math.random() * 0.2));
+
+    if (success) {
+        // If scouting is successful, return a report of the target's resources and units.
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         return {
             success: true,
             message: 'Scouting successful! Detailed report obtained.',
             targetCityName: targetGameState.cityName,
+<<<<<<< HEAD
             targetOwnerUsername: targetGameState.playerInfo?.username || 'Unknown', // Safely access username
             resources: { ...targetGameState.resources },
             units: { ...targetGameState.units },
@@ -34277,6 +35999,23 @@ export function resolveScouting(targetGameState, attackingSilver) {
             success: false,
             message: 'Scouting failed! Your spy was detected.',
             silverGained: silverGainedByDefender
+=======
+            targetOwnerUsername: targetGameState.playerInfo?.username || 'Unknown',
+            resources: { ...targetGameState.resources },
+            units: { ...targetGameState.units },
+            buildings: { ...targetGameState.buildings },
+            god: targetGameState.god || 'None',
+            silverLostByDefender: 0
+        };
+    } else {
+        // If scouting fails, the defender's cave is depleted as they use silver to counter the spy.
+        const silverLostByDefender = Math.min(defenderCaveSilver, attackingSilver);
+        return {
+            success: false,
+            message: 'Scouting failed! Your spy was detected and eliminated.',
+            silverGained: 0, // Defender no longer gains silver
+            silverLostByDefender: silverLostByDefender
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
         };
     }
     
@@ -34886,6 +36625,7 @@ module.exports = {
 </file>
 
 <file path="todo.txt">
+<<<<<<< HEAD
 - fix report
 - make requirements for more than one building to show on different rows
 
@@ -34895,6 +36635,20 @@ Later:
 
 
 Bugs:
+=======
+- make it unzoom more and show dots instead of the models
+- add an option to see the world map
+- add premium currency 
+- add an agent to be able to free hero
+- find a way to conquer city
+
+Bugs:
+- fix security issues
+- bug when scout on a max cave it always fails
+- sometimes report is shown 2 times
+- fix bbcodes
+- fix cities sometimes dont show on map
+>>>>>>> b17a6edadfe9e9f9a71bd906fe8b8f6c0edcf0e4
 </file>
 
 <file path="Zap stuff.txt">

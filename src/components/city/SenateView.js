@@ -171,12 +171,19 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmAction, setConfirmAction] = useState(null);
     const senateRef = useRef(null);
-    const [position, setPosition] = useState({ 
-        x: (window.innerWidth - 1000) / 2,
-        y: (window.innerHeight - 650) / 2
-    });
+    const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+    if (senateRef.current) {
+        const rect = senateRef.current.getBoundingClientRect();
+        setPosition({
+        x: (window.innerWidth - rect.width) / 2,
+        y: (window.innerHeight - rect.height) / 2
+        });
+    }
+    }, []);
 
     const handleMouseDown = (e) => {
         if (e.target.classList.contains('senate-header') || e.target.parentElement.classList.contains('senate-header')) {
@@ -190,12 +197,17 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
 
     const handleMouseMove = useCallback((e) => {
         if (isDragging) {
-            setPosition({
-                x: e.clientX - dragStart.x,
-                y: e.clientY - dragStart.y,
-            });
+            const newX = e.clientX - dragStart.x;
+            const newY = e.clientY - dragStart.y;
+
+            // Clamp to visible window
+            const clampedX = Math.max(0, Math.min(newX, window.innerWidth - senateRef.current.offsetWidth));
+            const clampedY = Math.max(0, Math.min(newY, window.innerHeight - senateRef.current.offsetHeight));
+
+            setPosition({ x: clampedX, y: clampedY });
         }
     }, [isDragging, dragStart]);
+
 
     const handleMouseUp = () => {
         setIsDragging(false);
@@ -346,7 +358,7 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             )}
             <div
                 ref={senateRef}
-                className="senate-view-container text-white p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col"
+                className="senate-view-container text-white p-6 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col absolute"
                 onClick={e => e.stopPropagation()}
                 onMouseDown={handleMouseDown}
                 style={{ top: `${position.y}px`, left: `${position.x}px` }}
