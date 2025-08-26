@@ -1,0 +1,390 @@
+{
+  "build_timber_camp_2": {
+    "title": "First Steps: Wood",
+    "description": "A city is built on resources. Secure your wood supply by upgrading your Timber Camp to level 2.",
+    "type": "building",
+    "targetId": "timber_camp",
+    "targetLevel": 2,
+    "rewards": { "resources": { "wood": 100, "stone": 50 } },
+    "nextQuest": "build_quarry_2"
+  },
+  "build_quarry_2": {
+    "title": "First Steps: Stone",
+    "description": "Stone is essential for strong foundations. Upgrade your Quarry to level 2.",
+    "type": "building",
+    "targetId": "quarry",
+    "targetLevel": 2,
+    "rewards": { "resources": { "wood": 50, "stone": 100 } },
+    "nextQuest": "build_silver_mine_2"
+  },
+  "build_silver_mine_2": {
+    "title": "First Steps: Silver",
+    "description": "Wealth fuels ambition. Upgrade your Silver Mine to level 2.",
+    "type": "building",
+    "targetId": "silver_mine",
+    "targetLevel": 2,
+    "rewards": { "resources": { "silver": 100 } },
+    "nextQuest": "build_farm_3"
+  },
+  "build_farm_3": {
+    "title": "A Growing Populace",
+    "description": "Your people need space to thrive. Upgrade your Farm to level 3 to support more citizens.",
+    "type": "building",
+    "targetId": "farm",
+    "targetLevel": 3,
+    "rewards": { "resources": { "wood": 200, "stone": 200 } },
+    "nextQuest": "economic_path_1"
+  },
+  "economic_path_1": {
+    "title": "Path of the Economist: Storage",
+    "description": "A growing city needs a place to store its wealth. Upgrade your Warehouse to level 5.",
+    "type": "building",
+    "targetId": "warehouse",
+    "targetLevel": 5,
+    "rewards": { "resources": { "stone": 300, "silver": 150 } },
+    "nextQuest": "warrior_path_1"
+  },
+  "warrior_path_1": {
+    "title": "Path of the Warrior: The Barracks",
+    "description": "To protect your city and project your power, you need an army. Build a Barracks.",
+    "type": "building",
+    "targetId": "barracks",
+    "targetLevel": 1,
+    "rewards": { "resources": { "wood": 250, "silver": 250 } },
+    "nextQuest": "barracks_lvl_3"
+  },
+  "barracks_lvl_3": {
+    "title": "Path of the Warrior: Advanced Barracks",
+    "description": "Upgrade your Barracks to level 3 to unlock more training options.",
+    "type": "building",
+    "targetId": "barracks",
+    "targetLevel": 3,
+    "rewards": { "units": { "generic_swordsman": 20 } },
+    "nextQuest": "train_swordsmen_20"
+  },
+  "train_swordsmen_20": {
+    "title": "Path of the Warrior: Swords Up",
+    "description": "Train 20 of your nation's swordsmen.",
+    "type": "units",
+    "targetId": "generic_swordsman",
+    "targetCount": 20,
+    "rewards": { "units": { "generic_archer": 15 } },
+    "nextQuest": "train_hoplites_50"
+  },
+  "train_hoplites_50": {
+    "title": "Path of the Warrior: Basic Training",
+    "description": "The foundation of any army is its infantry. Train 50 of your nation's primary infantry unit.",
+    "type": "units",
+    "targetId": "generic_hoplite",
+    "targetCount": 50,
+    "rewards": { "resources": { "wood": 500, "stone": 500 } },
+    "nextQuest": "warrior_path_2"
+  },
+  "warrior_path_2": {
+    "title": "Path of the Warrior: First Blood",
+    "description": "Your troops are trained, now they must be tested. Successfully attack a farming village.",
+    "type": "attack_village",
+    "targetCount": 1,
+    "rewards": { "resources": { "silver": 1000 } },
+    "nextQuest": "divine_path_1"
+  },
+  "divine_path_1": {
+    "title": "Path of the Divine: A Place of Worship",
+    "description": "The gods watch over mortals. Build a Temple to gain their favor.",
+    "type": "building",
+    "targetId": "temple",
+    "targetLevel": 1,
+    "rewards": { "resources": { "wood": 300, "stone": 300, "silver": 300 } },
+    "nextQuest": "worship_god_1"
+  },
+  "worship_god_1": {
+    "title": "Path of the Divine: Choose Your Patron",
+    "description": "Declare your allegiance. Choose a god to worship from your Temple.",
+    "type": "worship",
+    "targetCount": 1,
+    "rewards": { "items": { "favor_boost_10": 1 } },
+    "nextQuest": "warrior_path_3"
+  },
+  "warrior_path_3": {
+    "title": "Path of the Warrior: True Combat",
+    "description": "True glory is found in battle against equals. Win a battle against another player.",
+    "type": "attack_player",
+    "targetCount": 1,
+    "rewards": { "items": { "attack_boost_5": 1 } },
+    "nextQuest": "espionage_path_1"
+  },
+  "espionage_path_1": {
+    "title": "Path of Shadows: A Secret Place",
+    "description": "Knowledge is power. Build a Cave to level 3 to hide your silver and train spies.",
+    "type": "building",
+    "targetId": "cave",
+    "targetLevel": 3,
+    "rewards": { "resources": { "silver": 2000 } },
+    "nextQuest": "scout_enemy_1"
+  },
+  "scout_enemy_1": {
+    "title": "Path of Shadows: Eyes Everywhere",
+    "description": "Send a spy to gather intelligence on another player's city.",
+    "type": "scout",
+    "targetCount": 1,
+    "rewards": { "items": { "scout_reveal": 1 } },
+    "nextQuest": "economic_path_2"
+  },
+  "economic_path_2": {
+    "title": "Path of the Economist: Prosperity",
+    "description": "Maximize your resource income. Upgrade your Timber Camp, Quarry, and Silver Mine to level 10.",
+    "type": "building_multiple",
+    "targets": { "timber_camp": 10, "quarry": 10, "silver_mine": 10 },
+    "rewards": { "items": { "resource_boost_wood_25": 1, "resource_boost_stone_25": 1 } },
+    "nextQuest": "naval_path_1"
+  },
+  "naval_path_1": {
+    "title": "Path of the Admiral: The Shipyard",
+    "description": "To rule the seas, you must first build a fleet. Construct a Shipyard.",
+    "type": "building",
+    "targetId": "shipyard",
+    "targetLevel": 1,
+    "rewards": { "units": { "generic_trireme": 2 } },
+    "nextQuest": "hero_path_1"
+  },
+  "hero_path_1": {
+    "title": "Path of Legends: The Altar",
+    "description": "Great heroes can turn the tide of war. Build a Heroes' Altar to summon them.",
+    "type": "building",
+    "targetId": "heroes_altar",
+    "targetLevel": 1,
+    "rewards": { "resources": { "silver": 2500, "wood": 1000, "stone": 1000 } },
+    "nextQuest": "recruit_hero_1"
+  },
+  "recruit_hero_1": {
+    "title": "Path of Legends: A Hero's Calling",
+    "description": "Recruit your first hero from the Altar. Their power will be invaluable.",
+    "type": "recruit_hero",
+    "targetCount": 1,
+    "rewards": { "items": { "soulstone": 1 } },
+    "nextQuest": "alliance_path_1"
+  },
+  "alliance_path_1": {
+    "title": "Path of Unity: Strength in Numbers",
+    "description": "No empire stands alone. Join or create an alliance to forge powerful bonds.",
+    "type": "alliance_join",
+    "targetCount": 1,
+    "rewards": { "resources": { "silver": 5000 } },
+    "nextQuest": "conquest_path_1"
+  },
+  "conquest_path_1": {
+    "title": "Path of the Emperor: Expansion",
+    "description": "Your empire must grow. Found a second city on an empty plot.",
+    "type": "found_city",
+    "targetCount": 2,
+    "rewards": { "items": { "population_boost_200": 2 } },
+    "nextQuest": "economic_path_3"
+  },
+  "economic_path_3": {
+    "title": "Path of the Economist: Grand Market",
+    "description": "Commerce is the lifeblood of an empire. Upgrade your Market to level 10.",
+    "type": "building",
+    "targetId": "market",
+    "targetLevel": 10,
+    "rewards": { "resources": { "silver": 10000 } },
+    "nextQuest": "warrior_path_4"
+  },
+  "warrior_path_4": {
+    "title": "Path of the Warrior: City Defenses",
+    "description": "A great city needs great walls. Upgrade your City Wall to level 10.",
+    "type": "building",
+    "targetId": "city_wall",
+    "targetLevel": 10,
+    "rewards": { "units": { "generic_hoplite": 100 } },
+    "nextQuest": "train_cavalry_50"
+  },
+  "train_cavalry_50": {
+    "title": "Path of the Warrior: Mounted Charge",
+    "description": "Train 50 of your nation's cavalry units.",
+    "type": "units",
+    "targetId": "generic_cavalry",
+    "targetCount": 50,
+    "rewards": { "resources": { "wood": 2000, "silver": 2000 } },
+    "nextQuest": "naval_path_2"
+  },
+  "naval_path_2": {
+    "title": "Path of the Admiral: Building a Fleet",
+    "description": "A small fleet is not enough. Build 10 of your nation's primary warships.",
+    "type": "units",
+    "targetId": "generic_trireme",
+    "targetCount": 10,
+    "rewards": { "resources": { "wood": 5000, "silver": 3000 } },
+    "nextQuest": "divine_path_2"
+  },
+  "divine_path_2": {
+    "title": "Path of the Divine: Divine Might",
+    "description": "The gods favor the bold. Train your first mythical unit.",
+    "type": "mythical_unit",
+    "targetCount": 1,
+    "rewards": { "items": { "favor_boost_10": 2 } },
+    "nextQuest": "hero_path_2"
+  },
+  "hero_path_2": {
+    "title": "Path of Legends: A Hero's Growth",
+    "description": "Even legends can grow stronger. Level up any hero to level 3.",
+    "type": "hero_level",
+    "targetLevel": 3,
+    "rewards": { "resources": { "silver": 7500 } },
+    "nextQuest": "espionage_path_2"
+  },
+  "espionage_path_2": {
+    "title": "Path of Shadows: Infiltration",
+    "description": "Your spies have found a weakness. Successfully sabotage an enemy building.",
+    "type": "sabotage",
+    "targetCount": 1,
+    "rewards": { "resources": { "silver": 5000 } },
+    "nextQuest": "economic_path_4"
+  },
+  "economic_path_4": {
+    "title": "Path of the Economist: Master Trader",
+    "description": "Dominate the market. Successfully complete 20 trades with other players.",
+    "type": "trade",
+    "targetCount": 20,
+    "rewards": { "items": { "instant_silver_250": 5 } },
+    "nextQuest": "warrior_path_5"
+  },
+  "warrior_path_5": {
+    "title": "Path of the Warrior: Grand Army",
+    "description": "Amass a truly formidable force. Have a total of 1000 land units.",
+    "type": "total_units",
+    "unitType": "land",
+    "targetCount": 1000,
+    "rewards": { "items": { "training_speed_10": 2 } },
+    "nextQuest": "conquest_path_2"
+  },
+  "conquest_path_2": {
+    "title": "Path of the Emperor: First Conquest",
+    "description": "True power is taken, not given. Conquer another player's city.",
+    "type": "conquer_city",
+    "targetCount": 1,
+    "rewards": { "items": { "soulstone": 2 } },
+    "nextQuest": "divine_path_3"
+  },
+  "divine_path_3": {
+    "title": "Path of the Divine: Pantheon",
+    "description": "Your devotion knows no bounds. Upgrade your Temple to level 10.",
+    "type": "building",
+    "targetId": "temple",
+    "targetLevel": 10,
+    "rewards": { "units": { "generic_mythical_1": 5 } },
+    "nextQuest": "naval_path_3"
+  },
+  "naval_path_3": {
+    "title": "Path of the Admiral: Armada",
+    "description": "Control the seas. Build a fleet of 50 warships.",
+    "type": "total_units",
+    "unitType": "naval",
+    "targetCount": 50,
+    "rewards": { "items": { "movement_speed_10": 2 } },
+    "nextQuest": "hero_path_3"
+  },
+  "hero_path_3": {
+    "title": "Path of Legends: Legendary Power",
+    "description": "Your hero has become a legend in their own right. Level up any hero to level 7.",
+    "type": "hero_level",
+    "targetLevel": 7,
+    "rewards": { "resources": { "silver": 20000 } },
+    "nextQuest": "alliance_path_2"
+  },
+  "alliance_path_2": {
+    "title": "Path of Unity: Contribution",
+    "description": "An alliance thrives on the contributions of its members. Donate 100,000 total resources to your alliance bank.",
+    "type": "alliance_donate",
+    "targetCount": 100000,
+    "rewards": { "items": { "construction_speed_10": 2 } },
+    "nextQuest": "economic_path_5"
+  },
+  "economic_path_5": {
+    "title": "Path of the Economist: Metropolis",
+    "description": "Your city is a beacon of civilization. Reach a total of 200 building levels in one city.",
+    "type": "total_building_levels",
+    "targetCount": 200,
+    "rewards": { "resources": { "wood": 15000, "stone": 15000, "silver": 15000 } },
+    "nextQuest": "warrior_path_6"
+  },
+  "warrior_path_6": {
+    "title": "Path of the Warrior: Siege Engines",
+    "description": "Walls are made to be broken. Research Siegecraft and build 10 Catapults.",
+    "type": "units",
+    "targetId": "catapult",
+    "targetCount": 10,
+    "rewards": { "items": { "attack_boost_5": 3 } },
+    "nextQuest": "conquest_path_3"
+  },
+  "conquest_path_3": {
+    "title": "Path of the Emperor: Triarchy",
+    "description": "An empire needs a strong foundation. Control at least 3 cities.",
+    "type": "found_city",
+    "targetCount": 3,
+    "rewards": { "items": { "population_boost_200": 5 } },
+    "nextQuest": "divine_path_4"
+  },
+  "divine_path_4": {
+    "title": "Path of the Divine: Divine Army",
+    "description": "The gods march with you. Amass an army of 50 mythical units.",
+    "type": "mythical_unit",
+    "targetCount": 50,
+    "rewards": { "items": { "favor_boost_10": 5 } },
+    "nextQuest": "espionage_path_3"
+  },
+  "espionage_path_3": {
+    "title": "Path of Shadows: Master of Whispers",
+    "description": "Your network of spies is unparalleled. Successfully perform 10 sabotage missions.",
+    "type": "sabotage",
+    "targetCount": 10,
+    "rewards": { "resources": { "silver": 25000 } },
+    "nextQuest": "naval_path_4"
+  },
+  "naval_path_4": {
+    "title": "Path of the Admiral: Sea Lord",
+    "description": "Your naval supremacy is unquestioned. Win 10 naval battles against other players.",
+    "type": "naval_battle_win",
+    "targetCount": 10,
+    "rewards": { "items": { "defense_boost_5": 3 } },
+    "nextQuest": "hero_path_4"
+  },
+  "hero_path_4": {
+    "title": "Path of Legends: Living Myth",
+    "description": "Your hero's name will be sung for generations. Level up any hero to the maximum level (10).",
+    "type": "hero_level",
+    "targetLevel": 10,
+    "rewards": { "items": { "soulstone": 5 } },
+    "nextQuest": "alliance_path_3"
+  },
+  "alliance_path_3": {
+    "title": "Path of Unity: Cooperative Research",
+    "description": "Knowledge shared is power multiplied. Contribute to 5 different alliance researches.",
+    "type": "alliance_research",
+    "targetCount": 5,
+    "rewards": { "items": { "research_speed_10": 3 } },
+    "nextQuest": "economic_path_6"
+  },
+  "economic_path_6": {
+    "title": "Path of the Economist: Unending Growth",
+    "description": "Your economic engine is unstoppable. Upgrade your resource fields to level 20 in one city.",
+    "type": "building_multiple",
+    "targets": { "timber_camp": 20, "quarry": 20, "silver_mine": 20 },
+    "rewards": { "resources": { "wood": 50000, "stone": 50000, "silver": 50000 } },
+    "nextQuest": "warrior_path_7"
+  },
+  "warrior_path_7": {
+    "title": "Path of the Warrior: Unstoppable Force",
+    "description": "Your army is a force of nature. Amass 20,000 attack points in a single army.",
+    "type": "attack_points",
+    "targetCount": 20000,
+    "rewards": { "items": { "attack_boost_5": 5 } },
+    "nextQuest": "conquest_path_4"
+  },
+  "conquest_path_4": {
+    "title": "Path of the Emperor: World Wonder",
+    "description": "Leave an eternal mark on the world. Be part of an alliance that completes a World Wonder.",
+    "type": "alliance_wonder",
+    "targetCount": 1,
+    "rewards": { "resources": { "silver": 250000 } }
+  }
+}

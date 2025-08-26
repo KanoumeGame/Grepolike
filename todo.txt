@@ -1,0 +1,12 @@
+- make it unzoom more and show dots instead of the models
+- add an option to see the world map
+- add premium currency 
+- add an agent to be able to free hero
+- find a way to conquer city
+
+Bugs:
+- fix security issues
+- bug when scout on a max cave it always fails
+- sometimes report is shown 2 times
+- fix bbcodes
+- fix cities sometimes dont show on map

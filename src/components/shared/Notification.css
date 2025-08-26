@@ -1,0 +1,110 @@
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+/* src/components/shared/Notification.css */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.notification-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 8px;
+    animation: slideInFromRight 0.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+}
+.notification-wrapper:last-child {
+    margin-bottom: 0;
+}
+
+.notification-container {
+    position: absolute;
+    top: -100%;
+    right: 0;
+    display: flex;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    background-color: rgba(30, 41, 59, 0.9); /* slate-800 with opacity */
+    color: #e2e8f0; /* slate-200 */
+    border: 1px solid #475569; /* slate-600 */
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-radius 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
+}
+
+.notification-wrapper:hover .notification-container {
+    width: 320px; /* Expand on hover */
+    border-radius: 8px; /* Become rectangular on hover */
+    z-index: 2;
+}
+
+.notification-icon-wrapper {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.notification-content {
+    flex-grow: 1;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.2s 0.2s ease-in-out; /* Delay opacity transition */
+    white-space: nowrap;
+    overflow: hidden;
+    margin-left: 60px; /* Make space for the icon */
+    padding-right: 10px;
+}
+
+.notification-wrapper:hover .notification-content {
+    opacity: 1; /* Show on hover */
+    white-space: normal;
+}
+
+.notification-message {
+    font-size: 0.9rem;
+}
+
+.notification-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background-color: #38bdf8; /* sky-400 */
+    animation: shrink 5s linear forwards;
+}
+
+@keyframes shrink {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}

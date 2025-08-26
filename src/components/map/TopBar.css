@@ -1,0 +1,238 @@
+.top-bar-container {
+  background: linear-gradient(rgba(245, 222, 179, 0.95), rgba(245, 222, 179, 0.95)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border-bottom: 2px solid #8b4513;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #4a2c2a;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  z-index: 30;
+}
+
+.top-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.top-bar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-bar-section.left {
+  justify-content: flex-start;
+  width: 44%;
+}
+
+.top-bar-section.center {
+  justify-content: center;
+}
+
+.top-bar-section.right {
+  justify-content: flex-end;
+}
+
+.city-name-container {
+  position: relative;
+}
+
+.city-name-button {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.125rem;
+  color: #4a2c2a;
+  transition: background-color 0.2s;
+}
+
+.city-name-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.city-name-input {
+  background: transparent;
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.125rem;
+  color: #4a2c2a;
+  text-align: center;
+  width: 200px;
+}
+
+.city-list-dropdown {
+  background: linear-gradient(rgba(245, 222, 179, 0.98), rgba(245, 222, 179, 0.98)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border: 2px solid #8b4513;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  z-index: 50;
+}
+
+.city-list-item {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  color: #4a2c2a;
+  transition: background-color 0.2s;
+}
+
+.city-list-item:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+.city-list-item.active {
+  background: rgba(251, 191, 36, 0.3);
+  font-weight: bold;
+}
+
+.weather-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+}
+
+.weather-icon {
+  font-size: 1.25rem;
+}
+
+.season,
+.weather {
+  font-weight: bold;
+}
+
+.separator {
+  color: #8b4513;
+}
+
+.activity-group,
+.resource-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resource-group {
+  gap: 0.75rem;
+}
+
+.resource-item,
+.activity-button {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.resource-item:hover,
+.activity-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.resource-icon,
+.activity-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.resource-icon {
+  margin-right: 0.5rem;
+}
+
+.resource-value {
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.activity-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: bold;
+  border-radius: 9999px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fff;
+}
+
+.glowing {
+  animation: glowing-icon 1.5s infinite;
+}
+
+@keyframes glowing-icon {
+  0% {
+    box-shadow: 0 0 4px #ef4444;
+  }
+  50% {
+    box-shadow: 0 0 8px #f87171, 0 0 4px #f87171;
+  }
+  100% {
+    box-shadow: 0 0 4px #ef4444;
+  }
+}
+
+.tooltip-wrapper {
+  position: relative;
+}
+
+.tooltip,
+.happiness-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: linear-gradient(rgba(245, 222, 179, 0.98), rgba(245, 222, 179, 0.98)),
+    url('https://www.transparenttextures.com/patterns/cracks.png');
+  background-color: #f5deb3;
+  border: 2px solid #8b4513;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  padding: 0.75rem;
+  z-index: 50;
+  min-width: 200px;
+}
+
+.tooltip-title {
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: capitalize;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-text {
+  font-size: 0.875rem;
+  color: #4a2c2a;
+}
+
+.tooltip-timer {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  text-align: right;
+  color: #8b4513;
+}

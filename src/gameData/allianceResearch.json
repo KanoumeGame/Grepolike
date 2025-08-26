@@ -1,0 +1,122 @@
+{
+    "master_of_arms": {
+        "name": "Master of Arms",
+        "description": "Increases the attack power of all alliance members' troops.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 100000, "stone": 100000, "silver": 50000 },
+        "costMultiplier": 1.5,
+        "effect": { "type": "attack_boost", "value": 0.01 }
+    },
+    "fortification_experts": {
+        "name": "Fortification Experts",
+        "description": "Increases the defensive power of all alliance members' troops.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 100000, "stone": 150000, "silver": 25000 },
+        "costMultiplier": 1.5,
+        "effect": { "type": "defense_boost", "value": 0.01 }
+    },
+    "logistics_specialists": {
+        "name": "Logistics Specialists",
+        "description": "Increases the travel speed of all alliance members' troops.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 120000, "stone": 80000, "silver": 80000 },
+        "costMultiplier": 1.8,
+        "effect": { "type": "speed_boost", "value": 0.02 }
+    },
+    "expanded_charter": {
+        "name": "Expanded Charter",
+        "description": "Increases the maximum number of members in the alliance.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 250000, "stone": 250000, "silver": 100000 },
+        "costMultiplier": 2,
+        "effect": { "type": "max_members", "value": 5 }
+    },
+    "reinforced_vaults": {
+        "name": "Reinforced Vaults",
+        "description": "Increases the capacity of the alliance bank.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 150000, "stone": 200000, "silver": 150000 },
+        "costMultiplier": 1.6,
+        "effect": { "type": "bank_capacity", "value": 50000 }
+    },
+    "forestry_experts": {
+        "name": "Forestry Experts",
+        "description": "Increases wood production for all alliance members.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 80000, "stone": 60000, "silver": 40000 },
+        "costMultiplier": 1.6,
+        "effect": { "type": "production_boost_wood", "value": 0.02 }
+    },
+    "masonry_techniques": {
+        "name": "Masonry Techniques",
+        "description": "Increases stone production for all alliance members.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 60000, "stone": 80000, "silver": 40000 },
+        "costMultiplier": 1.6,
+        "effect": { "type": "production_boost_stone", "value": 0.02 }
+    },
+    "coinage_reform": {
+        "name": "Coinage Reform",
+        "description": "Increases silver production for all alliance members.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 70000, "stone": 70000, "silver": 60000 },
+        "costMultiplier": 1.7,
+        "effect": { "type": "production_boost_silver", "value": 0.02 }
+    },
+    "training_regimens": {
+        "name": "Training Regimens",
+        "description": "Reduces the training time of all units for alliance members.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 200000, "stone": 200000, "silver": 150000 },
+        "costMultiplier": 1.9,
+        "effect": { "type": "unit_training_speed_boost", "value": 0.01 }
+    },
+    "naval_engineering": {
+        "name": "Naval Engineering",
+        "description": "Increases the attack and defense of all naval units.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 180000, "stone": 120000, "silver": 160000 },
+        "costMultiplier": 1.6,
+        "effect": { "type": "naval_boost", "value": 0.01 }
+    },
+    "diplomatic_leverage": {
+        "name": "Diplomatic Leverage",
+        "description": "Increases the amount of resources gained from farming villages.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 100000, "stone": 100000, "silver": 200000 },
+        "costMultiplier": 2.0,
+        "effect": { "type": "village_demand_boost", "value": 0.03 }
+    },
+    "advanced_storage": {
+        "name": "Advanced Storage",
+        "description": "Increases the warehouse capacity for all alliance members.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 220000, "stone": 280000, "silver": 100000 },
+        "costMultiplier": 1.8,
+        "effect": { "type": "warehouse_capacity_boost", "value": 0.05 }
+    },
+    "generous_contributions": {
+        "name": "Generous Contributions",
+        "description": "Increases the daily donation limit to the alliance bank.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 50000, "stone": 50000, "silver": 150000 },
+        "costMultiplier": 1.7,
+        "effect": { "type": "donation_limit_increase", "value": 10000 }
+    },
+    "rapid_donations": {
+        "name": "Rapid Donations",
+        "description": "Reduces the cooldown time between donations to the alliance bank.",
+        "maxLevel": 5,
+        "baseCost": { "wood": 80000, "stone": 80000, "silver": 80000 },
+        "costMultiplier": 1.8,
+        "effect": { "type": "donation_cooldown_reduction", "value": 15 }
+    },
+    "divine_devotion": {
+        "name": "Divine Devotion",
+        "description": "Increases favor production for all alliance members.",
+        "maxLevel": 10,
+        "baseCost": { "wood": 150000, "stone": 150000, "silver": 250000 },
+        "costMultiplier": 1.7,
+        "effect": { "type": "favor_production_boost", "value": 0.02 }
+    }
+}

@@ -1,0 +1,156 @@
+{
+  "logistics": {
+    "name": "Logistics",
+    "description": "Increases the speed of your land units by 10%.",
+    "cost": { "wood": 1000, "stone": 1200, "silver": 800, "time": 1800, "points": 5 },
+    "requirements": { "academy": 1 },
+    "effect": { "type": "unit_speed_land", "value": 1.1 }
+  },
+  "architecture": {
+    "name": "Architecture",
+    "description": "Reduces the construction time of buildings by 10%.",
+    "cost": { "wood": 1500, "stone": 2000, "silver": 1000, "time": 3600, "points": 8 },
+    "requirements": { "academy": 2 },
+    "effect": { "type": "build_time", "value": 0.9 }
+  },
+  "irrigation": {
+    "name": "Irrigation",
+    "description": "Increases the population capacity from Farms by 10%.",
+    "cost": { "wood": 1800, "stone": 1500, "silver": 1200, "time": 3000, "points": 7 },
+    "requirements": { "academy": 2 },
+    "effect": { "type": "farm_boost", "value": 1.1 }
+  },
+  "archery": {
+    "name": "Archery",
+    "description": "Unlocks the ability to train Archers in the Barracks.",
+    "cost": { "wood": 1200, "stone": 1800, "silver": 1500, "time": 4000, "points": 10 },
+    "requirements": { "academy": 3 },
+    "effect": { "type": "unlock_unit", "unitId": "archer" }
+  },
+  "espionage": {
+    "name": "Espionage",
+    "description": "Allows you to train Spies in your Cave to gather intelligence on your enemies.",
+    "cost": { "wood": 1200, "stone": 1200, "silver": 2000, "time": 4500, "points": 10 },
+    "requirements": { "academy": 3 },
+    "effect": { "type": "unlock_unit", "unitId": "spy" }
+  },
+  "phalanx": {
+    "name": "Phalanx",
+    "description": "Unlocks the ability to train Hoplites, heavily armored defensive infantry.",
+    "cost": { "wood": 3000, "stone": 4000, "silver": 3500, "time": 10800, "points": 20 },
+    "requirements": { "academy": 4, "research": "architecture" },
+    "effect": { "type": "unlock_unit", "unitId": "hoplite" }
+  },
+  "shipwright": {
+    "name": "Shipwright",
+    "description": "Unlocks the ability to build basic Transport Ships in the Shipyard.",
+    "cost": { "wood": 2500, "stone": 1800, "silver": 2200, "time": 7200, "points": 15 },
+    "requirements": { "academy": 4 },
+    "effect": { "type": "unlock_unit", "unitId": "transport_ship" }
+  },
+  "horsemanship": {
+    "name": "Horsemanship",
+    "description": "Unlocks the ability to train Cavalry, fast and powerful mounted units.",
+    "cost": { "wood": 4000, "stone": 3000, "silver": 5000, "time": 12000, "points": 22 },
+    "requirements": { "academy": 5, "research": "logistics" },
+    "effect": { "type": "unlock_unit", "unitId": "cavalry" }
+  },
+  "naval_warfare": {
+    "name": "Naval Warfare",
+    "description": "Unlocks the ability to build your nation's primary warship (e.g., Trireme).",
+    "cost": { "wood": 3500, "stone": 2800, "silver": 3200, "time": 9000, "points": 18 },
+    "requirements": { "academy": 5, "research": "shipwright" },
+    "effect": { "type": "unlock_unit", "unitId": "generic_trireme" }
+  },
+  "ballistics": {
+    "name": "Ballistics",
+    "description": "Increases the attack power of archers and slingers by 15%.",
+    "cost": { "wood": 2000, "stone": 1500, "silver": 2500, "time": 5400, "points": 12 },
+    "requirements": { "academy": 5, "research": "archery" },
+    "effect": { "type": "unit_attack_ranged", "value": 1.15 }
+  },
+  "coinage": {
+    "name": "Coinage",
+    "description": "Increases silver production from your Silver Mine by 15%.",
+    "cost": { "wood": 2200, "stone": 2200, "silver": 1800, "time": 6000, "points": 14 },
+    "requirements": { "academy": 4, "research": "architecture" },
+    "effect": { "type": "silver_production_boost", "value": 1.15 }
+  },
+  "advanced_shipwright": {
+    "name": "Advanced Shipwright",
+    "description": "Unlocks the ability to build Fast Transport Ships.",
+    "cost": { "wood": 4500, "stone": 3200, "silver": 4000, "time": 11000, "points": 24 },
+    "requirements": { "academy": 6, "research": "shipwright" },
+    "effect": { "type": "unlock_unit", "unitId": "fast_transport_ship" }
+  },
+  "forged_weapons": {
+    "name": "Forged Weapons",
+    "description": "Improves the attack of all melee land units by 10%.",
+    "cost": { "wood": 5000, "stone": 4500, "silver": 4000, "time": 14000, "points": 26 },
+    "requirements": { "academy": 6, "research": "phalanx" },
+    "effect": { "type": "unit_attack_melee", "value": 1.1 }
+  },
+  "fortification": {
+    "name": "Fortification",
+    "description": "Increases the defensive bonus of your City Wall by 20%.",
+    "cost": { "wood": 3000, "stone": 6000, "silver": 3000, "time": 13000, "points": 25 },
+    "requirements": { "academy": 6, "research": "architecture" },
+    "effect": { "type": "wall_defense_boost", "value": 1.2 }
+  },
+  "cartography": {
+    "name": "Cartography",
+    "description": "Your merchants travel 20% faster between cities.",
+    "cost": { "wood": 3500, "stone": 3500, "silver": 6000, "time": 18000, "points": 28 },
+    "requirements": { "academy": 7, "research": "coinage" },
+    "effect": { "type": "trade_speed_boost", "value": 1.2 }
+  },
+  "boarding": {
+    "name": "Boarding",
+    "description": "Your warships are more effective in naval combat, increasing their attack by 10%.",
+    "cost": { "wood": 5000, "stone": 3500, "silver": 4500, "time": 15000, "points": 25 },
+    "requirements": { "academy": 7, "research": "naval_warfare" },
+    "effect": { "type": "unit_attack_naval", "value": 1.1 }
+  },
+  "theology": {
+    "name": "Theology",
+    "description": "Deepens your understanding of the divine, increasing favor production by 10%.",
+    "cost": { "wood": 7000, "stone": 7000, "silver": 7000, "time": 22000, "points": 35 },
+    "requirements": { "academy": 8, "temple": 5 },
+    "effect": { "type": "favor_production_boost", "value": 1.1 }
+  },
+  "counter_espionage": {
+    "name": "Counter-Espionage",
+    "description": "Increases the chance to detect and eliminate enemy spies in your city.",
+    "cost": { "wood": 2500, "stone": 2500, "silver": 4000, "time": 9000, "points": 18 },
+    "requirements": { "academy": 8, "research": "espionage" },
+    "effect": { "type": "counter_spy_boost", "value": 0.10 }
+  },
+  "plate_armor": {
+    "name": "Plate Armor",
+    "description": "Improves the defense of all melee land units by 10%.",
+    "cost": { "wood": 4500, "stone": 5500, "silver": 4200, "time": 16000, "points": 28 },
+    "requirements": { "academy": 8, "research": "forged_weapons" },
+    "effect": { "type": "unit_defense_melee", "value": 1.1 }
+  },
+  "medicine": {
+    "name": "Medicine",
+    "description": "Increases the capacity of your Hospital by 20% and speeds up healing.",
+    "cost": { "wood": 6000, "stone": 8000, "silver": 6000, "time": 19000, "points": 30 },
+    "requirements": { "academy": 9 },
+    "effect": { "type": "hospital_boost", "capacity": 1.2, "speed": 0.9 }
+  },
+  "conscription": {
+    "name": "Conscription",
+    "description": "Reduces the training time of all land units by 10%.",
+    "cost": { "wood": 10000, "stone": 10000, "silver": 10000, "time": 28000, "points": 45 },
+    "requirements": { "academy": 10, "research": "horsemanship" },
+    "effect": { "type": "land_training_speed", "value": 0.9 }
+  },
+  "divine_mandate": {
+    "name": "Divine Mandate",
+    "description": "The gods look more favorably upon you. Reduces the favor cost of all divine powers by 15%.",
+    "cost": { "wood": 9000, "stone": 9000, "silver": 12000, "time": 32000, "points": 50 },
+    "requirements": { "academy": 10, "research": "theology" },
+    "effect": { "type": "favor_cost_reduction", "value": 0.85 }
+  }
+}

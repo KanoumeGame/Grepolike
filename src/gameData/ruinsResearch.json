@@ -1,0 +1,57 @@
+{
+  "qol_research_0": {
+    "name": "Advanced Cartography",
+    "description": "Your troops travel 5% faster on the world map.",
+    "effect": { "type": "speed_boost_all", "value": 0.05 }
+  },
+  "qol_research_1": {
+    "name": "Efficient Logistics",
+    "description": "Your transport ships can carry 10% more units.",
+    "effect": { "type": "transport_capacity_boost", "value": 0.10 }
+  },
+  "qol_research_2": {
+    "name": "Scouting Techniques",
+    "description": "Your scouts are 10% more effective.",
+    "effect": { "type": "scout_power_boost", "value": 0.10 }
+  },
+  "ancient_masonry": {
+    "name": "Ancient Masonry",
+    "description": "Reduces the stone cost of all building upgrades by 5%.",
+    "effect": { "type": "building_cost_reduction_stone", "value": 0.05 }
+  },
+  "lost_agricultural_techniques": {
+    "name": "Lost Agricultural Techniques",
+    "description": "Increases the population output of your Farms by 5%.",
+    "effect": { "type": "farm_population_boost", "value": 0.05 }
+  },
+  "sunken_treasury": {
+    "name": "Sunken Treasury",
+    "description": "Your explorers have found a lost cache of coins. Instantly gain 5000 silver.",
+    "effect": { "type": "instant_resource_silver", "value": 5000 }
+  },
+  "reinforced_hulls": {
+    "name": "Reinforced Hulls",
+    "description": "Ancient shipwright secrets increase the defense of all your naval units by 5%.",
+    "effect": { "type": "naval_defense_boost", "value": 0.05 }
+  },
+  "fletching_secrets": {
+    "name": "Fletching Secrets",
+    "description": "Rediscovered arrow designs increase the attack power of your archers by 5%.",
+    "effect": { "type": "archer_attack_boost", "value": 0.05 }
+  },
+  "coded_messages": {
+    "name": "Coded Messages",
+    "description": "It is 10% harder for enemy spies to successfully scout your cities.",
+    "effect": { "type": "spy_defense_boost", "value": 0.10 }
+  },
+  "drillmasters_manual": {
+    "name": "Drillmaster's Manual",
+    "description": "Reduces the training time of all land units by 5%.",
+    "effect": { "type": "land_training_speed_boost", "value": 0.05 }
+  },
+  "divine_glyphs": {
+    "name": "Divine Glyphs",
+    "description": "Ancient carvings increase your understanding of the gods, boosting favor production by 5%.",
+    "effect": { "type": "favor_production_boost", "value": 0.05 }
+  }
+}

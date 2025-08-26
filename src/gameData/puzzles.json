@@ -1,0 +1,34 @@
+{
+  "puzzle_1": {
+    "question": "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+    "answer": "A map"
+  },
+  "puzzle_2": {
+    "question": "What has an eye, but cannot see?",
+    "answer": "A needle"
+  },
+  "puzzle_3": {
+    "question": "What is full of holes but still holds water?",
+    "answer": "A sponge"
+  },
+  "puzzle_4": {
+    "question": "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?",
+    "answer": "An echo"
+  },
+  "puzzle_5": {
+    "question": "I am a god, a planet, and a measurer of heat. What am I?",
+    "answer": "Mercury"
+  },
+  "puzzle_6": {
+    "question": "I have no voice, but I can tell you stories of kings and wars. I have no legs, but I travel through time. What am I?",
+    "answer": "A book"
+  },
+  "puzzle_7": {
+    "question": "What is built by wise men, yet can be destroyed by a single fool?",
+    "answer": "A reputation"
+  },
+  "puzzle_8": {
+    "question": "The more you take, the more you leave behind. What am I?",
+    "answer": "Footsteps"
+  }
+}

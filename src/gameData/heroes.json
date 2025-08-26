@@ -1,0 +1,138 @@
+{
+  "achilles": {
+    "name": "Achilles",
+    "description": "A legendary warrior whose skill in battle is unmatched. He inspires troops to fight with greater ferocity.",
+    "image": "achilles.png",
+    "cost": { "silver": 5000, "favor": 100 },
+    "maxLevel": 10,
+    "xpPerLevel": [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000],
+    "levelUpCost": { "silver": 1000, "favor": 20 },
+    "passive": {
+        "name": "Warrior's Presence",
+        "description": "Increases land unit attack by 5% (+1% per level) in this city.",
+        "effect": { "type": "city_buff", "subtype": "land_attack", "baseValue": 0.05, "valuePerLevel": 0.01 }
+    },
+    "skills": [
+      {
+        "name": "Warcry",
+        "type": "battle",
+        "description": "Boosts the attack of all land units by 10% (+2% per level) for the next battle.",
+        "cost": { "favor": { "base": 50, "perLevel": 5 } },
+        "cooldown": 3600,
+        "icon": "warcry.png",
+        "effect": { "type": "troop_buff", "subtype": "attack", "baseValue": 0.10, "valuePerLevel": 0.02, "unit_type": "land" }
+      },
+      {
+        "name": "Rapid Mobilization",
+        "type": "city",
+        "description": "Reduces recruitment time in the Barracks by 15% (+1% per level) for 1 hour.",
+        "cost": { "favor": { "base": 30, "perLevel": 3 } },
+        "cooldown": 7200,
+        "icon": "rapid_mobilization.png",
+        "effect": { "type": "city_buff", "subtype": "recruitment_speed", "baseValue": 0.15, "valuePerLevel": 0.01, "duration": 3600 }
+      }
+    ]
+  },
+  "odysseus": {
+    "name": "Odysseus",
+    "description": "A cunning strategist known for his intellect and trickery. He excels at espionage and naval tactics.",
+    "image": "odysseus.png",
+    "cost": { "silver": 4500, "favor": 120 },
+    "maxLevel": 10,
+    "xpPerLevel": [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000],
+    "levelUpCost": { "silver": 900, "favor": 25 },
+    "passive": {
+        "name": "Cunning Mind",
+        "description": "Increases silver production by 10% (+1.5% per level) in this city.",
+        "effect": { "type": "city_buff", "subtype": "silver_production", "baseValue": 0.10, "valuePerLevel": 0.015 }
+    },
+    "skills": [
+      {
+        "name": "Naval Superiority",
+        "type": "battle",
+        "description": "Boosts the speed of all naval units by 15% (+1% per level) for the next battle.",
+        "cost": { "favor": { "base": 40, "perLevel": 4 } },
+        "cooldown": 3600,
+        "icon": "naval_superiority.png",
+        "effect": { "type": "troop_buff", "subtype": "speed", "baseValue": 0.15, "valuePerLevel": 0.01, "unit_type": "naval" }
+      },
+      {
+        "name": "Master Spy",
+        "type": "city",
+        "description": "Increases the effectiveness of spies by 20% (+2% per level) for 2 hours.",
+        "cost": { "favor": { "base": 60, "perLevel": 6 } },
+        "cooldown": 7200,
+        "icon": "master_spy.png",
+        "effect": { "type": "city_buff", "subtype": "spy_effectiveness", "baseValue": 0.20, "valuePerLevel": 0.02, "duration": 7200 }
+      }
+    ]
+  },
+  "leonidas": {
+    "name": "Leonidas",
+    "description": "King of Sparta, a master of defensive warfare. His presence turns his city into an unbreakable fortress.",
+    "image": "leonidas.png",
+    "cost": { "silver": 6000, "favor": 150 },
+    "maxLevel": 10,
+    "xpPerLevel": [120, 280, 550, 1100, 2200, 4400, 8800, 17600, 35200],
+    "levelUpCost": { "silver": 1200, "favor": 30 },
+    "passive": {
+      "name": "Spartan Resolve",
+      "description": "Increases the defense of Hoplites by 10% (+1.5% per level) and the city wall's effectiveness by 5% (+0.5% per level).",
+      "effect": { "type": "city_buff", "subtype": "hoplite_defense_and_wall", "baseValueHoplite": 0.10, "valuePerLevelHoplite": 0.015, "baseValueWall": 0.05, "valuePerLevelWall": 0.005 }
+    },
+    "skills": [
+      {
+        "name": "Hold the Line",
+        "type": "battle",
+        "description": "Boosts the defense of all land units by 25% (+2.5% per level) for the next incoming battle.",
+        "cost": { "favor": { "base": 70, "perLevel": 7 } },
+        "cooldown": 10800,
+        "icon": "hold_the_line.png",
+        "effect": { "type": "troop_buff", "subtype": "defense", "baseValue": 0.25, "valuePerLevel": 0.025, "unit_type": "land" }
+      },
+      {
+        "name": "Phalanx Training",
+        "type": "city",
+        "description": "Reduces recruitment time for Hoplites and Swordsmen by 20% (+2% per level) for 1 hour.",
+        "cost": { "favor": { "base": 40, "perLevel": 4 } },
+        "cooldown": 7200,
+        "icon": "phalanx_training.png",
+        "effect": { "type": "city_buff", "subtype": "defensive_recruitment_speed", "baseValue": 0.20, "valuePerLevel": 0.02, "duration": 3600 }
+      }
+    ]
+  },
+  "cleopatra": {
+    "name": "Cleopatra",
+    "description": "The last pharaoh of Egypt, a brilliant diplomat and administrator. Her charm is as potent a weapon as any sword.",
+    "image": "cleopatra.png",
+    "cost": { "silver": 4000, "favor": 200 },
+    "maxLevel": 10,
+    "xpPerLevel": [90, 220, 480, 950, 1900, 3800, 7600, 15200, 30400],
+    "levelUpCost": { "silver": 800, "favor": 40 },
+    "passive": {
+      "name": "Royal Treasury",
+      "description": "Increases city happiness by 5% (+0.5% per level) and silver production by 8% (+1% per level).",
+      "effect": { "type": "city_buff", "subtype": "happiness_and_silver", "baseValueHappiness": 0.05, "valuePerLevelHappiness": 0.005, "baseValueSilver": 0.08, "valuePerLevelSilver": 0.01 }
+    },
+    "skills": [
+      {
+        "name": "Siren's Call",
+        "type": "battle",
+        "description": "Charms 5% (+0.5% per level) of incoming land units, causing them to desert before the battle begins.",
+        "cost": { "favor": { "base": 100, "perLevel": 10 } },
+        "cooldown": 14400,
+        "icon": "sirens_call.png",
+        "effect": { "type": "pre_battle_debuff", "subtype": "desertion", "baseValue": 0.05, "valuePerLevel": 0.005, "unit_type": "land" }
+      },
+      {
+        "name": "Gift of the Nile",
+        "type": "city",
+        "description": "Instantly grants 500 (+50 per level) of each resource (wood, stone, silver).",
+        "cost": { "favor": { "base": 80, "perLevel": 8 } },
+        "cooldown": 21600,
+        "icon": "gift_of_the_nile.png",
+        "effect": { "type": "instant_resources", "baseValue": 500, "valuePerLevel": 50 }
+      }
+    ]
+  }
+}

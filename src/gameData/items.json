@@ -1,0 +1,176 @@
+{
+  "resource_boost_wood_25": {
+    "name": "Lumberjack's Blessing",
+    "description": "Increases wood production by 25% for 1 hour.",
+    "image": "resource_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "production_boost",
+      "resource": "wood",
+      "value": 0.25,
+      "duration": 3600
+    }
+  },
+  "resource_boost_stone_25": {
+    "name": "Mason's Focus",
+    "description": "Increases stone production by 25% for 1 hour.",
+    "image": "resource_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "production_boost",
+      "resource": "stone",
+      "value": 0.25,
+      "duration": 3600
+    }
+  },
+  "resource_boost_silver_25": {
+    "name": "Midas' Touch",
+    "description": "Increases silver production by 25% for 1 hour.",
+    "image": "resource_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "production_boost",
+      "resource": "silver",
+      "value": 0.25,
+      "duration": 3600
+    }
+  },
+  "construction_speed_10": {
+    "name": "Architect's Draft",
+    "description": "Reduces construction time by 10% for all buildings for 1 hour.",
+    "image": "construction_speed.png",
+    "type": "boost",
+    "effect": {
+      "type": "construction_speed",
+      "value": 0.10,
+      "duration": 3600
+    }
+  },
+  "research_speed_10": {
+    "name": "Scholar's Insight",
+    "description": "Reduces research time by 10% for 1 hour.",
+    "image": "research_speed.png",
+    "type": "boost",
+    "effect": {
+      "type": "research_speed",
+      "value": 0.10,
+      "duration": 3600
+    }
+  },
+  "training_speed_10": {
+    "name": "Trainer's Whip",
+    "description": "Reduces unit training time by 10% for 1 hour.",
+    "image": "training_speed.png",
+    "type": "boost",
+    "effect": {
+      "type": "training_speed",
+      "value": 0.10,
+      "duration": 3600
+    }
+  },
+  "attack_boost_5": {
+    "name": "Potion of Attack",
+    "description": "Increases the attack of all units by 5% for 1 hour.",
+    "image": "attack_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "attack_boost",
+      "value": 0.05,
+      "duration": 3600
+    }
+  },
+  "defense_boost_5": {
+    "name": "Potion of Defense",
+    "description": "Increases the defense of all units by 5% for 1 hour.",
+    "image": "defense_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "defense_boost",
+      "value": 0.05,
+      "duration": 3600
+    }
+  },
+  "movement_speed_10": {
+    "name": "Winds of Haste",
+    "description": "Increases the speed of all troops by 10% for 1 hour.",
+    "image": "movement_speed.png",
+    "type": "boost",
+    "effect": {
+      "type": "movement_speed",
+      "value": 0.10,
+      "duration": 3600
+    }
+  },
+  "instant_wood_500": {
+    "name": "Bundle of Logs",
+    "description": "Instantly adds 500 wood to your warehouse.",
+    "image": "instant_resource.png",
+    "type": "instant",
+    "effect": {
+      "type": "add_resource",
+      "resource": "wood",
+      "value": 500
+    }
+  },
+  "instant_stone_500": {
+    "name": "Pile of Rocks",
+    "description": "Instantly adds 500 stone to your warehouse.",
+    "image": "instant_resource.png",
+    "type": "instant",
+    "effect": {
+      "type": "add_resource",
+      "resource": "stone",
+      "value": 500
+    }
+  },
+  "instant_silver_250": {
+    "name": "Sack of Coins",
+    "description": "Instantly adds 250 silver to your warehouse.",
+    "image": "instant_resource.png",
+    "type": "instant",
+    "effect": {
+      "type": "add_resource",
+      "resource": "silver",
+      "value": 250
+    }
+  },
+  "soulstone": {
+    "name": "Soulstone",
+    "description": "A mystical gem that can instantly revive one of your executed heroes from the dead.",
+    "image": "soulstone.png",
+    "type": "special",
+    "effect": {
+      "type": "revive_hero"
+    }
+  },
+  "favor_boost_10": {
+    "name": "Offering to the Gods",
+    "description": "Increases favor production by 10% for 2 hours.",
+    "image": "favor_boost.png",
+    "type": "boost",
+    "effect": {
+      "type": "favor_production",
+      "value": 0.10,
+      "duration": 7200
+    }
+  },
+  "population_boost_200": {
+    "name": "Call to the People",
+    "description": "Instantly adds 200 population to your city, temporarily exceeding your farm's capacity if needed.",
+    "image": "population_boost.png",
+    "type": "instant",
+    "effect": {
+      "type": "add_population",
+      "value": 200
+    }
+  },
+  "scout_reveal": {
+    "name": "Oracle's Vision",
+    "description": "Reveals the size and composition of one incoming attack against your city.",
+    "image": "scout_reveal.png",
+    "type": "special",
+    "effect": {
+      "type": "reveal_attack"
+    }
+  }
+}
