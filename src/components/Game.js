@@ -47,6 +47,7 @@ import { collection, onSnapshot, query, where, doc, updateDoc, runTransaction, s
 import unitConfig from '../gameData/units.json';
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
+import Modal from './shared/Modal';
 
 let worldDataCache = {
     villages: null,
@@ -86,6 +87,7 @@ const Game = ({ onBackToWorlds }) => {
     const prevViewRef = useRef();
     const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); //  State for ManagementPanel
     const [isNotesOpen, setIsNotesOpen] = useState(false); //  State for Notes
+    const [message, setMessage] = useState('');
 
     useMovementProcessor(worldId);
     const { modalState, openModal, closeModal } = useModalState();
@@ -98,7 +100,7 @@ const Game = ({ onBackToWorlds }) => {
         setView('city');
     }, [setActiveCityId]);
 
-    const { handleCancelMovement, handleActionClick } = useMapActions(openModal, closeModal, showCity, () => {});
+    const { handleCancelMovement, handleActionClick } = useMapActions(openModal, closeModal, showCity, () => {}, setMessage);
 
     const toggleView = () => {
         setView(prevView => prevView === 'city' ? 'map' : 'city');
@@ -447,6 +449,7 @@ const Game = ({ onBackToWorlds }) => {
 
     return (
         <div className="w-full h-screen bg-gray-900 text-white relative">
+            <Modal message={message} onClose={() => setMessage('')} />
             {view === 'city' && (
                 <CityView
                     showMap={showMap}

@@ -163,7 +163,6 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
                 isCrossIsland: false,
             };
         } else if (mode === 'attack' && targetCity.isRuinTarget) {
-            console.log("[MapActions] Creating attack_ruin movement:", { targetCity, units, hero });
             movementData = {
                 type: 'attack_ruin',
                 originCityId: playerCity.id,
@@ -357,7 +356,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
         const batch = writeBatch(db);
     
-        //  Calculate travel time for the journey to the plot, then founding time separately.
+        // Calculate travel time for the journey to the plot, then founding time separately.
         const slowestSpeed = Object.entries(units)
             .filter(([, count]) => count > 0)
             .map(([unitId]) => unitConfig[unitId].speed)
