@@ -6,7 +6,7 @@
     "targetId": "timber_camp",
     "targetLevel": 2,
     "rewards": { "resources": { "wood": 100, "stone": 50 } },
-    "nextQuest": "build_quarry_2"
+    "nextQuests": ["build_quarry_2"]
   },
   "build_quarry_2": {
     "title": "First Steps: Stone",
@@ -15,7 +15,7 @@
     "targetId": "quarry",
     "targetLevel": 2,
     "rewards": { "resources": { "wood": 50, "stone": 100 } },
-    "nextQuest": "build_silver_mine_2"
+    "nextQuests": ["build_silver_mine_2"]
   },
   "build_silver_mine_2": {
     "title": "First Steps: Silver",
@@ -24,7 +24,7 @@
     "targetId": "silver_mine",
     "targetLevel": 2,
     "rewards": { "resources": { "silver": 100 } },
-    "nextQuest": "build_farm_3"
+    "nextQuests": ["build_farm_3"]
   },
   "build_farm_3": {
     "title": "A Growing Populace",
@@ -33,7 +33,7 @@
     "targetId": "farm",
     "targetLevel": 3,
     "rewards": { "resources": { "wood": 200, "stone": 200 } },
-    "nextQuest": "economic_path_1"
+    "nextQuests": ["economic_path_1", "warrior_path_1"]
   },
   "economic_path_1": {
     "title": "Path of the Economist: Storage",
@@ -42,7 +42,7 @@
     "targetId": "warehouse",
     "targetLevel": 5,
     "rewards": { "resources": { "stone": 300, "silver": 150 } },
-    "nextQuest": "warrior_path_1"
+    "nextQuests": ["economic_path_2"]
   },
   "warrior_path_1": {
     "title": "Path of the Warrior: The Barracks",
@@ -51,7 +51,7 @@
     "targetId": "barracks",
     "targetLevel": 1,
     "rewards": { "resources": { "wood": 250, "silver": 250 } },
-    "nextQuest": "barracks_lvl_3"
+    "nextQuests": ["barracks_lvl_3"]
   },
   "barracks_lvl_3": {
     "title": "Path of the Warrior: Advanced Barracks",
@@ -60,7 +60,7 @@
     "targetId": "barracks",
     "targetLevel": 3,
     "rewards": { "units": { "generic_swordsman": 20 } },
-    "nextQuest": "train_swordsmen_20"
+    "nextQuests": ["train_swordsmen_20"]
   },
   "train_swordsmen_20": {
     "title": "Path of the Warrior: Swords Up",
@@ -69,7 +69,7 @@
     "targetId": "generic_swordsman",
     "targetCount": 20,
     "rewards": { "units": { "generic_archer": 15 } },
-    "nextQuest": "train_hoplites_50"
+    "nextQuests": ["train_hoplites_50"]
   },
   "train_hoplites_50": {
     "title": "Path of the Warrior: Basic Training",
@@ -78,7 +78,7 @@
     "targetId": "generic_hoplite",
     "targetCount": 50,
     "rewards": { "resources": { "wood": 500, "stone": 500 } },
-    "nextQuest": "warrior_path_2"
+    "nextQuests": ["warrior_path_2"]
   },
   "warrior_path_2": {
     "title": "Path of the Warrior: First Blood",
@@ -86,7 +86,7 @@
     "type": "attack_village",
     "targetCount": 1,
     "rewards": { "resources": { "silver": 1000 } },
-    "nextQuest": "divine_path_1"
+    "nextQuests": ["warrior_path_3", "divine_path_1", "naval_path_1", "espionage_path_1", "hero_path_1"]
   },
   "divine_path_1": {
     "title": "Path of the Divine: A Place of Worship",
@@ -95,7 +95,7 @@
     "targetId": "temple",
     "targetLevel": 1,
     "rewards": { "resources": { "wood": 300, "stone": 300, "silver": 300 } },
-    "nextQuest": "worship_god_1"
+    "nextQuests": ["worship_god_1"]
   },
   "worship_god_1": {
     "title": "Path of the Divine: Choose Your Patron",
@@ -103,7 +103,7 @@
     "type": "worship",
     "targetCount": 1,
     "rewards": { "items": { "favor_boost_10": 1 } },
-    "nextQuest": "warrior_path_3"
+    "nextQuests": ["divine_path_2"]
   },
   "warrior_path_3": {
     "title": "Path of the Warrior: True Combat",
@@ -111,7 +111,7 @@
     "type": "attack_player",
     "targetCount": 1,
     "rewards": { "items": { "attack_boost_5": 1 } },
-    "nextQuest": "espionage_path_1"
+    "nextQuests": ["train_cavalry_50"]
   },
   "espionage_path_1": {
     "title": "Path of Shadows: A Secret Place",
@@ -120,7 +120,7 @@
     "targetId": "cave",
     "targetLevel": 3,
     "rewards": { "resources": { "silver": 2000 } },
-    "nextQuest": "scout_enemy_1"
+    "nextQuests": ["scout_enemy_1"]
   },
   "scout_enemy_1": {
     "title": "Path of Shadows: Eyes Everywhere",
@@ -128,7 +128,7 @@
     "type": "scout",
     "targetCount": 1,
     "rewards": { "items": { "scout_reveal": 1 } },
-    "nextQuest": "economic_path_2"
+    "nextQuests": ["espionage_path_2"]
   },
   "economic_path_2": {
     "title": "Path of the Economist: Prosperity",
@@ -136,7 +136,7 @@
     "type": "building_multiple",
     "targets": { "timber_camp": 10, "quarry": 10, "silver_mine": 10 },
     "rewards": { "items": { "resource_boost_wood_25": 1, "resource_boost_stone_25": 1 } },
-    "nextQuest": "naval_path_1"
+    "nextQuests": ["economic_path_3"]
   },
   "naval_path_1": {
     "title": "Path of the Admiral: The Shipyard",
@@ -145,7 +145,7 @@
     "targetId": "shipyard",
     "targetLevel": 1,
     "rewards": { "units": { "generic_trireme": 2 } },
-    "nextQuest": "hero_path_1"
+    "nextQuests": ["naval_path_2"]
   },
   "hero_path_1": {
     "title": "Path of Legends: The Altar",
@@ -154,7 +154,7 @@
     "targetId": "heroes_altar",
     "targetLevel": 1,
     "rewards": { "resources": { "silver": 2500, "wood": 1000, "stone": 1000 } },
-    "nextQuest": "recruit_hero_1"
+    "nextQuests": ["recruit_hero_1"]
   },
   "recruit_hero_1": {
     "title": "Path of Legends: A Hero's Calling",
@@ -162,7 +162,7 @@
     "type": "recruit_hero",
     "targetCount": 1,
     "rewards": { "items": { "soulstone": 1 } },
-    "nextQuest": "alliance_path_1"
+    "nextQuests": ["hero_path_2", "alliance_path_1"]
   },
   "alliance_path_1": {
     "title": "Path of Unity: Strength in Numbers",
@@ -170,7 +170,7 @@
     "type": "alliance_join",
     "targetCount": 1,
     "rewards": { "resources": { "silver": 5000 } },
-    "nextQuest": "conquest_path_1"
+    "nextQuests": ["alliance_path_2"]
   },
   "conquest_path_1": {
     "title": "Path of the Emperor: Expansion",
@@ -178,7 +178,7 @@
     "type": "found_city",
     "targetCount": 2,
     "rewards": { "items": { "population_boost_200": 2 } },
-    "nextQuest": "economic_path_3"
+    "nextQuests": ["conquest_path_2"]
   },
   "economic_path_3": {
     "title": "Path of the Economist: Grand Market",
@@ -187,7 +187,7 @@
     "targetId": "market",
     "targetLevel": 10,
     "rewards": { "resources": { "silver": 10000 } },
-    "nextQuest": "warrior_path_4"
+    "nextQuests": ["economic_path_4"]
   },
   "warrior_path_4": {
     "title": "Path of the Warrior: City Defenses",
@@ -196,7 +196,7 @@
     "targetId": "city_wall",
     "targetLevel": 10,
     "rewards": { "units": { "generic_hoplite": 100 } },
-    "nextQuest": "train_cavalry_50"
+    "nextQuests": ["warrior_path_5"]
   },
   "train_cavalry_50": {
     "title": "Path of the Warrior: Mounted Charge",
@@ -205,7 +205,7 @@
     "targetId": "generic_cavalry",
     "targetCount": 50,
     "rewards": { "resources": { "wood": 2000, "silver": 2000 } },
-    "nextQuest": "naval_path_2"
+    "nextQuests": ["warrior_path_4"]
   },
   "naval_path_2": {
     "title": "Path of the Admiral: Building a Fleet",
@@ -214,7 +214,7 @@
     "targetId": "generic_trireme",
     "targetCount": 10,
     "rewards": { "resources": { "wood": 5000, "silver": 3000 } },
-    "nextQuest": "divine_path_2"
+    "nextQuests": ["naval_path_3"]
   },
   "divine_path_2": {
     "title": "Path of the Divine: Divine Might",
@@ -222,7 +222,7 @@
     "type": "mythical_unit",
     "targetCount": 1,
     "rewards": { "items": { "favor_boost_10": 2 } },
-    "nextQuest": "hero_path_2"
+    "nextQuests": ["divine_path_3"]
   },
   "hero_path_2": {
     "title": "Path of Legends: A Hero's Growth",
@@ -230,15 +230,15 @@
     "type": "hero_level",
     "targetLevel": 3,
     "rewards": { "resources": { "silver": 7500 } },
-    "nextQuest": "espionage_path_2"
+    "nextQuests": ["hero_path_3"]
   },
   "espionage_path_2": {
     "title": "Path of Shadows: Infiltration",
-    "description": "Your spies have found a weakness. Successfully sabotage an enemy building.",
+    "description": "Your spies have found a weakness. Successfully perform a sabotage mission.",
     "type": "sabotage",
     "targetCount": 1,
     "rewards": { "resources": { "silver": 5000 } },
-    "nextQuest": "economic_path_4"
+    "nextQuests": ["espionage_path_3"]
   },
   "economic_path_4": {
     "title": "Path of the Economist: Master Trader",
@@ -246,7 +246,7 @@
     "type": "trade",
     "targetCount": 20,
     "rewards": { "items": { "instant_silver_250": 5 } },
-    "nextQuest": "warrior_path_5"
+    "nextQuests": ["economic_path_5"]
   },
   "warrior_path_5": {
     "title": "Path of the Warrior: Grand Army",
@@ -255,7 +255,7 @@
     "unitType": "land",
     "targetCount": 1000,
     "rewards": { "items": { "training_speed_10": 2 } },
-    "nextQuest": "conquest_path_2"
+    "nextQuests": ["warrior_path_6"]
   },
   "conquest_path_2": {
     "title": "Path of the Emperor: First Conquest",
@@ -263,7 +263,7 @@
     "type": "conquer_city",
     "targetCount": 1,
     "rewards": { "items": { "soulstone": 2 } },
-    "nextQuest": "divine_path_3"
+    "nextQuests": ["conquest_path_3"]
   },
   "divine_path_3": {
     "title": "Path of the Divine: Pantheon",
@@ -272,7 +272,7 @@
     "targetId": "temple",
     "targetLevel": 10,
     "rewards": { "units": { "generic_mythical_1": 5 } },
-    "nextQuest": "naval_path_3"
+    "nextQuests": ["divine_path_4"]
   },
   "naval_path_3": {
     "title": "Path of the Admiral: Armada",
@@ -281,15 +281,15 @@
     "unitType": "naval",
     "targetCount": 50,
     "rewards": { "items": { "movement_speed_10": 2 } },
-    "nextQuest": "hero_path_3"
+    "nextQuests": ["naval_path_4"]
   },
   "hero_path_3": {
     "title": "Path of Legends: Legendary Power",
-    "description": "Your hero has become a legend in their own right. Level up any hero to level 7.",
+    "description": "Your hero's name will be sung for generations. Level up any hero to level 7.",
     "type": "hero_level",
     "targetLevel": 7,
     "rewards": { "resources": { "silver": 20000 } },
-    "nextQuest": "alliance_path_2"
+    "nextQuests": ["hero_path_4"]
   },
   "alliance_path_2": {
     "title": "Path of Unity: Contribution",
@@ -297,7 +297,7 @@
     "type": "alliance_donate",
     "targetCount": 100000,
     "rewards": { "items": { "construction_speed_10": 2 } },
-    "nextQuest": "economic_path_5"
+    "nextQuests": ["alliance_path_3"]
   },
   "economic_path_5": {
     "title": "Path of the Economist: Metropolis",
@@ -305,7 +305,7 @@
     "type": "total_building_levels",
     "targetCount": 200,
     "rewards": { "resources": { "wood": 15000, "stone": 15000, "silver": 15000 } },
-    "nextQuest": "warrior_path_6"
+    "nextQuests": ["economic_path_6"]
   },
   "warrior_path_6": {
     "title": "Path of the Warrior: Siege Engines",
@@ -314,7 +314,7 @@
     "targetId": "catapult",
     "targetCount": 10,
     "rewards": { "items": { "attack_boost_5": 3 } },
-    "nextQuest": "conquest_path_3"
+    "nextQuests": ["conquest_path_3"]
   },
   "conquest_path_3": {
     "title": "Path of the Emperor: Triarchy",
@@ -322,7 +322,7 @@
     "type": "found_city",
     "targetCount": 3,
     "rewards": { "items": { "population_boost_200": 5 } },
-    "nextQuest": "divine_path_4"
+    "nextQuests": ["conquest_path_4"]
   },
   "divine_path_4": {
     "title": "Path of the Divine: Divine Army",
@@ -330,31 +330,28 @@
     "type": "mythical_unit",
     "targetCount": 50,
     "rewards": { "items": { "favor_boost_10": 5 } },
-    "nextQuest": "espionage_path_3"
+    "nextQuests": ["espionage_path_3"]
   },
   "espionage_path_3": {
     "title": "Path of Shadows: Master of Whispers",
     "description": "Your network of spies is unparalleled. Successfully perform 10 sabotage missions.",
     "type": "sabotage",
     "targetCount": 10,
-    "rewards": { "resources": { "silver": 25000 } },
-    "nextQuest": "naval_path_4"
+    "rewards": { "resources": { "silver": 25000 } }
   },
   "naval_path_4": {
     "title": "Path of the Admiral: Sea Lord",
     "description": "Your naval supremacy is unquestioned. Win 10 naval battles against other players.",
     "type": "naval_battle_win",
     "targetCount": 10,
-    "rewards": { "items": { "defense_boost_5": 3 } },
-    "nextQuest": "hero_path_4"
+    "rewards": { "items": { "defense_boost_5": 3 } }
   },
   "hero_path_4": {
     "title": "Path of Legends: Living Myth",
     "description": "Your hero's name will be sung for generations. Level up any hero to the maximum level (10).",
     "type": "hero_level",
     "targetLevel": 10,
-    "rewards": { "items": { "soulstone": 5 } },
-    "nextQuest": "alliance_path_3"
+    "rewards": { "items": { "soulstone": 5 } }
   },
   "alliance_path_3": {
     "title": "Path of Unity: Cooperative Research",
@@ -362,15 +359,14 @@
     "type": "alliance_research",
     "targetCount": 5,
     "rewards": { "items": { "research_speed_10": 3 } },
-    "nextQuest": "economic_path_6"
+    "nextQuests": ["economic_path_6"]
   },
   "economic_path_6": {
     "title": "Path of the Economist: Unending Growth",
     "description": "Your economic engine is unstoppable. Upgrade your resource fields to level 20 in one city.",
     "type": "building_multiple",
     "targets": { "timber_camp": 20, "quarry": 20, "silver_mine": 20 },
-    "rewards": { "resources": { "wood": 50000, "stone": 50000, "silver": 50000 } },
-    "nextQuest": "warrior_path_7"
+    "rewards": { "resources": { "wood": 50000, "stone": 50000, "silver": 50000 } }
   },
   "warrior_path_7": {
     "title": "Path of the Warrior: Unstoppable Force",
@@ -378,7 +374,7 @@
     "type": "attack_points",
     "targetCount": 20000,
     "rewards": { "items": { "attack_boost_5": 5 } },
-    "nextQuest": "conquest_path_4"
+    "nextQuests": ["conquest_path_4"]
   },
   "conquest_path_4": {
     "title": "Path of the Emperor: World Wonder",

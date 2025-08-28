@@ -160,9 +160,19 @@ export const useQuestTracker = (cityState) => {
                 if (!newQuestProgress.completed[questId]) {
                     newQuestProgress.completed[questId] = true;
                 }
-                // Unlock next quest if there is one
-                if (quest.nextQuest) {
-                    newQuestProgress.active[quest.nextQuest] = true;
+                
+                // Unlock next quest(s)
+                if (quest.nextQuests) { // The new array property
+                    quest.nextQuests.forEach(nextId => {
+                        // Only activate if not already completed
+                        if (!newQuestProgress.completed[nextId]) {
+                            newQuestProgress.active[nextId] = true;
+                        }
+                    });
+                } else if (quest.nextQuest) { // Fallback for old format
+                    if (!newQuestProgress.completed[quest.nextQuest]) {
+                        newQuestProgress.active[quest.nextQuest] = true;
+                    }
                 }
 
                 transaction.update(cityDocRef, { resources: newResources, units: newUnits });
