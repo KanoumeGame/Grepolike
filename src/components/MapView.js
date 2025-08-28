@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
 import { db } from '../firebase/config';
-import { doc, updateDoc, writeBatch, serverTimestamp, getDoc, collection, getDocs, query,orderBy, onSnapshot, where, collectionGroup } from 'firebase/firestore';
+import { doc, updateDoc, writeBatch, serverTimestamp, getDoc, collection, getDocs, query,orderBy, onSnapshot, where, collectionGroup, limit } from 'firebase/firestore';
 import island1 from '../images/islands/island_1.png';
 import island2 from '../images/islands/island_2.png';
 import SidebarNav from './map/SidebarNav';
@@ -90,7 +90,6 @@ const MapView = ({
     const [godTowns, setGodTowns] = useState({});
     const [allWonders, setAllWonders] = useState([]);
     const [wonderInfo, setWonderInfo] = useState(null);
-    const [combinedSlots, setCombinedSlots] = useState({});
 
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
@@ -257,8 +256,7 @@ const MapView = ({
 
     const handleOpenAlliance = () => openModal('alliance');
 
-    // Combine player cities with visible slots using useEffect for better state synchronization
-    useEffect(() => {
+    const combinedSlots = useMemo(() => {
         const newSlots = { ...visibleSlots };
         for (const cityId in playerCities) {
             const pCity = playerCities[cityId];
@@ -272,8 +270,8 @@ const MapView = ({
                 };
             }
         }
-        setCombinedSlots(newSlots);
-    }, [visibleSlots, playerCities, currentUser, userProfile]);
+        return newSlots;
+    }, [visibleSlots, playerCities, currentUser.uid, userProfile.username]);
 
     useEffect(() => {
         if (initialMapAction?.type === 'open_city_modal') {
@@ -315,15 +313,23 @@ const MapView = ({
         batch.update(casterGameDocRef, { worship: newWorship });
         const isSelfCast = !targetCity;
         const targetOwnerId = isSelfCast ? currentUser.uid : targetCity.ownerId;
-        const targetGameDocRef = doc(db, `users/${targetOwnerId}/games`, worldId, 'cities', targetCity.id);
-        const targetGameSnap = await getDoc(targetGameDocRef);
-        if (!targetGameSnap.exists()) {
+        const targetSlotId = isSelfCast ? currentState.slotId : (targetCity.slotId || targetCity.id);
+        
+        const citiesRef = collection(db, `users/${targetOwnerId}/games`, worldId, 'cities');
+        const q = query(citiesRef, where("slotId", "==", targetSlotId), limit(1));
+        const cityQuerySnap = await getDocs(q);
+
+        if (cityQuerySnap.empty) {
             setMessage("Target city's data not found.");
             await batch.commit();
             setGameState({ ...gameState, worship: newWorship });
             return;
         }
-        const targetGameState = targetGameSnap.data();
+
+        const targetCityDoc = cityQuerySnap.docs[0];
+        const targetGameDocRef = targetCityDoc.ref;
+        const targetGameState = targetCityDoc.data();
+
         let spellEffectMessage = '', casterMessage = '';
         switch (power.effect.type) {
             case 'add_resources':

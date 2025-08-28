@@ -14,5 +14,21 @@
         "description": "Travels to an empty plot to start the construction of a new city. The founding time is reduced by the number of villagers sent with him."
       }
     ]
+  },
+  "liberator": {
+    "name": "Liberator",
+    "description": "A cunning agent specializing in infiltration and extraction. Can be sent to enemy cities to free captured heroes.",
+    "image": "liberator.png",
+    "cost": {
+      "wood": 500,
+      "stone": 1500,
+      "silver": 3000
+    },
+    "abilities": [
+      {
+        "name": "Rescue Hero",
+        "description": "Attempts to free a captured hero from an enemy city. Success depends on the amount of silver sent versus the silver in the target's cave."
+      }
+    ]
   }
 }
