@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import heroesConfig from '../../gameData/heroes.json';
 import agentsConfig from '../../gameData/agents.json';
 import './HeroDisplay.css';
 import Countdown from '../map/Countdown'; //  Import Countdown component
+import FreeHeroModal from './FreeHeroModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { useGame } from '../../contexts/GameContext';
 
 const heroImages = {};
 const heroImageContext = require.context('../../images/heroes', false, /\.(png|jpe?g|svg)$/);
@@ -18,7 +21,23 @@ agentImageContext.keys().forEach((item) => {
     agentImages[key] = agentImageContext(item);
 });
 
-const HeroDisplay = ({ heroes, agents, movements, activeCityId }) => {
+const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator, combinedSlots }) => {
+    const [heroToFree, setHeroToFree] = useState(null);
+    const { currentUser } = useAuth();
+    const { gameState } = useGame();
+
+    const handleHeroClick = (heroId, heroData) => {
+        if (heroData.capturedIn) {
+            const capturedInSlotId = heroData.capturedIn;
+            const targetCityData = combinedSlots[capturedInSlotId];
+            if (targetCityData) {
+                setHeroToFree({ heroId, ownerId: currentUser.uid, targetCityData });
+            } else {
+                console.error("Could not find data for the capturing city.");
+            }
+        }
+    };
+
     //  Show all active heroes that are assigned to a city, captured, or currently in a movement.
     const heroesToShow = Object.keys(heroes || {}).filter(heroId => {
         const hero = heroes[heroId];
@@ -49,11 +68,13 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId }) => {
                     let overlay = null;
                     let customClass = '';
                     let backgroundClass = '';
+                    let onClickHandler = null;
 
                     if (isCaptured) {
-                        statusTitle = `${hero.name} (Captured)`;
+                        statusTitle = `${hero.name} (Captured) - Click to attempt rescue`;
                         overlay = <div className="captured-bars-overlay"></div>;
-                        customClass = 'opacity-50';
+                        customClass = 'opacity-50 cursor-pointer';
+                        onClickHandler = () => handleHeroClick(heroId, heroData);
                     } else if (isWounded) {
                         statusTitle = `${hero.name} (Wounded)`;
                         backgroundClass = 'bg-red-500/50';
@@ -75,7 +96,7 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId }) => {
                     }
 
                     return (
-                        <div key={heroId} className={`hero-item relative ${backgroundClass}`} title={statusTitle}>
+                        <div key={heroId} className={`hero-item relative ${backgroundClass}`} title={statusTitle} onClick={onClickHandler}>
                             <img src={heroImages[hero.image]} alt={hero.name} className={customClass} />
                             {overlay}
                         </div>
@@ -92,6 +113,13 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId }) => {
                     );
                 })}
             </div>
+            {heroToFree && (
+                <FreeHeroModal
+                    hero={heroToFree}
+                    onClose={() => setHeroToFree(null)}
+                    onSend={onSendLiberator}
+                />
+            )}
         </div>
     );
 };
