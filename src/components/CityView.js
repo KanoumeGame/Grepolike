@@ -70,7 +70,7 @@ const CityView = ({
         setIsInstantBuild, setIsInstantResearch, setIsInstantUnits, getMaxWorkerSlots
     });
     const { onRecruitHero, onActivateSkill, onAssignHero, onUnassignHero, onReleaseHero } = useHeroActions(cityGameState, saveGameState, setMessage);
-    const { onRecruitAgent, onAssignAgent} = useAgentActions(cityGameState, saveGameState, setMessage);
+    const { onRecruitAgent, onAssignAgent } = useAgentActions(cityGameState, saveGameState, setMessage);
     const premiumActions = usePremiumActions(); // Initialize premium actions
 
     const { availablePopulation, happiness } = useMemo(() => {

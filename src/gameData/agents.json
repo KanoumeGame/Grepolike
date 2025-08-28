@@ -17,17 +17,17 @@
   },
   "liberator": {
     "name": "Liberator",
-    "description": "A cunning agent specializing in rescue missions. Can be sent to an enemy city with silver from your cave to attempt to free a captured hero.",
+    "description": "A cunning agent specializing in infiltration and extraction. Can be sent to enemy cities to free captured heroes.",
     "image": "liberator.png",
     "cost": {
       "wood": 500,
-      "stone": 500,
+      "stone": 1500,
       "silver": 3000
     },
     "abilities": [
       {
-        "name": "Rescue Mission",
-        "description": "Attempts to free a captured hero by bribing guards. Success depends on the amount of silver sent versus the silver stored in the target's cave. Failure results in the agent's death."
+        "name": "Rescue Hero",
+        "description": "Attempts to free a captured hero from an enemy city. Success depends on the amount of silver sent versus the silver in the target's cave."
       }
     ]
   }

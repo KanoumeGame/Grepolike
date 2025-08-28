@@ -12,7 +12,7 @@ import TroopDisplay from './TroopDisplay';
 import HeroDisplay from './city/HeroDisplay';
 import { useGame } from '../contexts/GameContext';
 
-const SideInfoPanel = ({ gameState, className, onOpenPowers, movements, onSendLiberator, combinedSlots }) => {
+const SideInfoPanel = ({ gameState, className, onOpenPowers, movements }) => {
     const { activeCityId } = useGame();
     if (!gameState || !gameState.playerInfo) { //  Added a check for playerInfo
         return null;
@@ -31,8 +31,6 @@ const SideInfoPanel = ({ gameState, className, onOpenPowers, movements, onSendLi
                 agents={gameState.agents} 
                 movements={movements} 
                 activeCityId={activeCityId} 
-                onSendLiberator={onSendLiberator}
-                combinedSlots={combinedSlots}
             />
             <TroopDisplay units={gameState.units || {}} />
         </div>
