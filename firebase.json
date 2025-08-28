@@ -12,9 +12,7 @@
         "destination": "/index.html"
       }
     ],
-    "versionHistory": {
-      "retainedVersions": 10
-    }
+    "retainedReleases": 10
   },
   "emulators": {
     "ui": {
@@ -28,7 +26,7 @@
     "auth": {
       "port": 9099,
       "host": "0.0.0.0",
-      "import": "./firebase-data",
+      "import_data": "./firebase-data",
       "exportOnShutdown": true
     },
     "firestore": {
