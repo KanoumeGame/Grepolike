@@ -5,7 +5,6 @@ import './HeroDisplay.css';
 import Countdown from '../map/Countdown'; //  Import Countdown component
 import FreeHeroModal from './FreeHeroModal';
 import { useAuth } from '../../contexts/AuthContext';
-import { useGame } from '../../contexts/GameContext';
 
 const heroImages = {};
 const heroImageContext = require.context('../../images/heroes', false, /\.(png|jpe?g|svg)$/);
@@ -24,7 +23,6 @@ agentImageContext.keys().forEach((item) => {
 const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator, combinedSlots }) => {
     const [heroToFree, setHeroToFree] = useState(null);
     const { currentUser } = useAuth();
-    const { gameState } = useGame();
 
     const handleHeroClick = (heroId, heroData) => {
         if (heroData.capturedIn) {
