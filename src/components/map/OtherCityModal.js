@@ -11,7 +11,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) => {
     const { currentUser } = useAuth();
-    console.log("OtherCityModal received city prop:", city);
 
     const canWithdraw = useMemo(() => {
         if (!city || !city.reinforcements) return false;
@@ -20,9 +19,8 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
 
     if (!city) return null;
 
+    // # Check if the current user's hero is captured in this city
     const canRescue = city.capturedHero && city.capturedHero[1] === currentUser.uid;
-    console.log("OtherCityModal canRescue check:", canRescue, "capturedHero:", city.capturedHero, "currentUser.uid:", currentUser.uid);
-
 
     const resourceImages = {
         wood: woodImage,

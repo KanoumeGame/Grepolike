@@ -1,3 +1,4 @@
+// src/hooks/movementProcessors/processAttackMovement.js
 import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp, deleteField} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveCombat, getVillageTroops } from '../../utils/combat';
@@ -14,17 +15,14 @@ export const processAttackMovement = async (
     originAllianceData,
     targetAllianceData
 ) => {
-    console.log(`[AttackProcessor] Processing attack: ${movement.id}, type: ${movement.type}`);
     const batch = writeBatch(db);
 
     // # --- Ruin Attack Logic ---
     if (movement.type === 'attack_ruin') {
-        console.log("[AttackProcessor] Handling ruin attack...");
         const ruinRef = doc(db, 'worlds', worldId, 'ruins', movement.targetRuinId);
         const ruinSnap = await getDoc(ruinRef);
 
         if (!ruinSnap.exists()) {
-            console.log("[AttackProcessor] Ruin not found, returning troops.");
             const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
             const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
             batch.update(movementDoc.ref, { status: 'returning', arrivalTime: returnArrivalTime });
@@ -34,7 +32,6 @@ export const processAttackMovement = async (
 
         const ruinData = ruinSnap.data();
         const result = resolveCombat(movement.units, ruinData.troops, {}, true); // # Ruins are cross-island
-        console.log("[AttackProcessor] Ruin combat resolved:", result);
 
         const attackerReport = {
             type: 'attack_ruin',
@@ -62,7 +59,6 @@ export const processAttackMovement = async (
         };
 
         if (result.attackerWon) {
-            console.log("[AttackProcessor] Attacker won against ruin. Assigning reward and ownership.");
             batch.update(ruinRef, { ownerId: movement.originOwnerId, ownerUsername: movement.originOwnerUsername });
             const playerRuinRef = doc(db, `users/${movement.originOwnerId}/games/${worldId}/conqueredRuins`, movement.targetRuinId);
             batch.set(playerRuinRef, { research: ruinData.researchReward, conqueredAt: serverTimestamp() });
@@ -85,9 +81,7 @@ export const processAttackMovement = async (
                 units: survivingAttackers,
                 arrivalTime: returnArrivalTime,
             });
-            console.log("[AttackProcessor] Surviving troops returning from ruin.");
         } else {
-            console.log("[AttackProcessor] No surviving troops, deleting movement.");
             batch.delete(movementDoc.ref);
         }
 
@@ -291,8 +285,7 @@ export const processAttackMovement = async (
     const newDefenderHeroes = { ...(targetCityState.heroes || {}) };
     const newAttackerHeroes = { ...(originCityState.heroes || {}) };
     const newPrisoners = targetCityState.prisoners || [];
-    let capturedHeroForSlot = null;
-
+    
     if (result.capturedHero) {
         const { heroId, capturedBy } = result.capturedHero;
         if (capturedBy === 'defender') { // Attacker's hero was captured
@@ -307,11 +300,7 @@ export const processAttackMovement = async (
                 originCityCoords: { x: originCityState.x, y: originCityState.y },
                 captureId: uuidv4()
             });
-            capturedHeroForSlot = [heroId, movement.originOwnerId];
         }
-    } else {
-        // # If no hero was captured, ensure the field is cleared
-        capturedHeroForSlot = deleteField();
     }
 
     if (result.woundedHero) {
@@ -330,9 +319,13 @@ export const processAttackMovement = async (
     const attackerCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
     batch.update(attackerCityRef, { heroes: newAttackerHeroes });
 
-
     const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
-    batch.update(targetCitySlotRef, { reinforcements: newReinforcements, capturedHero: capturedHeroForSlot });
+    const slotUpdates = { reinforcements: newReinforcements };
+    if (result.capturedHero) {
+        const { heroId } = result.capturedHero;
+        slotUpdates.capturedHero = [heroId, movement.originOwnerId];
+    }
+    batch.update(targetCitySlotRef, slotUpdates);
 
     const hasSurvivingLandOrMythic = Object.keys(movement.units).some(unitId => {
         const unit = unitConfig[unitId];

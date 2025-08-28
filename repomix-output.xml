@@ -6380,6 +6380,7 @@ export default CaveMenu;
 </file>
 
 <file path="src/components/city/CityModals.js">
+// src/components/city/CityModals.js
 import React from 'react';
 import AdminCheatMenu from './AdminCheatMenu';
 import BarracksMenu from './BarracksMenu';
@@ -14962,6 +14963,7 @@ export default MapGrid;
 </file>
 
 <file path="src/components/map/MapModals.js">
+// src/components/map/MapModals.js
 import React, { useMemo } from 'react';
 import RadialMenu from './RadialMenu';
 import OtherCityModal from './OtherCityModal';
@@ -15010,6 +15012,8 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
+        console.log("Selected City in MapModals:", selectedCity);
+
         if (selectedCity.isRuinTarget || selectedCity.isVillageTarget) {
             return (
                 <OtherCityModal
@@ -15057,14 +15061,19 @@ const MapModals = ({
                 { label: 'Reinforce', icon: '🛡️', handler: () => handleActionClick('reinforce', selectedCity) },
                 { label: 'Scout', icon: '👁️', handler: () => handleActionClick('scout', selectedCity) },
                 { label: 'Trade', icon: '⚖️', handler: () => handleActionClick('trade', selectedCity) },
-                //  Corrected this handler to use handleActionClick
                 { label: 'Cast Spell', icon: '✨', handler: () => handleActionClick('castSpell', selectedCity) },
                 { label: 'Profile', icon: '👤', handler: () => handleActionClick('profile', selectedCity) },
             ];
             if (canWithdraw) {
                 allActions.push({ label: 'Withdraw Troops', icon: '🛡️', handler: () => onWithdraw(selectedCity) });
             }
-            if (selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid) {
+            const canRescue = selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid;
+            console.log("Can Rescue Check:", {
+                capturedHero: selectedCity.capturedHero,
+                currentUserId: currentUser.uid,
+                result: canRescue
+            });
+            if (canRescue) {
                 allActions.push({ label: 'Rescue Hero', icon: '🗝️', handler: () => handleActionClick('rescue', selectedCity) });
             }
         }
@@ -15117,7 +15126,7 @@ const MapModals = ({
                     goToCoordinates={goToCoordinates}
                     onCancel={handleCancelMovement}
                     onRush={handleRushMovement}
-                    isAdmin={userProfile?.is_admin}
+                    userProfile={userProfile}
                 />
             )}
             {modalState.isReinforcementsModalOpen && (
@@ -16863,11 +16872,10 @@ import stoneImage from '../../images/resources/stone.png';
 import silverImage from '../../images/resources/silver.png';
 import './OtherCityModal.css';
 import { useAuth } from '../../contexts/AuthContext';
-import { useGame } from '../../contexts/GameContext';
 
 const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) => {
     const { currentUser } = useAuth();
-    const { setActiveCityId } = useGame();
+    console.log("OtherCityModal received city prop:", city);
 
     const canWithdraw = useMemo(() => {
         if (!city || !city.reinforcements) return false;
@@ -16876,8 +16884,9 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
 
     if (!city) return null;
 
-    const isOwnCity = city.ownerId === currentUser.uid;
     const canRescue = city.capturedHero && city.capturedHero[1] === currentUser.uid;
+    console.log("OtherCityModal canRescue check:", canRescue, "capturedHero:", city.capturedHero, "currentUser.uid:", currentUser.uid);
+
 
     const resourceImages = {
         wood: woodImage,
@@ -16889,11 +16898,6 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
         if (onGoTo) {
             onGoTo(city.x, city.y);
         }
-        onClose();
-    };
-    
-    const handleGoToCity = () => {
-        setActiveCityId(city.id);
         onClose();
     };
 
@@ -16986,75 +16990,64 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
                             </button>
                         ) : !isRuin ? (
                             <>
-                                {isOwnCity ? (
+                                <button 
+                                    onClick={() => onAction('attack', city)}
+                                    className="action-btn attack-btn"
+                                >
+                                    Attack
+                                </button>
+                                <button 
+                                    onClick={() => onAction('reinforce', city)}
+                                    className="action-btn reinforce-btn"
+                                >
+                                    Reinforce
+                                </button>
+                                {canWithdraw && (
                                     <button 
-                                        onClick={handleGoToCity}
-                                        className="action-btn col-span-2"
+                                        onClick={() => onAction('withdraw', city)}
+                                        className="action-btn"
                                     >
-                                        Go to City
+                                        Withdraw Troops
                                     </button>
-                                ) : (
-                                    <>
-                                        <button 
-                                            onClick={() => onAction('attack', city)}
-                                            className="action-btn attack-btn"
-                                        >
-                                            Attack
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('reinforce', city)}
-                                            className="action-btn reinforce-btn"
-                                        >
-                                            Reinforce
-                                        </button>
-                                        {canWithdraw && (
-                                            <button 
-                                                onClick={() => onAction('withdraw', city)}
-                                                className="action-btn"
-                                            >
-                                                Withdraw Troops
-                                            </button>
-                                        )}
-                                        {canRescue && (
-                                            <button
-                                                onClick={() => onAction('rescue', city)}
-                                                className="action-btn"
-                                            >
-                                                Rescue Hero
-                                            </button>
-                                        )}
-                                        <button 
-                                            onClick={() => onAction('scout', city)}
-                                            className="action-btn"
-                                        >
-                                            Scout
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('trade', city)}
-                                            className="action-btn"
-                                        >
-                                            Trade
-                                        </button>
-                                         <button 
-                                            onClick={() => onAction('castSpell', city)}
-                                            className="action-btn spell-btn"
-                                        >
-                                            Cast Spell
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('profile', city)}
-                                            className="action-btn"
-                                        >
-                                            Profile
-                                        </button>
-                                        <button 
-                                            onClick={handleGoTo}
-                                            className="action-btn"
-                                        >
-                                            Go To
-                                        </button>
-                                    </>
                                 )}
+                                {canRescue && (
+                                    <button
+                                        onClick={() => onAction('rescue', city)}
+                                        className="action-btn"
+                                    >
+                                        Rescue Hero
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={() => onAction('scout', city)}
+                                    className="action-btn"
+                                >
+                                    Scout
+                                </button>
+                                <button 
+                                    onClick={() => onAction('trade', city)}
+                                    className="action-btn"
+                                >
+                                    Trade
+                                </button>
+                                 <button 
+                                    onClick={() => onAction('castSpell', city)}
+                                    className="action-btn spell-btn"
+                                >
+                                    Cast Spell
+                                </button>
+                                <button 
+                                    onClick={() => onAction('profile', city)}
+                                    className="action-btn"
+                                >
+                                    Profile
+                                </button>
+                                <button 
+                                    onClick={handleGoTo}
+                                    className="action-btn"
+                                >
+                                    Go To
+                                </button>
                             </>
                         ) : null}
                     </div>
@@ -17331,6 +17324,7 @@ export default RadialMenu;
 </file>
 
 <file path="src/components/map/RescueModal.js">
+// src/components/map/RescueModal.js
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { calculateDistance, calculateTravelTime, formatTravelTime } from '../../utils/travel';
@@ -17499,6 +17493,7 @@ export default SidebarNav;
 </file>
 
 <file path="src/components/map/Tiles.js">
+// src/components/map/Tiles.js
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import godTownImage from '../../images/god-town.png';
@@ -17525,7 +17520,7 @@ const _WaterTile = ({ gameSettings = defaultSettings }) => {
     return <div className="w-full h-full bg-transparent" />;
 };
 const _LandTile = ({ gameSettings = defaultSettings }) => {
-    //  Make land tiles transparent so the island images in MapView are visible.
+    // # Make land tiles transparent so the island images in MapView are visible.
     const bgClass = gameSettings.showVisuals ? 'bg-transparent' : 'bg-gray-800';
     const borderClass = gameSettings.showGrid
         ? `border-r border-b ${gameSettings.showVisuals ? 'border-green-700/20' : 'border-gray-700'}`
@@ -17562,11 +17557,11 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         const ownerName = slotData.ownerUsername || 'Unknown';
         const isOwn = slotData.ownerId === currentUser.uid;
 
-        //  Use playerAlliance context for consistent alliance info for own cities
+        // # Use playerAlliance context for consistent alliance info for own cities
         const cityAllianceTag = isOwn ? playerAlliance?.tag : slotData.alliance;
         const cityAllianceName = isOwn ? playerAlliance?.name : slotData.allianceName;
         
-        //  Use the correct key to find city points for own cities vs other players' cities
+        // # Use the correct key to find city points for own cities vs other players' cities
         const pointsKey = isOwn ? slotData.slotId : slotData.id;
         const points = cityPoints[pointsKey] || 0;
 
@@ -17977,7 +17972,7 @@ const WeatherDisplay = ({ season, weather }) => {
     );
 };
 
-const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }) => {
+const ResourceTooltip = ({ resource, current, production, capacity, isLocked, countdown }) => {
     if (!resource) return null;
 
     if (resource === 'platinum') {
@@ -17985,6 +17980,19 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
             <div className="resource-tooltip">
                 <h4 className="font-bold capitalize text-lg">Platinum</h4>
                 <p className="text-sm">A premium currency used for special advantages.</p>
+                <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
+                <div className="tooltip-lock-timer">
+                    {isLocked ? '🔒' : countdown}
+                </div>
+            </div>
+        );
+    }
+
+    if (resource === 'population') {
+        return (
+            <div className="resource-tooltip">
+                <h4 className="font-bold capitalize text-lg">Population</h4>
+                <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
                 <div className="tooltip-lock-timer">
                     {isLocked ? '🔒' : countdown}
                 </div>
@@ -17995,6 +18003,7 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
     return (
         <div className="resource-tooltip">
             <h4 className="font-bold capitalize text-lg">{resource}</h4>
+            <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
             <p className="text-sm">Production: <span className="font-semibold">+{production}/hr</span></p>
             <p className="text-sm">Capacity: <span className="font-semibold">{capacity.toLocaleString()}</span></p>
             <div className="tooltip-lock-timer">
@@ -18002,6 +18011,13 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
             </div>
         </div>
     );
+};
+
+const formatNumber = (num) => {
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return num.toString();
 };
 
 const TopBar = ({
@@ -18270,7 +18286,7 @@ const TopBar = ({
             </div>
 
             {/* Right side */}
-            <div className="flex-1 flex justify-end items-center space-x-2" onMouseLeave={handleMouseLeave}>
+            <div className="flex justify-end items-center space-x-2" onMouseLeave={handleMouseLeave}>
                  <div
                     ref={activityTrackerRef}
                     className="activity-tracker-container"
@@ -18332,10 +18348,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'wood')}
                 >
                     <img src={woodImage} alt="Wood" className="w-6 h-6 mr-2"/>
-                    <span className="text-yellow-800 font-bold">{Math.floor(resources.wood || 0)}</span>
+                    <span className="text-yellow-800 font-bold">{formatNumber(Math.floor(resources.wood || 0))}</span>
                     {activeTooltip === 'wood' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="wood"
+                            current={Math.floor(resources.wood || 0)}
                             production={productionRates.wood}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -18349,10 +18366,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'stone')}
                 >
                     <img src={stoneImage} alt="Stone" className="w-6 h-6 mr-2"/>
-                    <span className="text-gray-600 font-bold">{Math.floor(resources.stone || 0)}</span>
+                    <span className="text-gray-600 font-bold">{formatNumber(Math.floor(resources.stone || 0))}</span>
                      {activeTooltip === 'stone' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="stone"
+                            current={Math.floor(resources.stone || 0)}
                             production={productionRates.stone}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -18366,10 +18384,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'silver')}
                 >
                     <img src={silverImage} alt="Silver" className="w-6 h-6 mr-2"/>
-                    <span className="text-blue-800 font-bold">{Math.floor(resources.silver || 0)}</span>
+                    <span className="text-blue-800 font-bold">{formatNumber(Math.floor(resources.silver || 0))}</span>
                      {activeTooltip === 'silver' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="silver"
+                            current={Math.floor(resources.silver || 0)}
                             production={productionRates.silver}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -18382,19 +18401,32 @@ const TopBar = ({
                     onMouseEnter={() => handleMouseEnter('platinum')}
                     onClick={(e) => handleTooltipClick(e, 'platinum')}
                 >
-                    <PlatinumIcon className="w-6 h-6 mr-2 text-gray-200" />
-                    <span className="font-bold text-gray-300">{Math.floor(playerGameData?.platinum || 0)}</span>
+                    <PlatinumIcon className="w-6 h-6 mr-2 text-gray-400" />
+                    <span className="font-bold text-gray-500">{formatNumber(Math.floor(playerGameData?.platinum || 0))}</span>
                     {activeTooltip === 'platinum' && (
                         <ResourceTooltip
                             resource="platinum"
+                            current={Math.floor(playerGameData?.platinum || 0)}
                             isLocked={isTooltipLocked}
                             countdown={lockCountdown}
                         />
                     )}
                 </div>
-                <div className="resource-display">
+                <div 
+                    className="resource-display relative"
+                    onMouseEnter={() => handleMouseEnter('population')}
+                    onClick={(e) => handleTooltipClick(e, 'population')}
+                >
                     <img src={populationImage} alt="Population" className="w-6 h-6 mr-2"/>
-                    <span className="font-bold text-red-800">{Math.floor(availablePopulation || 0)}</span>
+                    <span className="font-bold text-red-800">{formatNumber(Math.floor(availablePopulation || 0))}</span>
+                    {activeTooltip === 'population' && (
+                        <ResourceTooltip
+                            resource="population"
+                            current={Math.floor(availablePopulation || 0)}
+                            isLocked={isTooltipLocked}
+                            countdown={lockCountdown}
+                        />
+                    )}
                 </div>
                 <div
                     className="resource-display relative"
@@ -18557,6 +18589,7 @@ export default TradesTooltip;
 </file>
 
 <file path="src/components/MapView.js">
+// src/components/MapView.js
 import React, { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -18827,7 +18860,14 @@ const MapView = ({
                     ownerId: currentUser.uid,
                     ownerUsername: userProfile.username
                 };
+                if (existingSlotData.capturedHero && !newSlots[pCity.slotId].capturedHero) {
+                    console.log(`[MapView] capturedHero field was overwritten for slot ${pCity.slotId}`);
+                }
             }
+        }
+        const capturedCity = Object.values(newSlots).find(s => s.capturedHero);
+        if (capturedCity) {
+            console.log("[MapView] combinedSlots contains a city with a captured hero:", capturedCity);
         }
         return newSlots;
     }, [visibleSlots, playerCities, currentUser.uid, userProfile.username]);
@@ -18908,7 +18948,7 @@ const MapView = ({
             case 'damage_building': {
                 if (isSelfCast) break;
                 const buildings = { ...targetGameState.buildings };
-                const buildingKeys = Object.keys(buildings).filter(b => buildings[b].level > 0);
+                const buildingKeys = Object.keys(buildings).filter(b => buildings[b].level > 0 && buildingConfig[b].constructible !== false);
                 if (buildingKeys.length > 0) {
                     const randomBuildingKey = buildingKeys[Math.floor(Math.random() * buildingKeys.length)];
                     buildings[randomBuildingKey].level = Math.max(0, buildings[randomBuildingKey].level - power.effect.amount);
@@ -29355,14 +29395,6 @@ export const useDivineActions = ({
 </file>
 
 <file path="src/hooks/actions/useHeroActions.js">
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 // src/hooks/actions/useHeroActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -29548,7 +29580,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         const capturingCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', capturingCitySlotId);
         
         try {
-            //  Fetch all cities of the hero's owner BEFORE the transaction
+            // # Fetch all cities of the hero's owner BEFORE the transaction
             const heroOwnerCitiesRef = collection(db, `users/${prisonerToRelease.ownerId}/games`, worldId, 'cities');
             const heroOwnerCitiesSnap = await getDocs(heroOwnerCitiesRef);
 
@@ -29568,7 +29600,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
                 transaction.update(capturingCityRef, { prisoners: newPrisoners });
                 transaction.update(capturingCitySlotRef, { capturedHero: deleteField() });
     
-                //  Atomically remove the 'capturedIn' field without overwriting other hero data.
+                // # Atomically remove the 'capturedIn' field without overwriting other hero data.
                 heroOwnerCitiesSnap.forEach(cityDoc => {
                     // We only need to update if the hero object exists in this city's data.
                     if (cityDoc.data().heroes?.[prisonerToRelease.heroId]) {
@@ -31117,6 +31149,7 @@ export const processReinforceMovement = async (movement, movementDoc, worldId, t
 </file>
 
 <file path="src/hooks/movementProcessors/processRescueMovement.js">
+// src/hooks/movementProcessors/processRescueMovement.js
 import { doc,  writeBatch, collection, serverTimestamp, deleteField } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { calculateDistance, calculateTravelTime } from '../../utils/travel';
@@ -32229,6 +32262,7 @@ export const useKeyboardControls = (controls) => {
 </file>
 
 <file path="src/hooks/useMapActions.js">
+// src/hooks/useMapActions.js
 import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -32800,6 +32834,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 </file>
 
 <file path="src/hooks/useMapClickHandler.js">
+// src/hooks/useMapClickHandler.js
 import { calculateDistance } from '../utils/travel';
 import { getVillageTroops } from '../utils/combat';
 
@@ -32818,6 +32853,7 @@ export const useMapClickHandler = ({
 }) => {
 
     const onCitySlotClick = (e, slotData) => {
+        console.log("onCitySlotClick triggered. slotData:", slotData);
         if (!playerCity) {
             setMessage("Your city data is still loading. Please wait a moment.");
             return;
@@ -32930,6 +32966,7 @@ export const useMapClickHandler = ({
 </file>
 
 <file path="src/hooks/usemapdatapls.js">
+// src/hooks/usemapdatapls.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -32956,7 +32993,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
     }, []);
 
     useEffect(() => {
-        //  Cleanup all listeners on unmount
+        // # Cleanup all listeners on unmount
         return () => {
             Object.values(activeListenersRef.current).forEach(unsubArray => {
                 if (Array.isArray(unsubArray)) {
@@ -33011,7 +33048,11 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
                     const unsubscribe = onSnapshot(q, (snapshot) => {
                         const chunkData = {};
                         snapshot.forEach(doc => {
-                            chunkData[doc.id] = { id: doc.id, ...doc.data() };
+                            const data = doc.data();
+                            if (data.capturedHero) {
+                                console.log(`[useMapData] Fetched slot ${doc.id} with capturedHero:`, data.capturedHero);
+                            }
+                            chunkData[doc.id] = { id: doc.id, ...data };
                         });
                         setCachedData(prevCache => ({
                             ...prevCache,
@@ -33048,6 +33089,9 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
             Object.values(chunk.citySlots || {}).forEach(slot => {
                 if (slot.x >= viewStartCol && slot.x <= viewEndCol && slot.y >= viewStartRow && slot.y <= viewEndRow) {
                     newVisibleSlots[slot.id] = slot;
+                    if (slot.capturedHero) {
+                        console.log(`[useMapData -> setVisibleSlots] Slot ${slot.id} has capturedHero:`, slot.capturedHero);
+                    }
                 }
             });
             Object.values(chunk.villages || {}).forEach(village => {
@@ -33409,6 +33453,7 @@ export const useModalState = () => {
 </file>
 
 <file path="src/hooks/useMovementProcessor.js">
+// src/hooks/useMovementProcessor.js
 import { useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
 import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction } from 'firebase/firestore';

@@ -47,8 +47,6 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
-        console.log("Selected City in MapModals:", selectedCity);
-
         if (selectedCity.isRuinTarget || selectedCity.isVillageTarget) {
             return (
                 <OtherCityModal
@@ -102,12 +100,8 @@ const MapModals = ({
             if (canWithdraw) {
                 allActions.push({ label: 'Withdraw Troops', icon: '🛡️', handler: () => onWithdraw(selectedCity) });
             }
+            // # Add rescue option if one of your heroes is captured in this city
             const canRescue = selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid;
-            console.log("Can Rescue Check:", {
-                capturedHero: selectedCity.capturedHero,
-                currentUserId: currentUser.uid,
-                result: canRescue
-            });
             if (canRescue) {
                 allActions.push({ label: 'Rescue Hero', icon: '🗝️', handler: () => handleActionClick('rescue', selectedCity) });
             }
