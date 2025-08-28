@@ -8,6 +8,7 @@ import { processReturnMovement } from './movementProcessors/processReturnMovemen
 import { processFoundingMovement } from './movementProcessors/processFoundingMovement';
 import { processReinforceMovement } from './movementProcessors/processReinforceMovement';
 import { processScoutMovement } from './movementProcessors/processScoutMovement';
+import { processRescueMovement } from './movementProcessors/processRescueMovement';
 
 
 export const useMovementProcessor = (worldId) => {
@@ -78,6 +79,9 @@ export const useMovementProcessor = (worldId) => {
                     break;
                 case 'scout':
                     await processScoutMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
+                    break;
+                case 'rescue_hero':
+                    await processRescueMovement(movement, movementDoc, worldId, originCityState, targetCityState);
                     break;
                 // # trade and other movements would have cases here
                 default:

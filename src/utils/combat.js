@@ -188,7 +188,7 @@ export function getVillageTroops(villageData) {
     }
     return troops;
 }
-export function resolveCombat(attackingUnits, defendingUnits, defendingResources, isNavalAttack, attackerPhalanx, attackerSupport, defenderPhalanx, defenderSupport, attackingHero, defendingHero) {
+export function resolveCombat(attackingUnits, defendingUnits, defendingResources, isNavalAttack, attackerPhalanx, attackerSupport, defenderPhalanx, defenderSupport, attackingHero, defendingHero, defendingCityState) {
     console.log("[Combat] Resolving combat. Naval Attack:", isNavalAttack);
     console.log("[Combat] Attacking Units:", attackingUnits);
     console.log("[Combat] Defending Units:", defendingUnits);
@@ -249,7 +249,6 @@ export function resolveCombat(attackingUnits, defendingUnits, defendingResources
         }
     }
 
-    //  A hero is captured if they are present, their side loses, and all land units on their side are annihilated.
     const allAttackerLandUnitsLost = Object.entries(attackingUnits)
         .filter(([id]) => unitConfig[id]?.type === 'land')
         .every(([id, count]) => (totalAttackerLosses[id] || 0) >= count);
@@ -258,35 +257,40 @@ export function resolveCombat(attackingUnits, defendingUnits, defendingResources
         .filter(([id]) => unitConfig[id]?.type === 'land')
         .every(([id, count]) => (totalDefenderLosses[id] || 0) >= count);
 
-    if (attackerWon && defendingHero && allDefenderLandUnitsLost) {
-        capturedHero = { heroId: defendingHero, capturedBy: 'attacker' };
-    } else if (!attackerWon && attackingHero && allAttackerLandUnitsLost) {
-        capturedHero = { heroId: attackingHero, capturedBy: 'defender' };
-    }
-
-    //  Increased Wounded Hero probability
+    // # Hero capture/wound logic
     if (landBattle) {
+        const prisonLevel = defendingCityState?.buildings?.prison?.level || 0;
+        const prisonCapacity = prisonLevel > 0 ? prisonLevel + 4 : 0;
+        const currentPrisoners = defendingCityState?.prisoners?.length || 0;
+        const hasPrisonSpace = prisonCapacity > currentPrisoners;
+
         if (attackerWon) {
-            // Attacker won, but check if it was a close call.
-            if (attackingHero && landBattle.attackerLossRatio > 0.5 && Math.random() < 0.75) { // 75% chance if winner's losses > 50%
-                woundedHero = { heroId: attackingHero, side: 'attacker' };
-            }
-            // Defender lost, standard chance of being wounded.
-            if (defendingHero && Math.random() < 0.75) { // 75% chance
+            if (defendingHero && allDefenderLandUnitsLost) {
                 woundedHero = { heroId: defendingHero, side: 'defender' };
+            }
+            if (attackingHero) {
+                // # Winning hero has a small chance to be wounded, increased by closeness of battle
+                const woundChance = 0.02 + (landBattle.attackerLossRatio * 0.2); // Base 2% + up to 20%
+                if (Math.random() < woundChance) {
+                    woundedHero = { heroId: attackingHero, side: 'attacker' };
+                }
             }
         } else { // Defender won
-            // Attacker lost, standard chance of being wounded.
-            if (attackingHero && Math.random() < 0.75) { // 75% chance
-                woundedHero = { heroId: attackingHero, side: 'attacker' };
+            if (attackingHero && allAttackerLandUnitsLost) {
+                if (prisonLevel > 0 && hasPrisonSpace) {
+                    capturedHero = { heroId: attackingHero, capturedBy: 'defender' };
+                } else {
+                    woundedHero = { heroId: attackingHero, side: 'attacker' };
+                }
             }
-            // Defender won, but check if it was a close call.
-            if (defendingHero && landBattle.defenderLossRatio > 0.5 && Math.random() < 0.75) { // 75% chance if winner's losses > 50%
-                woundedHero = { heroId: defendingHero, side: 'defender' };
+            if (defendingHero) {
+                const woundChance = 0.02 + (landBattle.defenderLossRatio * 0.2);
+                if (Math.random() < woundChance) {
+                    woundedHero = { heroId: defendingHero, side: 'defender' };
+                }
             }
         }
     }
-
 
     // Calculate wounded troops from attacker losses
     for (const unitId in totalAttackerLosses) {

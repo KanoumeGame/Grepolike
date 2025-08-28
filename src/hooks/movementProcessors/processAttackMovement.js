@@ -1,7 +1,8 @@
-import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp} from 'firebase/firestore';
+import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp, deleteField} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveCombat, getVillageTroops } from '../../utils/combat';
 import unitConfig from '../../gameData/units.json';
+import { v4 as uuidv4 } from 'uuid';
 
 // # processes all attack-related movements
 export const processAttackMovement = async (
@@ -216,7 +217,8 @@ export const processAttackMovement = async (
         null,
         null,
         movement.hero,
-        Object.keys(targetCityState.heroes || {}).find(id => targetCityState.heroes[id].cityId === movement.targetCityId) || null
+        Object.keys(targetCityState.heroes || {}).find(id => targetCityState.heroes[id].cityId === movement.targetCityId) || null,
+        targetCityState
     );
     
     await runTransaction(db, async (transaction) => {
@@ -284,10 +286,53 @@ export const processAttackMovement = async (
     }
     
     const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
-    batch.update(targetCityRef, { units: newDefenderUnits, resources: newDefenderResources, reinforcements: newReinforcements });
     
+    // # Hero state updates
+    const newDefenderHeroes = { ...(targetCityState.heroes || {}) };
+    const newAttackerHeroes = { ...(originCityState.heroes || {}) };
+    const newPrisoners = targetCityState.prisoners || [];
+    let capturedHeroForSlot = null;
+
+    if (result.capturedHero) {
+        const { heroId, capturedBy } = result.capturedHero;
+        if (capturedBy === 'defender') { // Attacker's hero was captured
+            newAttackerHeroes[heroId].capturedIn = movement.targetCityId;
+            newPrisoners.push({
+                heroId: heroId,
+                ownerId: movement.originOwnerId,
+                ownerUsername: movement.originOwnerUsername,
+                capturedAt: new Date(),
+                originCityId: movement.originCityId,
+                originCityName: originCityState.cityName,
+                originCityCoords: { x: originCityState.x, y: originCityState.y },
+                captureId: uuidv4()
+            });
+            capturedHeroForSlot = [heroId, movement.originOwnerId];
+        }
+    } else {
+        // # If no hero was captured, ensure the field is cleared
+        capturedHeroForSlot = deleteField();
+    }
+
+    if (result.woundedHero) {
+        const { heroId, side } = result.woundedHero;
+        const woundDuration = 3600 * 1000 * 6; // 6 hours
+        const woundedUntil = new Date(Date.now() + woundDuration);
+        if (side === 'attacker') {
+            newAttackerHeroes[heroId].woundedUntil = woundedUntil;
+        } else {
+            newDefenderHeroes[heroId].woundedUntil = woundedUntil;
+        }
+    }
+
+    batch.update(targetCityRef, { units: newDefenderUnits, resources: newDefenderResources, reinforcements: newReinforcements, heroes: newDefenderHeroes, prisoners: newPrisoners });
+    
+    const attackerCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
+    batch.update(attackerCityRef, { heroes: newAttackerHeroes });
+
+
     const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
-    batch.update(targetCitySlotRef, { reinforcements: newReinforcements });
+    batch.update(targetCitySlotRef, { reinforcements: newReinforcements, capturedHero: capturedHeroForSlot });
 
     const hasSurvivingLandOrMythic = Object.keys(movement.units).some(unitId => {
         const unit = unitConfig[unitId];
@@ -371,7 +416,7 @@ export const processAttackMovement = async (
         }
     }
     
-    const heroSurvives = movement.hero && (!result.capturedHero || result.capturedHero.heroId !== movement.hero);
+    const heroSurvives = movement.hero && (!result.capturedHero || result.capturedHero.heroId !== movement.hero) && (!result.woundedHero || result.woundedHero.heroId !== movement.hero || result.woundedHero.side !== 'attacker');
     if (Object.keys(survivingAttackers).length > 0 || Object.keys(result.wounded).length > 0 || heroSurvives) {
         const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
         const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);

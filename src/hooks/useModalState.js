@@ -30,6 +30,8 @@ export const useModalState = () => {
         viewingAllianceId: null,
         isEmptyCityModalOpen: false,
         emptyCityModalData: null,
+        isRescueModalOpen: false,
+        rescueModalData: null,
     });
 
     //  Opens a modal of a given type with optional data.
@@ -57,6 +59,7 @@ export const useModalState = () => {
                 case 'withdraw': return { ...prevState, isWithdrawModalOpen: true, withdrawModalData: data };
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: true, reinforcementsModalData: data };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: true, emptyCityModalData: data };
+                case 'rescue': return { ...prevState, isRescueModalOpen: true, rescueModalData: data };
                 default: return prevState;
             }
         });
@@ -87,6 +90,7 @@ export const useModalState = () => {
                 case 'withdraw': return { ...prevState, isWithdrawModalOpen: false, withdrawModalData: null };
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: false, reinforcementsModalData: null };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: false, emptyCityModalData: null };
+                case 'rescue': return { ...prevState, isRescueModalOpen: false, rescueModalData: null };
                 default: return prevState;
             }
         });

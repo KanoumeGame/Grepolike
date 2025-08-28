@@ -93,7 +93,6 @@ src/components/city/DivinePowers.css
 src/components/city/DivinePowers.js
 src/components/city/DivineTempleMenu.css
 src/components/city/DivineTempleMenu.js
-src/components/city/FreeHeroModal.js
 src/components/city/HeroDisplay.css
 src/components/city/HeroDisplay.js
 src/components/city/HeroesAltar.css
@@ -7346,69 +7345,6 @@ const DivineTempleMenu = ({ resources, availablePopulation, onTrain, onClose, ci
 export default DivineTempleMenu;
 </file>
 
-<file path="src/components/city/FreeHeroModal.js">
-import React, { useState } from 'react';
-import heroesConfig from '../../gameData/heroes.json';
-import { useGame } from '../../contexts/GameContext';
-
-const FreeHeroModal = ({ hero, onClose, onSend }) => {
-    const { gameState } = useGame();
-    const heroConfig = heroesConfig[hero.heroId];
-    const maxSilver = gameState.cave?.silver || 0;
-    const [silverAmount, setSilverAmount] = useState(Math.min(100, maxSilver));
-
-    const handleSend = () => {
-        if (silverAmount > 0 && silverAmount <= maxSilver) {
-            onSend(hero, hero.targetCityData, silverAmount);
-            onClose();
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600 text-white" onClick={e => e.stopPropagation()}>
-                <h3 className="font-title text-2xl text-white mb-4">Rescue {heroConfig.name}</h3>
-                <p className="text-sm text-gray-400 mb-4">
-                    Your hero is captured in {hero.targetCityData.cityName}. Send a Liberator with silver from your cave to attempt a rescue.
-                    Success depends on offering more silver than is in the enemy's cave.
-                </p>
-                <div className="my-4">
-                    <label htmlFor="silver" className="block text-sm font-medium text-gray-300">
-                        Silver to Send (From Cave: {maxSilver.toLocaleString()})
-                    </label>
-                    <input
-                        type="range"
-                        min="0"
-                        max={maxSilver}
-                        value={silverAmount}
-                        onChange={(e) => setSilverAmount(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <input
-                        type="number"
-                        value={silverAmount}
-                        onChange={(e) => setSilverAmount(Math.max(0, Math.min(maxSilver, Number(e.target.value) || 0)))}
-                        className="w-full bg-gray-700 border border-gray-600 rounded-md p-2 mt-2 text-white text-center"
-                    />
-                </div>
-                <div className="flex justify-end space-x-4 mt-6">
-                    <button onClick={onClose} className="btn btn-secondary">Cancel</button>
-                    <button
-                        onClick={handleSend}
-                        className="btn btn-primary"
-                        disabled={silverAmount <= 0 || silverAmount > maxSilver}
-                    >
-                        Send Liberator
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default FreeHeroModal;
-</file>
-
 <file path="src/components/city/HeroDisplay.css">
 .hero-display-container {
     @apply w-40 p-1.5 flex flex-col gap-1.5;
@@ -7441,13 +7377,11 @@ export default FreeHeroModal;
 </file>
 
 <file path="src/components/city/HeroDisplay.js">
-import React, { useState } from 'react';
+import React from 'react';
 import heroesConfig from '../../gameData/heroes.json';
 import agentsConfig from '../../gameData/agents.json';
 import './HeroDisplay.css';
 import Countdown from '../map/Countdown'; //  Import Countdown component
-import FreeHeroModal from './FreeHeroModal';
-import { useAuth } from '../../contexts/AuthContext';
 
 const heroImages = {};
 const heroImageContext = require.context('../../images/heroes', false, /\.(png|jpe?g|svg)$/);
@@ -7463,22 +7397,7 @@ agentImageContext.keys().forEach((item) => {
     agentImages[key] = agentImageContext(item);
 });
 
-const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator, combinedSlots }) => {
-    const [heroToFree, setHeroToFree] = useState(null);
-    const { currentUser } = useAuth();
-
-    const handleHeroClick = (heroId, heroData) => {
-        if (heroData.capturedIn) {
-            const capturedInSlotId = heroData.capturedIn;
-            const targetCityData = combinedSlots[capturedInSlotId];
-            if (targetCityData) {
-                setHeroToFree({ heroId, ownerId: currentUser.uid, targetCityData });
-            } else {
-                console.error("Could not find data for the capturing city.");
-            }
-        }
-    };
-
+const HeroDisplay = ({ heroes, agents, movements, activeCityId }) => {
     //  Show all active heroes that are assigned to a city, captured, or currently in a movement.
     const heroesToShow = Object.keys(heroes || {}).filter(heroId => {
         const hero = heroes[heroId];
@@ -7509,13 +7428,11 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator,
                     let overlay = null;
                     let customClass = '';
                     let backgroundClass = '';
-                    let onClickHandler = null;
 
                     if (isCaptured) {
-                        statusTitle = `${hero.name} (Captured) - Click to attempt rescue`;
+                        statusTitle = `${hero.name} (Captured)`;
                         overlay = <div className="captured-bars-overlay"></div>;
-                        customClass = 'opacity-50 cursor-pointer';
-                        onClickHandler = () => handleHeroClick(heroId, heroData);
+                        customClass = 'opacity-50';
                     } else if (isWounded) {
                         statusTitle = `${hero.name} (Wounded)`;
                         backgroundClass = 'bg-red-500/50';
@@ -7537,7 +7454,7 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator,
                     }
 
                     return (
-                        <div key={heroId} className={`hero-item relative ${backgroundClass}`} title={statusTitle} onClick={onClickHandler}>
+                        <div key={heroId} className={`hero-item relative ${backgroundClass}`} title={statusTitle}>
                             <img src={heroImages[hero.image]} alt={hero.name} className={customClass} />
                             {overlay}
                         </div>
@@ -7554,13 +7471,6 @@ const HeroDisplay = ({ heroes, agents, movements, activeCityId, onSendLiberator,
                     );
                 })}
             </div>
-            {heroToFree && (
-                <FreeHeroModal
-                    hero={heroToFree}
-                    onClose={() => setHeroToFree(null)}
-                    onSend={onSendLiberator}
-                />
-            )}
         </div>
     );
 };
@@ -11614,7 +11524,7 @@ const CityView = ({
         setIsInstantBuild, setIsInstantResearch, setIsInstantUnits, getMaxWorkerSlots
     });
     const { onRecruitHero, onActivateSkill, onAssignHero, onUnassignHero, onReleaseHero } = useHeroActions(cityGameState, saveGameState, setMessage);
-    const { onRecruitAgent, onAssignAgent} = useAgentActions(cityGameState, saveGameState, setMessage);
+    const { onRecruitAgent, onAssignAgent } = useAgentActions(cityGameState, saveGameState, setMessage);
     const premiumActions = usePremiumActions(); // Initialize premium actions
 
     const { availablePopulation, happiness } = useMemo(() => {
@@ -23594,7 +23504,7 @@ import TroopDisplay from './TroopDisplay';
 import HeroDisplay from './city/HeroDisplay';
 import { useGame } from '../contexts/GameContext';
 
-const SideInfoPanel = ({ gameState, className, onOpenPowers, movements, onSendLiberator, combinedSlots }) => {
+const SideInfoPanel = ({ gameState, className, onOpenPowers, movements }) => {
     const { activeCityId } = useGame();
     if (!gameState || !gameState.playerInfo) { //  Added a check for playerInfo
         return null;
@@ -23613,8 +23523,6 @@ const SideInfoPanel = ({ gameState, className, onOpenPowers, movements, onSendLi
                 agents={gameState.agents} 
                 movements={movements} 
                 activeCityId={activeCityId} 
-                onSendLiberator={onSendLiberator}
-                combinedSlots={combinedSlots}
             />
             <TroopDisplay units={gameState.units || {}} />
         </div>
@@ -25121,17 +25029,17 @@ export default app;
   },
   "liberator": {
     "name": "Liberator",
-    "description": "A cunning agent specializing in rescue missions. Can be sent to an enemy city with silver from your cave to attempt to free a captured hero.",
+    "description": "A cunning agent specializing in infiltration and extraction. Can be sent to enemy cities to free captured heroes.",
     "image": "liberator.png",
     "cost": {
       "wood": 500,
-      "stone": 500,
+      "stone": 1500,
       "silver": 3000
     },
     "abilities": [
       {
-        "name": "Rescue Mission",
-        "description": "Attempts to free a captured hero by bribing guards. Success depends on the amount of silver sent versus the silver stored in the target's cave. Failure results in the agent's death."
+        "name": "Rescue Hero",
+        "description": "Attempts to free a captured hero from an enemy city. Success depends on the amount of silver sent versus the silver in the target's cave."
       }
     ]
   }
@@ -27374,18 +27282,16 @@ export const useAdminActions = ({
 # Unauthorized copying, modification, distribution, or use of this file,
 # in whole or in part, is strictly prohibited without prior written permission.
 */
-// src/hooks/actions/useAgentActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
 import { db } from '../../firebase/config';
-import { doc, runTransaction, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, runTransaction } from 'firebase/firestore';
 import agentsConfig from '../../gameData/agents.json';
-import { calculateDistance, calculateTravelTime } from '../../utils/travel';
 
 //  Handles actions related to agents like recruiting.
 export const useAgentActions = (cityGameState, saveGameState, setMessage) => {
     const { currentUser } = useAuth();
-    const { worldId, activeCityId, worldState } = useGame();
+    const { worldId, activeCityId } = useGame();
 
     //  Logic to recruit a new agent.
     const onRecruitAgent = async (agentId) => {
@@ -27423,73 +27329,12 @@ export const useAgentActions = (cityGameState, saveGameState, setMessage) => {
         }
     };
 
-    //  Sends a liberator agent to free a captured hero.
-    const onSendLiberator = async (heroToFree, targetCityData, silverAmount) => {
-        if (!cityGameState || !heroToFree || !targetCityData || silverAmount <= 0) {
-            setMessage("Invalid data for rescue mission.");
-            return;
-        }
-
-        const cityDocRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'cities', activeCityId);
-        const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
-
-        try {
-            await runTransaction(db, async (transaction) => {
-                const cityDoc = await transaction.get(cityDocRef);
-                if (!cityDoc.exists()) throw new Error("Your city data could not be found.");
-
-                const cityData = cityDoc.data();
-                if ((cityData.agents?.liberator || 0) < 1) {
-                    throw new Error("You do not have a Liberator agent available.");
-                }
-                if ((cityData.cave?.silver || 0) < silverAmount) {
-                    throw new Error("Not enough silver in your cave.");
-                }
-
-                // Consume agent and silver
-                const newAgents = { ...cityData.agents, liberator: cityData.agents.liberator - 1 };
-                const newCave = { ...cityData.cave, silver: cityData.cave.silver - silverAmount };
-                transaction.update(cityDocRef, { agents: newAgents, cave: newCave });
-
-                // Create movement
-                const distance = calculateDistance(cityData, targetCityData);
-                const travelSeconds = calculateTravelTime(distance, 5, 'free_hero', worldState, ['land']);
-                const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
-
-                const movementData = {
-                    type: 'free_hero',
-                    status: 'moving',
-                    originCityId: activeCityId,
-                    originOwnerId: currentUser.uid,
-                    originCityName: cityData.cityName,
-                    originCoords: { x: cityData.x, y: cityData.y },
-                    targetCityId: targetCityData.id,
-                    targetSlotId: targetCityData.slotId,
-                    targetOwnerId: targetCityData.ownerId,
-                    targetCityName: targetCityData.cityName,
-                    targetCoords: { x: targetCityData.x, y: targetCityData.y },
-                    heroToFreeId: heroToFree.heroId,
-                    heroOwnerId: heroToFree.ownerId,
-                    silverAmount: silverAmount,
-                    departureTime: serverTimestamp(),
-                    arrivalTime: arrivalTime,
-                    involvedParties: [currentUser.uid, targetCityData.ownerId]
-                };
-                transaction.set(newMovementRef, movementData);
-            });
-            setMessage(`A Liberator has been dispatched to ${targetCityData.cityName}.`);
-        } catch (error) {
-            setMessage(`Mission failed to start: ${error.message}`);
-            console.error(error);
-        }
-    };
-
     //  Placeholder for assigning an agent.
     const onAssignAgent = async (agentId) => {
         setMessage(`${agentsConfig[agentId].name} is ready for duty.`);
     };
 
-    return { onRecruitAgent, onAssignAgent, onSendLiberator };
+    return { onRecruitAgent, onAssignAgent };
 };
 </file>
 
@@ -33346,24 +33191,23 @@ export const useModalState = () => {
 <file path="src/hooks/useMovementProcessor.js">
 import { useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
-import { collection, query, where, getDocs, writeBatch, doc, getDoc, serverTimestamp, runTransaction,deleteDoc, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { useCityState } from './useCityState';
-import buildingConfig from '../gameData/buildings.json';
-import heroesConfig from '../gameData/heroes.json';
-import { calculateDistance, calculateTravelTime } from '../utils/travel';
+// import all the new processor functions
+import { processAttackMovement } from './movementProcessors/processAttackMovement';
+import { processReturnMovement } from './movementProcessors/processReturnMovement';
+import { processFoundingMovement } from './movementProcessors/processFoundingMovement';
+import { processReinforceMovement } from './movementProcessors/processReinforceMovement';
+import { processScoutMovement } from './movementProcessors/processScoutMovement';
 
-const getWarehouseCapacity = (level) => {
-    if (!level) return 0;
-    return Math.floor(1500 * Math.pow(1.4, level - 1));
-};
 
 export const useMovementProcessor = (worldId) => {
     const { getHospitalCapacity } = useCityState(worldId);
 
     const processMovement = useCallback(async (movementDoc) => {
         const movement = { id: movementDoc.id, ...movementDoc.data() };
-
-        //  Handle hero assignment first as it has no origin city
+        
+        // # Handle hero assignment first as it has no origin city
         if (movement.type === 'assign_hero') {
             const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
             try {
@@ -33382,291 +33226,69 @@ export const useMovementProcessor = (worldId) => {
                 console.error("Error processing hero assignment:", error);
                 await deleteDoc(movementDoc.ref);
             }
-            return; // End processing for this movement
+            return; // # End processing for this movement
         }
         
         const originCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
-
         let targetCityRef;
         if (movement.targetOwnerId && movement.targetCityId) {
             targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
         }
 
-        // Handle free_hero movement
-        if (movement.type === 'free_hero') {
-            try {
-                const heroOwnerCitiesRef = collection(db, `users/${movement.heroOwnerId}/games`, worldId, 'cities');
-                const heroOwnerCitiesSnap = await getDocs(heroOwnerCitiesRef);
-
-                await runTransaction(db, async (transaction) => {
-                    const targetCitySnap = await transaction.get(targetCityRef);
-                    if (!targetCitySnap.exists()) throw new Error("Target city not found.");
-
-                    const targetCityData = targetCitySnap.data();
-                    const enemyCaveSilver = targetCityData.cave?.silver || 0;
-
-                    const attackerReportRef = doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`));
-                    const defenderReportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
-
-                    if (movement.silverAmount > enemyCaveSilver) {
-                        // SUCCESS
-                        const newPrisoners = (targetCityData.prisoners || []).filter(p => p.heroId !== movement.heroToFreeId);
-                        transaction.update(targetCityRef, { prisoners: newPrisoners });
-
-                        heroOwnerCitiesSnap.forEach(cityDoc => {
-                            if (cityDoc.data().heroes?.[movement.heroToFreeId]) {
-                                transaction.update(cityDoc.ref, { [`heroes.${movement.heroToFreeId}.capturedIn`]: deleteField() });
-                            }
-                        });
-
-                        const prisonerData = (targetCityData.prisoners || []).find(p => p.heroId === movement.heroToFreeId);
-                        const homeCityCoords = prisonerData?.originCityCoords || { x: 0, y: 0 };
-                        const distance = calculateDistance(targetCityData, homeCityCoords);
-                        const travelSeconds = calculateTravelTime(distance, 10);
-                        const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
-
-                        const returnMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
-                        transaction.set(returnMovementRef, {
-                            type: 'return', status: 'returning', hero: movement.heroToFreeId,
-                            originCityId: movement.targetCityId, originCoords: { x: targetCityData.x, y: targetCityData.y },
-                            targetCityId: prisonerData?.originCityId, targetCoords: homeCityCoords,
-                            targetOwnerId: movement.heroOwnerId, departureTime: serverTimestamp(), arrivalTime,
-                            involvedParties: [movement.heroOwnerId]
-                        });
-
-                        transaction.set(attackerReportRef, {
-                            type: 'free_hero', title: `Rescue Successful!`, timestamp: serverTimestamp(), read: false,
-                            outcome: { message: `${heroesConfig[movement.heroToFreeId].name} was freed from ${movement.targetCityName}!` }
-                        });
-                        transaction.set(defenderReportRef, {
-                            type: 'free_hero', title: `Prisoner Freed!`, timestamp: serverTimestamp(), read: false,
-                            outcome: { message: `A Liberator agent from ${movement.originCityName} freed your prisoner, ${heroesConfig[movement.heroToFreeId].name}!` }
-                        });
-
-                    } else {
-                        // FAILURE
-                        const newCaveSilver = enemyCaveSilver + movement.silverAmount;
-                        transaction.update(targetCityRef, { 'cave.silver': newCaveSilver });
-
-                        transaction.set(attackerReportRef, {
-                            type: 'free_hero', title: `Rescue Failed!`, timestamp: serverTimestamp(), read: false,
-                            outcome: { message: `Your Liberator was caught and executed while trying to free ${heroesConfig[movement.heroToFreeId].name} from ${movement.targetCityName}. Your silver was confiscated.` }
-                        });
-                        transaction.set(defenderReportRef, {
-                            type: 'free_hero', title: `Rescue Attempt Foiled!`, timestamp: serverTimestamp(), read: false,
-                            outcome: { message: `An enemy Liberator was caught trying to free ${heroesConfig[movement.heroToFreeId].name}. You have confiscated ${movement.silverAmount} silver.` }
-                        });
-                    }
-                    transaction.delete(movementDoc.ref);
-                });
-            } catch (error) {
-                console.error("Error processing free_hero movement:", error);
-                await deleteDoc(movementDoc.ref);
-            }
-            return;
-        }
-
-
-        //  Handle city founding movements
-        if (movement.type === 'found_city') {
-            const targetSlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
-
-            if (movement.status === 'moving') {
-                // Troops have arrived, now start the founding timer.
-                const newArrivalTime = new Date(Date.now() + movement.foundingTimeSeconds * 1000);
-                await updateDoc(movementDoc.ref, {
-                    status: 'founding',
-                    arrivalTime: newArrivalTime,
-                });
-                return; // Stop processing, wait for founding to finish
-            }
-
-            if (movement.status === 'founding') {
-                const newCityDocRef = doc(collection(db, `users/${movement.originOwnerId}/games`, worldId, 'cities'));
-                try {
-                    await runTransaction(db, async (transaction) => {
-                        const [targetSlotSnap, originCitySnap] = await Promise.all([
-                            transaction.get(targetSlotRef),
-                            transaction.get(originCityRef)
-                        ]);
-                        if (!originCitySnap.exists()) {
-                            transaction.delete(movementDoc.ref);
-                            return;
-                        }
-                        if (!targetSlotSnap.exists() || targetSlotSnap.data().ownerId !== null) {
-                            const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
-                            const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
-                            transaction.update(movementDoc.ref, {
-                                status: 'returning',
-                                units: movement.units,
-                                agent: movement.agent,
-                                arrivalTime: returnArrivalTime,
-                                involvedParties: [movement.originOwnerId]
-                            });
-                            const failureReport = {
-                                type: 'found_city_failed',
-                                title: `Founding attempt failed`,
-                                timestamp: serverTimestamp(),
-                                outcome: { message: `The plot at (${movement.targetCoords.x}, ${movement.targetCoords.y}) was claimed by another player before your party arrived.` },
-                                read: false,
-                            };
-                            transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failureReport);
-                            return;
-                        }
-                        const originCityData = originCitySnap.data();
-                        const newCityName = movement.newCityName;
-                        transaction.update(targetSlotRef, {
-                            ownerId: movement.originOwnerId,
-                            ownerUsername: movement.originOwnerUsername,
-                            cityName: newCityName,
-                            alliance: originCityData.alliance || null,
-                            allianceName: originCityData.allianceName || null,
-                        });
-                        const initialBuildings = {};
-                        Object.keys(buildingConfig).forEach(id => {
-                            initialBuildings[id] = { level: 0 };
-                        });
-                        ['senate', 'farm', 'warehouse', 'timber_camp', 'quarry', 'silver_mine', 'cave'].forEach(id => {
-                            initialBuildings[id] = { level: 1 };
-                        });
-                        const newCityData = {
-                            id: newCityDocRef.id,
-                            slotId: movement.targetSlotId,
-                            x: movement.targetCoords.x,
-                            y: movement.targetCoords.y,
-                            islandId: targetSlotSnap.data().islandId,
-                            cityName: newCityName,
-                            playerInfo: originCityData.playerInfo,
-                            resources: { wood: 1000, stone: 1000, silver: 500 },
-                            buildings: initialBuildings,
-                            units: movement.units, wounded: {}, research: {}, worship: {},
-                            cave: { silver: 0 }, buildQueue: [], barracksQueue: [],
-                            shipyardQueue: [], divineTempleQueue: [], healQueue: [],
-                            lastUpdated: serverTimestamp(),
-                        };
-                        transaction.set(newCityDocRef, newCityData);
-                        const successReport = {
-                            type: 'found_city_success',
-                            title: `New city founded!`,
-                            timestamp: serverTimestamp(),
-                            outcome: { message: `You have successfully founded the city of ${newCityName} at (${movement.targetCoords.x}, ${movement.targetCoords.y}). Your troops have garrisoned the new city.` },
-                            read: false,
-                        };
-                        transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), successReport);
-                        transaction.delete(movementDoc.ref);
-                    });
-                } catch (error) {
-                    console.error("Error in found_city transaction:", error);
-                    await deleteDoc(movementDoc.ref);
-                }
-                return;
-            }
-        }
-
-
-        const batch = writeBatch(db);
-        const [originCitySnap] = await Promise.all([
+        const [originCitySnap, targetCitySnap] = await Promise.all([
             getDoc(originCityRef),
             targetCityRef ? getDoc(targetCityRef) : Promise.resolve(null)
         ]);
 
         if (!originCitySnap.exists()) {
-            batch.delete(movementDoc.ref);
-            await batch.commit();
+            await deleteDoc(movementDoc.ref);
             return;
         }
 
         const originCityState = originCitySnap.data();
+        const targetCityState = targetCitySnap?.exists() ? targetCitySnap.data() : null;
 
+        // # --- Dispatch based on status and type ---
         if (movement.status === 'returning') {
-            const newCityState = { ...originCityState };
-            const newUnits = { ...newCityState.units };
-            for (const unitId in movement.units) {
-                newUnits[unitId] = (newUnits[unitId] || 0) + movement.units[unitId];
+            await processReturnMovement(movement, movementDoc, worldId, getHospitalCapacity);
+        
+        } else if (movement.status === 'moving' || movement.status === 'founding') {
+            switch (movement.type) {
+                case 'found_city':
+                    await processFoundingMovement(movement, movementDoc, worldId, originCityRef);
+                    break;
+                case 'attack':
+                case 'attack_village':
+                case 'attack_ruin':
+                case 'attack_god_town':
+                    // # Fetching alliance data would happen here in a full implementation
+                    await processAttackMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
+                    break;
+                case 'reinforce':
+                    await processReinforceMovement(movement, movementDoc, worldId, targetCityRef);
+                    break;
+                case 'scout':
+                    await processScoutMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
+                    break;
+                // # trade and other movements would have cases here
+                default:
+                    console.log(`Unknown movement type: ${movement.type}. Deleting movement ${movement.id}`);
+                    await deleteDoc(movementDoc.ref);
+                    break;
             }
-            //  Return agent if it exists in the movement
-            if (movement.agent) {
-                const newAgents = { ...(newCityState.agents || {}) };
-                newAgents[movement.agent] = (newAgents[movement.agent] || 0) + 1;
-                batch.update(originCityRef, { agents: newAgents });
-            }
-
-            //  When a hero returns, update their status across ALL of the owner's cities.
-            if (movement.hero) {
-                const heroOwnerCitiesRef = collection(db, `users/${movement.originOwnerId}/games`, worldId, 'cities');
-                const heroOwnerCitiesSnap = await getDocs(heroOwnerCitiesRef);
-
-                //  Atomically update only the necessary fields for the hero in all of the owner's cities.
-                //  This prevents race conditions where a stale 'woundedUntil' field might be overwritten.
-                heroOwnerCitiesSnap.forEach(cityDoc => {
-                    const cityData = cityDoc.data();
-                    //  Check if the city has data for this hero before attempting an update.
-                    if (cityData.heroes && cityData.heroes[movement.hero]) {
-                        const updates = {};
-                        updates[`heroes.${movement.hero}.cityId`] = movement.originCityId;
-                        updates[`heroes.${movement.hero}.capturedIn`] = deleteField();
-                        
-                        //  Using updateDoc within the batch for targeted field updates.
-                        batch.update(cityDoc.ref, updates);
-                    }
-                });
-            }
-
-            const capacity = getWarehouseCapacity(newCityState.buildings.warehouse?.level);
-            const newResources = { ...newCityState.resources };
-
-            if (movement.resources) {
-                for (const resourceId in movement.resources) {
-                    newResources[resourceId] = (newResources[resourceId] || 0) + movement.resources[resourceId];
-                }
-            }
-            newResources.wood = Math.min(capacity, newResources.wood || 0);
-            newResources.stone = Math.min(capacity, newResources.stone || 0);
-            newResources.silver = Math.min(capacity, newResources.silver || 0);
-
-            const newWounded = { ...newCityState.wounded };
-            let totalWoundedInHospital = Object.values(newWounded).reduce((sum, count) => sum + count, 0);
-            const hospitalCapacity = getHospitalCapacity(newCityState.buildings.hospital?.level || 0);
-
-            if (movement.wounded) {
-                for (const unitId in movement.wounded) {
-                    const woundedCount = movement.wounded[unitId];
-                    if (totalWoundedInHospital < hospitalCapacity) {
-                        const canFit = hospitalCapacity - totalWoundedInHospital;
-                        const toHeal = Math.min(canFit, woundedCount);
-                        newWounded[unitId] = (newWounded[unitId] || 0) + toHeal;
-                        totalWoundedInHospital += toHeal;
-                    }
-                }
-            }
-
-             const returnReport = {
-                type: 'return',
-                title: `Troops returned to ${originCityState.cityName}`,
-                timestamp: serverTimestamp(),
-                units: movement.units || {},
-                hero: movement.hero || null,
-                resources: movement.resources || {},
-                wounded: movement.wounded || {},
-                read: false,
-            };
-
-            batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), returnReport);
-            batch.update(originCityRef, { units: newUnits, resources: newResources, wounded: newWounded });
-            batch.delete(movementDoc.ref);
-            await batch.commit();
-        } else if (movement.status === 'moving') {
-            // ... (rest of the combat/scout/reinforce logic)
         }
     }, [worldId, getHospitalCapacity]);
 
+    // # this effect remains to find and trigger processing for arrived movements
     useEffect(() => {
         const processMovements = async () => {
             if (!worldId) return;
             const movementsRef = collection(db, 'worlds', worldId, 'movements');
             const q = query(movementsRef, where('arrivalTime', '<=', new Date()));
             const arrivedMovementsSnapshot = await getDocs(q);
+
             if (arrivedMovementsSnapshot.empty) return;
+
             console.log(`Found ${arrivedMovementsSnapshot.docs.length} arrived movements to process.`);
             for (const movementDoc of arrivedMovementsSnapshot.docs) {
                 try {
@@ -33676,7 +33298,8 @@ export const useMovementProcessor = (worldId) => {
                 }
             }
         };
-        const interval = setInterval(processMovements, 5000);
+
+        const interval = setInterval(processMovements, 5000); // # check every 5 seconds
         return () => clearInterval(interval);
     }, [worldId, processMovement]);
 };

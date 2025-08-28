@@ -22,6 +22,7 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
     if (!city) return null;
 
     const isOwnCity = city.ownerId === currentUser.uid;
+    const canRescue = city.capturedHero && city.capturedHero[1] === currentUser.uid;
 
     const resourceImages = {
         wood: woodImage,
@@ -157,6 +158,14 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
                                                 className="action-btn"
                                             >
                                                 Withdraw Troops
+                                            </button>
+                                        )}
+                                        {canRescue && (
+                                            <button
+                                                onClick={() => onAction('rescue', city)}
+                                                className="action-btn"
+                                            >
+                                                Rescue Hero
                                             </button>
                                         )}
                                         <button 

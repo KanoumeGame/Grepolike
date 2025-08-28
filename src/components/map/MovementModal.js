@@ -66,7 +66,7 @@ const WindInfo = ({ weather, windSpeed }) => {
 
 
 // MovementModal component allows players to send units or resources for various actions.
-const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlayerUnits, playerResources: initialPlayerResources, travelTimeInfo, onSend, onClose, setMessage }) => {
+const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlayerUnits, playerResources: initialPlayerResources, travelTimeInfo, onSend, onClose, setMessage, movements }) => {
     const { gameState, worldState } = useGame();
     const [windSpeed, setWindSpeed] = useState(0);
 
@@ -286,7 +286,11 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         const availableHeroes = Object.keys(currentHeroes).filter(heroId => {
             const heroData = currentHeroes[heroId];
             if (!heroData.active || heroData.capturedIn) return false;
-    
+            
+            // # Check if hero is in another movement
+            const isTraveling = (movements || []).some(m => m.hero === heroId);
+            if(isTraveling) return false;
+
             //  Check if the hero is wounded
             const woundedUntilDate = heroData.woundedUntil?.toDate ? heroData.woundedUntil.toDate() : (heroData.woundedUntil ? new Date(heroData.woundedUntil) : null);
             const isWounded = woundedUntilDate && woundedUntilDate > new Date();

@@ -30,13 +30,16 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         } else if (mode === 'profile') {
             openModal('profile', { userId: targetCity.ownerId });
             closeModal('city');
+        } else if (mode === 'rescue') {
+            openModal('rescue', targetCity);
+            closeModal('city');
         } else if (['information', 'rally'].includes(mode)) {
             setMessage(`${mode.charAt(0).toUpperCase() + mode.slice(1)} is not yet implemented.`);
         }
     }, [openModal, closeModal, setMessage]);
 
     const handleSendMovement = useCallback(async (movementDetails) => {
-        const { mode, targetCity, units, resources, attackFormation, hero } = movementDetails;
+        const { mode, targetCity, units, resources, attackFormation, hero, silver, heroToRescueId } = movementDetails;
 
         if (!playerCity) {
             setMessage("Cannot send movement: Your city data could not be found.");
@@ -102,7 +105,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const distance = calculateDistance(playerCity, targetCity);
         const unitsBeingSent = Object.entries(units || {}).filter(([, count]) => count > 0);
         
-        if (unitsBeingSent.length === 0 && !['trade', 'scout'].includes(mode) && !hero) {
+        if (unitsBeingSent.length === 0 && !['trade', 'scout', 'rescue_hero'].includes(mode) && !hero) {
             setMessage("No units or hero selected for movement.");
             return;
         }
@@ -117,7 +120,29 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         let movementData;
 
-        if (mode === 'attack' && targetCity.isGodTownTarget) {
+        if (mode === 'rescue_hero') {
+            movementData = {
+                type: 'rescue_hero',
+                originCityId: playerCity.id,
+                originCoords: { x: playerCity.x, y: playerCity.y },
+                originOwnerId: currentUser.uid,
+                originCityName: playerCity.cityName,
+                originOwnerUsername: userProfile.username,
+                targetCityId: targetCityDocId,
+                targetSlotId: targetCity.id,
+                targetCoords: { x: targetCity.x, y: targetCity.y },
+                targetOwnerId: finalTargetOwnerId,
+                ownerUsername: targetCity.ownerUsername,
+                targetCityName: targetCity.cityName,
+                silver: silver,
+                heroToRescueId: heroToRescueId,
+                agent: 'liberator',
+                departureTime: serverTimestamp(),
+                arrivalTime: arrivalTime,
+                status: 'moving',
+                involvedParties: [currentUser.uid, finalTargetOwnerId],
+            };
+        } else if (mode === 'attack' && targetCity.isGodTownTarget) {
             movementData = {
                 type: 'attack_god_town',
                 originCityId: playerCity.id,
@@ -223,10 +248,17 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         const updatedResources = { ...gameState.resources };
         const updatedCave = { ...gameState.cave };
+        const updatedAgents = { ...gameState.agents };
+
         if (mode === 'scout') {
             if (resources && resources.silver) {
                 updatedCave.silver = (updatedCave.silver || 0) - resources.silver;
             }
+        } else if (mode === 'rescue_hero') {
+            if (silver) {
+                updatedCave.silver = (updatedCave.silver || 0) - silver;
+            }
+            updatedAgents.liberator = (updatedAgents.liberator || 0) - 1;
         } else if (resources) {
             for (const resource in resources) {
                 updatedResources[resource] -= resources[resource];
@@ -242,7 +274,8 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             units: updatedUnits,
             resources: updatedResources,
             cave: updatedCave,
-            heroes: updatedHeroes
+            heroes: updatedHeroes,
+            agents: updatedAgents
         });
 
         const newGameState = {
@@ -250,7 +283,8 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             units: updatedUnits,
             resources: updatedResources,
             cave: updatedCave,
-            heroes: updatedHeroes
+            heroes: updatedHeroes,
+            agents: updatedAgents
         };
 
         try {

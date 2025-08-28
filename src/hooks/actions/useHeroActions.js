@@ -186,6 +186,9 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         }
     
         const capturingCityRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'cities', activeCityId);
+        const capturingCityData = cityGameState;
+        const capturingCitySlotId = capturingCityData.slotId;
+        const capturingCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', capturingCitySlotId);
         
         try {
             //  Fetch all cities of the hero's owner BEFORE the transaction
@@ -206,6 +209,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
                 }
     
                 transaction.update(capturingCityRef, { prisoners: newPrisoners });
+                transaction.update(capturingCitySlotRef, { capturedHero: deleteField() });
     
                 //  Atomically remove the 'capturedIn' field without overwriting other hero data.
                 heroOwnerCitiesSnap.forEach(cityDoc => {

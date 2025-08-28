@@ -3,6 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import godTownImage from '../../images/god-town.png';
 import unitConfig from '../../gameData/units.json';
 import allianceWonders from '../../gameData/alliance_wonders.json';
+import heroesConfig from '../../gameData/heroes.json';
+
 const images = {};
 const imageContexts = [
     require.context('../../images', false, /\.(png|jpe?g|svg)$/),
@@ -78,6 +80,14 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         } else if (scoutedCities && scoutedCities[slotData.id]) {
             troopsHTML = formatUnitsForTooltip(scoutedCities[slotData.id]);
         }
+        
+        const capturedHeroData = slotData.capturedHero;
+        let capturedHeroText = '';
+        if (capturedHeroData && Array.isArray(capturedHeroData) && capturedHeroData.length === 2) {
+            const heroName = heroesConfig[capturedHeroData[0]]?.name || 'Unknown Hero';
+            capturedHeroText = `<br><b style="color: red;">Imprisoned: ${heroName}</b>`;
+        }
+
         const baseInfo = `
             <div class="tooltip-info-section">
                 <b>${slotData.cityName}</b><br>
@@ -86,7 +96,8 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
                 Alliance: ${cityAllianceName || 'None'}
             </div>
         `;
-        tooltipText = `${baseInfo}${troopsHTML}`;
+        tooltipText = `${baseInfo}${capturedHeroText}${troopsHTML}`;
+
         if (slotData.ownerId !== currentUser.uid && slotData.ownerId !== 'ghost') {
             if (playerAlliance && playerAlliance.tag && cityAllianceTag) {
                 const allies = playerAlliance.diplomacy?.allies || [];

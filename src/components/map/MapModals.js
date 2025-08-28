@@ -7,6 +7,7 @@ import MovementsPanel from './MovementsPanel';
 import ReinforcementModal from '../city/ReinforcementModal';
 import { useAuth } from '../../contexts/AuthContext';
 import EmptyCityModal from './EmptyCityModal';
+import RescueModal from './RescueModal';
 
 const MapModals = ({
     modalState,
@@ -99,6 +100,9 @@ const MapModals = ({
             if (canWithdraw) {
                 allActions.push({ label: 'Withdraw Troops', icon: '🛡️', handler: () => onWithdraw(selectedCity) });
             }
+            if (selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid) {
+                allActions.push({ label: 'Rescue Hero', icon: '🗝️', handler: () => handleActionClick('rescue', selectedCity) });
+            }
         }
 
         const centerAction = allActions.find(a => a.label === 'Select City');
@@ -137,6 +141,7 @@ const MapModals = ({
                     gameState={gameState}
                     travelTimeInfo={travelTimeInfo}
                     setMessage={setMessage}
+                    movements={movements}
                 />
             )}
             {modalState.isMovementsPanelOpen && (
@@ -164,6 +169,14 @@ const MapModals = ({
                     onClose={() => closeModal('emptyCity')}
                     onFoundCity={onFoundCity}
                     cityGameState={gameState}
+                />
+            )}
+            {modalState.isRescueModalOpen && (
+                 <RescueModal
+                    targetCity={modalState.rescueModalData}
+                    onClose={() => closeModal('rescue')}
+                    onSend={handleSendMovement}
+                    setMessage={setMessage}
                 />
             )}
         </>
