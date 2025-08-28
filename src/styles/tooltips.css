@@ -157,3 +157,18 @@
     transform: none;
     margin-right: 10px;
 }
+.senate-tooltip {
+    position: fixed;
+    background-color: #ae9670;
+    border: 2px solid #4a2c2a;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 1000;
+    pointer-events: none;
+    font-size: 0.9em;
+    color: #4a2c2a;
+    max-width: 300px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    transition: opacity 0.2s;
+    white-space: pre-wrap;
+}

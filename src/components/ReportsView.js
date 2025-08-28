@@ -61,7 +61,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
         'Reinforce': ['reinforce'],
         'Trade': ['trade'],
         'Scout': ['scout', 'spy_caught'],
-        'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail'],
+        'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail', 'found_city_success', 'found_city_failed', 'assign_hero_failed', 'rescue_success', 'rescue_foiled', 'rescue_failure', 'rescue_thwarted'],
     };
 
     // Handle dragging the modal window
@@ -444,6 +444,13 @@ const ReportsView = ({ onClose, onActionClick }) => {
             case 'spell_cast':
             case 'spell_received':
             case 'spell_fail':
+            case 'found_city_success':
+            case 'found_city_failed':
+            case 'assign_hero_failed':
+            case 'rescue_success':
+            case 'rescue_foiled':
+            case 'rescue_failure':
+            case 'rescue_thwarted':
                 return (
                     <div className="space-y-2 text-center">
                         <p className="font-bold text-lg">{report.title}</p>

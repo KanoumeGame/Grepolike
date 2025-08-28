@@ -4,7 +4,8 @@ import { db } from '../../firebase/config';
 import buildingConfig from '../../gameData/buildings.json';
 import specialBuildingsConfig from '../../gameData/specialBuildings.json';
 import BuildQueue from './BuildQueue';
-import './SenateView.css'; 
+import Tooltip from './Tooltip'; // Import the Tooltip component
+import './SenateView.css';
 
 const buildingImages = {};
 const contexts = [
@@ -18,7 +19,7 @@ contexts.forEach(context => {
     });
 });
 
-//  A reusable confirmation modal
+// A reusable confirmation modal
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]">
         <div className="bg-gray-800 p-6 rounded-lg text-white">
@@ -31,7 +32,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     </div>
 );
 
-//  Component to manage workers in production buildings
+// Component to manage workers in production buildings
 const WorkerManager = ({ buildings, onAddWorker, onRemoveWorker, getMaxWorkerSlots, availablePopulation }) => {
     const productionBuildings = ['timber_camp', 'quarry', 'silver_mine'];
     return (
@@ -107,7 +108,7 @@ const PresetManager = ({ presets, selectedPresetId, setSelectedPresetId, handleA
     );
 };
 
-const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, onUpgrade, isQueueFull, isMaxLevel }) => {
+const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, onUpgrade, isQueueFull, isMaxLevel, onMouseEnter, onMouseLeave }) => {
     let buttonText;
     if (level === 0 && finalQueuedLevel === 0) {
         buttonText = 'Build';
@@ -118,7 +119,6 @@ const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, on
     let disabledReason = '';
     if (isMaxLevel) disabledReason = 'Max Level';
     else if (isQueueFull) disabledReason = 'Queue Full';
-    else if (!canAfford) disabledReason = 'Not enough resources/pop';
 
     return (
         <div className="bg-gray-700/80 border-2 border-gray-600 rounded-lg p-2 w-48 text-center flex flex-col items-center relative shadow-lg">
@@ -128,13 +128,12 @@ const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, on
                 Level {level} {finalQueuedLevel > level ? `(-> ${finalQueuedLevel})` : ''}
             </p>
             <img src={buildingImages[config.image]} alt={config.name} className="w-20 h-20 object-contain my-1" />
-            <div className="text-xs text-gray-400 mb-2">
-                <span>{cost.wood}W</span>, <span>{cost.stone}S</span>, <span>{cost.silver}Ag</span>, <span>{cost.population}P</span>
-            </div>
             <button
                 onClick={() => onUpgrade(id)}
-                disabled={!canAfford || isQueueFull || isMaxLevel}
-                className={`w-full py-1.5 rounded font-bold text-sm transition-colors ${!canAfford || isQueueFull || isMaxLevel ? 'btn-disabled' : 'btn-upgrade'}`}
+                disabled={isQueueFull || isMaxLevel}
+                className={`w-full py-1.5 rounded font-bold text-sm transition-colors mt-auto ${!canAfford || isQueueFull || isMaxLevel ? 'btn-disabled' : 'btn-upgrade'}`}
+                onMouseEnter={(e) => onMouseEnter(e, id, finalQueuedLevel + 1)}
+                onMouseLeave={onMouseLeave}
             >
                 {disabledReason || buttonText}
             </button>
@@ -155,7 +154,7 @@ const SpecialBuildingCard = ({ cityGameState, onOpenSpecialBuildingMenu }) => {
             <button
                 onClick={onOpenSpecialBuildingMenu}
                 disabled={!!specialBuildingId}
-                className={`w-full py-1.5 rounded font-bold text-sm transition-colors ${!!specialBuildingId ? 'btn-disabled' : 'btn-upgrade'}`}
+                className={`w-full py-1.5 rounded font-bold text-sm transition-colors mt-auto ${!!specialBuildingId ? 'btn-disabled' : 'btn-upgrade'}`}
             >
                 {specialBuildingId ? 'Constructed' : 'Build Wonder'}
             </button>
@@ -174,6 +173,66 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [activeTooltip, setActiveTooltip] = useState({ visible: false, buildingId: null, level: 0, x: 0, y: 0 });
+
+    const handleMouseEnter = (e, buildingId, level) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setActiveTooltip({
+            visible: true,
+            buildingId,
+            level,
+            x: rect.left + rect.width / 2,
+            y: rect.bottom,
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setActiveTooltip(prev => ({ ...prev, visible: false }));
+    };
+
+    const handleUpgradeWrapper = (buildingId) => {
+        onUpgrade(buildingId);
+        setActiveTooltip(prev => {
+            if (prev.visible && prev.buildingId === buildingId) {
+                return { ...prev, level: prev.level + 1 };
+            }
+            return prev;
+        });
+    };
+
+    const generateTooltipContent = (buildingId, level) => {
+        const config = buildingConfig[buildingId] || specialBuildingsConfig[buildingId];
+        if (!config || level > (config.maxLevel || 99)) return null;
+
+        const cost = getUpgradeCost(buildingId, level);
+        const requirements = config.requirements;
+        let reqElements = [];
+        if (requirements) {
+            for (const reqId in requirements) {
+                const reqLevel = requirements[reqId];
+                const currentLevel = buildings[reqId]?.level || 0;
+                const reqConfig = buildingConfig[reqId];
+                const color = currentLevel >= reqLevel ? 'text-green-800' : 'text-red-800';
+                reqElements.push(
+                    <p key={reqId} className={`font-semibold ${color}`}>
+                        Requires: {reqConfig.name} Lvl {reqLevel} (Current: {currentLevel})
+                    </p>
+                );
+            }
+        }
+
+        return (
+            <div className="text-left">
+                <h4 className="font-bold text-lg mb-1">{config.name} - Level {level}</h4>
+                <p className="text-sm mb-2">{config.description}</p>
+                <div className="text-xs space-y-0.5">
+                    <p><strong>Cost:</strong> {cost.wood}W ({Math.floor(resources.wood)}), {cost.stone}S ({Math.floor(resources.stone)}), {cost.silver}Ag ({Math.floor(resources.silver)}), {cost.population}P</p>
+                    <p><strong>Time:</strong> {cost.time}s</p>
+                    {reqElements}
+                </div>
+            </div>
+        );
+    };
 
     useEffect(() => {
     if (senateRef.current) {
@@ -199,11 +258,8 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         if (isDragging) {
             const newX = e.clientX - dragStart.x;
             const newY = e.clientY - dragStart.y;
-
-            // Clamp to visible window
             const clampedX = Math.max(0, Math.min(newX, window.innerWidth - senateRef.current.offsetWidth));
             const clampedY = Math.max(0, Math.min(newY, window.innerHeight - senateRef.current.offsetHeight));
-
             setPosition({ x: clampedX, y: clampedY });
         }
     }, [isDragging, dragStart]);
@@ -237,7 +293,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         ['special_building_plot']
     ];
 
-    //  Fetch user's building presets
     useEffect(() => {
         if (!currentUser || !worldId) return;
         const presetsRef = collection(db, `users/${currentUser.uid}/games/${worldId}/presets`);
@@ -274,7 +329,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             setIsSavingPreset(false);
             return;
         }
-
         const onConfirmSave = async () => {
             const currentWorkers = {};
             const productionBuildings = ['timber_camp', 'quarry', 'silver_mine'];
@@ -292,7 +346,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             setConfirmAction(null);
             setMessage(`Preset '${presetData.name}' saved successfully!`);
         };
-
         if (existingPreset) {
             setConfirmAction({
                 message: `A preset named "${newPresetName.trim()}" already exists. Do you want to overwrite it?`,
@@ -303,7 +356,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         }
     };
 
-    //  Delete the selected preset after confirmation
     const handleDeletePreset = async () => {
         if (!selectedPresetId) return;
         const presetName = presets.find(p => p.id === selectedPresetId)?.name;
@@ -319,7 +371,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         });
     };
 
-    //  Apply worker distribution from the selected preset
     const handleApplyPreset = () => {
         const selectedPreset = presets.find(p => p.id === selectedPresetId);
         if (!selectedPreset) {
@@ -331,6 +382,12 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30">
+            <Tooltip
+                visible={activeTooltip.visible}
+                content={generateTooltipContent(activeTooltip.buildingId, activeTooltip.level)}
+                x={activeTooltip.x}
+                y={activeTooltip.y}
+            />
             {confirmAction && (
                 <ConfirmationModal
                     message={confirmAction.message}
@@ -412,9 +469,11 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
                                                 finalQueuedLevel={finalQueuedLevel}
                                                 cost={cost}
                                                 canAfford={canAfford}
-                                                onUpgrade={onUpgrade}
+                                                onUpgrade={handleUpgradeWrapper}
                                                 isQueueFull={isQueueFull}
                                                 isMaxLevel={isMaxLevel}
+                                                onMouseEnter={handleMouseEnter}
+                                                onMouseLeave={handleMouseLeave}
                                             />
                                         );
                                     })}
