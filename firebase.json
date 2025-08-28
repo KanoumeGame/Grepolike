@@ -11,7 +11,10 @@
         "source": "**",
         "destination": "/index.html"
       }
-    ]
+    ],
+    "versionHistory": {
+      "retainedVersions": 10
+    }
   },
   "emulators": {
     "ui": {
