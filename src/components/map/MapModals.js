@@ -1,3 +1,4 @@
+// src/components/map/MapModals.js
 import React, { useMemo } from 'react';
 import RadialMenu from './RadialMenu';
 import OtherCityModal from './OtherCityModal';
@@ -46,6 +47,8 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
+        console.log("Selected City in MapModals:", selectedCity);
+
         if (selectedCity.isRuinTarget || selectedCity.isVillageTarget) {
             return (
                 <OtherCityModal
@@ -93,14 +96,19 @@ const MapModals = ({
                 { label: 'Reinforce', icon: '🛡️', handler: () => handleActionClick('reinforce', selectedCity) },
                 { label: 'Scout', icon: '👁️', handler: () => handleActionClick('scout', selectedCity) },
                 { label: 'Trade', icon: '⚖️', handler: () => handleActionClick('trade', selectedCity) },
-                //  Corrected this handler to use handleActionClick
                 { label: 'Cast Spell', icon: '✨', handler: () => handleActionClick('castSpell', selectedCity) },
                 { label: 'Profile', icon: '👤', handler: () => handleActionClick('profile', selectedCity) },
             ];
             if (canWithdraw) {
                 allActions.push({ label: 'Withdraw Troops', icon: '🛡️', handler: () => onWithdraw(selectedCity) });
             }
-            if (selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid) {
+            const canRescue = selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid;
+            console.log("Can Rescue Check:", {
+                capturedHero: selectedCity.capturedHero,
+                currentUserId: currentUser.uid,
+                result: canRescue
+            });
+            if (canRescue) {
                 allActions.push({ label: 'Rescue Hero', icon: '🗝️', handler: () => handleActionClick('rescue', selectedCity) });
             }
         }
@@ -153,7 +161,7 @@ const MapModals = ({
                     goToCoordinates={goToCoordinates}
                     onCancel={handleCancelMovement}
                     onRush={handleRushMovement}
-                    isAdmin={userProfile?.is_admin}
+                    userProfile={userProfile}
                 />
             )}
             {modalState.isReinforcementsModalOpen && (

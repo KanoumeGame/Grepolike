@@ -1,3 +1,4 @@
+// src/components/map/RescueModal.js
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { calculateDistance, calculateTravelTime, formatTravelTime } from '../../utils/travel';

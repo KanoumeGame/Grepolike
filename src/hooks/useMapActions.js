@@ -1,3 +1,4 @@
+// src/hooks/useMapActions.js
 import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';

@@ -1,3 +1,4 @@
+// src/hooks/useMapClickHandler.js
 import { calculateDistance } from '../utils/travel';
 import { getVillageTroops } from '../utils/combat';
 
@@ -16,6 +17,7 @@ export const useMapClickHandler = ({
 }) => {
 
     const onCitySlotClick = (e, slotData) => {
+        console.log("onCitySlotClick triggered. slotData:", slotData);
         if (!playerCity) {
             setMessage("Your city data is still loading. Please wait a moment.");
             return;

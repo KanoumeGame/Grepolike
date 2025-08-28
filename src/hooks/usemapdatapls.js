@@ -1,3 +1,4 @@
+// src/hooks/usemapdatapls.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -24,7 +25,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
     }, []);
 
     useEffect(() => {
-        //  Cleanup all listeners on unmount
+        // # Cleanup all listeners on unmount
         return () => {
             Object.values(activeListenersRef.current).forEach(unsubArray => {
                 if (Array.isArray(unsubArray)) {
@@ -79,7 +80,11 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
                     const unsubscribe = onSnapshot(q, (snapshot) => {
                         const chunkData = {};
                         snapshot.forEach(doc => {
-                            chunkData[doc.id] = { id: doc.id, ...doc.data() };
+                            const data = doc.data();
+                            if (data.capturedHero) {
+                                console.log(`[useMapData] Fetched slot ${doc.id} with capturedHero:`, data.capturedHero);
+                            }
+                            chunkData[doc.id] = { id: doc.id, ...data };
                         });
                         setCachedData(prevCache => ({
                             ...prevCache,
@@ -116,6 +121,9 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
             Object.values(chunk.citySlots || {}).forEach(slot => {
                 if (slot.x >= viewStartCol && slot.x <= viewEndCol && slot.y >= viewStartRow && slot.y <= viewEndRow) {
                     newVisibleSlots[slot.id] = slot;
+                    if (slot.capturedHero) {
+                        console.log(`[useMapData -> setVisibleSlots] Slot ${slot.id} has capturedHero:`, slot.capturedHero);
+                    }
                 }
             });
             Object.values(chunk.villages || {}).forEach(village => {

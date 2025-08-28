@@ -74,7 +74,7 @@ const WeatherDisplay = ({ season, weather }) => {
     );
 };
 
-const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }) => {
+const ResourceTooltip = ({ resource, current, production, capacity, isLocked, countdown }) => {
     if (!resource) return null;
 
     if (resource === 'platinum') {
@@ -82,6 +82,19 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
             <div className="resource-tooltip">
                 <h4 className="font-bold capitalize text-lg">Platinum</h4>
                 <p className="text-sm">A premium currency used for special advantages.</p>
+                <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
+                <div className="tooltip-lock-timer">
+                    {isLocked ? '🔒' : countdown}
+                </div>
+            </div>
+        );
+    }
+
+    if (resource === 'population') {
+        return (
+            <div className="resource-tooltip">
+                <h4 className="font-bold capitalize text-lg">Population</h4>
+                <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
                 <div className="tooltip-lock-timer">
                     {isLocked ? '🔒' : countdown}
                 </div>
@@ -92,6 +105,7 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
     return (
         <div className="resource-tooltip">
             <h4 className="font-bold capitalize text-lg">{resource}</h4>
+            <p className="text-sm">Current: <span className="font-semibold">{current.toLocaleString()}</span></p>
             <p className="text-sm">Production: <span className="font-semibold">+{production}/hr</span></p>
             <p className="text-sm">Capacity: <span className="font-semibold">{capacity.toLocaleString()}</span></p>
             <div className="tooltip-lock-timer">
@@ -99,6 +113,13 @@ const ResourceTooltip = ({ resource, production, capacity, isLocked, countdown }
             </div>
         </div>
     );
+};
+
+const formatNumber = (num) => {
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return num.toString();
 };
 
 const TopBar = ({
@@ -367,7 +388,7 @@ const TopBar = ({
             </div>
 
             {/* Right side */}
-            <div className="flex-1 flex justify-end items-center space-x-2" onMouseLeave={handleMouseLeave}>
+            <div className="flex justify-end items-center space-x-2" onMouseLeave={handleMouseLeave}>
                  <div
                     ref={activityTrackerRef}
                     className="activity-tracker-container"
@@ -429,10 +450,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'wood')}
                 >
                     <img src={woodImage} alt="Wood" className="w-6 h-6 mr-2"/>
-                    <span className="text-yellow-800 font-bold">{Math.floor(resources.wood || 0)}</span>
+                    <span className="text-yellow-800 font-bold">{formatNumber(Math.floor(resources.wood || 0))}</span>
                     {activeTooltip === 'wood' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="wood"
+                            current={Math.floor(resources.wood || 0)}
                             production={productionRates.wood}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -446,10 +468,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'stone')}
                 >
                     <img src={stoneImage} alt="Stone" className="w-6 h-6 mr-2"/>
-                    <span className="text-gray-600 font-bold">{Math.floor(resources.stone || 0)}</span>
+                    <span className="text-gray-600 font-bold">{formatNumber(Math.floor(resources.stone || 0))}</span>
                      {activeTooltip === 'stone' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="stone"
+                            current={Math.floor(resources.stone || 0)}
                             production={productionRates.stone}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -463,10 +486,11 @@ const TopBar = ({
                     onClick={(e) => handleTooltipClick(e, 'silver')}
                 >
                     <img src={silverImage} alt="Silver" className="w-6 h-6 mr-2"/>
-                    <span className="text-blue-800 font-bold">{Math.floor(resources.silver || 0)}</span>
+                    <span className="text-blue-800 font-bold">{formatNumber(Math.floor(resources.silver || 0))}</span>
                      {activeTooltip === 'silver' && productionRates && getWarehouseCapacity && (
                         <ResourceTooltip
                             resource="silver"
+                            current={Math.floor(resources.silver || 0)}
                             production={productionRates.silver}
                             capacity={getWarehouseCapacity(gameState.buildings.warehouse.level)}
                             isLocked={isTooltipLocked}
@@ -479,19 +503,32 @@ const TopBar = ({
                     onMouseEnter={() => handleMouseEnter('platinum')}
                     onClick={(e) => handleTooltipClick(e, 'platinum')}
                 >
-                    <PlatinumIcon className="w-6 h-6 mr-2 text-gray-200" />
-                    <span className="font-bold text-gray-300">{Math.floor(playerGameData?.platinum || 0)}</span>
+                    <PlatinumIcon className="w-6 h-6 mr-2 text-gray-400" />
+                    <span className="font-bold text-gray-500">{formatNumber(Math.floor(playerGameData?.platinum || 0))}</span>
                     {activeTooltip === 'platinum' && (
                         <ResourceTooltip
                             resource="platinum"
+                            current={Math.floor(playerGameData?.platinum || 0)}
                             isLocked={isTooltipLocked}
                             countdown={lockCountdown}
                         />
                     )}
                 </div>
-                <div className="resource-display">
+                <div 
+                    className="resource-display relative"
+                    onMouseEnter={() => handleMouseEnter('population')}
+                    onClick={(e) => handleTooltipClick(e, 'population')}
+                >
                     <img src={populationImage} alt="Population" className="w-6 h-6 mr-2"/>
-                    <span className="font-bold text-red-800">{Math.floor(availablePopulation || 0)}</span>
+                    <span className="font-bold text-red-800">{formatNumber(Math.floor(availablePopulation || 0))}</span>
+                    {activeTooltip === 'population' && (
+                        <ResourceTooltip
+                            resource="population"
+                            current={Math.floor(availablePopulation || 0)}
+                            isLocked={isTooltipLocked}
+                            countdown={lockCountdown}
+                        />
+                    )}
                 </div>
                 <div
                     className="resource-display relative"

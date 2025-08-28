@@ -1,3 +1,4 @@
+// src/components/MapView.js
 import React, { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -268,7 +269,14 @@ const MapView = ({
                     ownerId: currentUser.uid,
                     ownerUsername: userProfile.username
                 };
+                if (existingSlotData.capturedHero && !newSlots[pCity.slotId].capturedHero) {
+                    console.log(`[MapView] capturedHero field was overwritten for slot ${pCity.slotId}`);
+                }
             }
+        }
+        const capturedCity = Object.values(newSlots).find(s => s.capturedHero);
+        if (capturedCity) {
+            console.log("[MapView] combinedSlots contains a city with a captured hero:", capturedCity);
         }
         return newSlots;
     }, [visibleSlots, playerCities, currentUser.uid, userProfile.username]);
@@ -349,7 +357,7 @@ const MapView = ({
             case 'damage_building': {
                 if (isSelfCast) break;
                 const buildings = { ...targetGameState.buildings };
-                const buildingKeys = Object.keys(buildings).filter(b => buildings[b].level > 0);
+                const buildingKeys = Object.keys(buildings).filter(b => buildings[b].level > 0 && buildingConfig[b].constructible !== false);
                 if (buildingKeys.length > 0) {
                     const randomBuildingKey = buildingKeys[Math.floor(Math.random() * buildingKeys.length)];
                     buildings[randomBuildingKey].level = Math.max(0, buildings[randomBuildingKey].level - power.effect.amount);

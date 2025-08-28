@@ -8,11 +8,10 @@ import stoneImage from '../../images/resources/stone.png';
 import silverImage from '../../images/resources/silver.png';
 import './OtherCityModal.css';
 import { useAuth } from '../../contexts/AuthContext';
-import { useGame } from '../../contexts/GameContext';
 
 const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) => {
     const { currentUser } = useAuth();
-    const { setActiveCityId } = useGame();
+    console.log("OtherCityModal received city prop:", city);
 
     const canWithdraw = useMemo(() => {
         if (!city || !city.reinforcements) return false;
@@ -21,8 +20,9 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
 
     if (!city) return null;
 
-    const isOwnCity = city.ownerId === currentUser.uid;
     const canRescue = city.capturedHero && city.capturedHero[1] === currentUser.uid;
+    console.log("OtherCityModal canRescue check:", canRescue, "capturedHero:", city.capturedHero, "currentUser.uid:", currentUser.uid);
+
 
     const resourceImages = {
         wood: woodImage,
@@ -34,11 +34,6 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
         if (onGoTo) {
             onGoTo(city.x, city.y);
         }
-        onClose();
-    };
-    
-    const handleGoToCity = () => {
-        setActiveCityId(city.id);
         onClose();
     };
 
@@ -131,75 +126,64 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
                             </button>
                         ) : !isRuin ? (
                             <>
-                                {isOwnCity ? (
+                                <button 
+                                    onClick={() => onAction('attack', city)}
+                                    className="action-btn attack-btn"
+                                >
+                                    Attack
+                                </button>
+                                <button 
+                                    onClick={() => onAction('reinforce', city)}
+                                    className="action-btn reinforce-btn"
+                                >
+                                    Reinforce
+                                </button>
+                                {canWithdraw && (
                                     <button 
-                                        onClick={handleGoToCity}
-                                        className="action-btn col-span-2"
+                                        onClick={() => onAction('withdraw', city)}
+                                        className="action-btn"
                                     >
-                                        Go to City
+                                        Withdraw Troops
                                     </button>
-                                ) : (
-                                    <>
-                                        <button 
-                                            onClick={() => onAction('attack', city)}
-                                            className="action-btn attack-btn"
-                                        >
-                                            Attack
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('reinforce', city)}
-                                            className="action-btn reinforce-btn"
-                                        >
-                                            Reinforce
-                                        </button>
-                                        {canWithdraw && (
-                                            <button 
-                                                onClick={() => onAction('withdraw', city)}
-                                                className="action-btn"
-                                            >
-                                                Withdraw Troops
-                                            </button>
-                                        )}
-                                        {canRescue && (
-                                            <button
-                                                onClick={() => onAction('rescue', city)}
-                                                className="action-btn"
-                                            >
-                                                Rescue Hero
-                                            </button>
-                                        )}
-                                        <button 
-                                            onClick={() => onAction('scout', city)}
-                                            className="action-btn"
-                                        >
-                                            Scout
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('trade', city)}
-                                            className="action-btn"
-                                        >
-                                            Trade
-                                        </button>
-                                         <button 
-                                            onClick={() => onAction('castSpell', city)}
-                                            className="action-btn spell-btn"
-                                        >
-                                            Cast Spell
-                                        </button>
-                                        <button 
-                                            onClick={() => onAction('profile', city)}
-                                            className="action-btn"
-                                        >
-                                            Profile
-                                        </button>
-                                        <button 
-                                            onClick={handleGoTo}
-                                            className="action-btn"
-                                        >
-                                            Go To
-                                        </button>
-                                    </>
                                 )}
+                                {canRescue && (
+                                    <button
+                                        onClick={() => onAction('rescue', city)}
+                                        className="action-btn"
+                                    >
+                                        Rescue Hero
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={() => onAction('scout', city)}
+                                    className="action-btn"
+                                >
+                                    Scout
+                                </button>
+                                <button 
+                                    onClick={() => onAction('trade', city)}
+                                    className="action-btn"
+                                >
+                                    Trade
+                                </button>
+                                 <button 
+                                    onClick={() => onAction('castSpell', city)}
+                                    className="action-btn spell-btn"
+                                >
+                                    Cast Spell
+                                </button>
+                                <button 
+                                    onClick={() => onAction('profile', city)}
+                                    className="action-btn"
+                                >
+                                    Profile
+                                </button>
+                                <button 
+                                    onClick={handleGoTo}
+                                    className="action-btn"
+                                >
+                                    Go To
+                                </button>
                             </>
                         ) : null}
                     </div>

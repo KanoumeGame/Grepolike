@@ -1,11 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 // src/hooks/actions/useHeroActions.js
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
@@ -191,7 +183,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         const capturingCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', capturingCitySlotId);
         
         try {
-            //  Fetch all cities of the hero's owner BEFORE the transaction
+            // # Fetch all cities of the hero's owner BEFORE the transaction
             const heroOwnerCitiesRef = collection(db, `users/${prisonerToRelease.ownerId}/games`, worldId, 'cities');
             const heroOwnerCitiesSnap = await getDocs(heroOwnerCitiesRef);
 
@@ -211,7 +203,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
                 transaction.update(capturingCityRef, { prisoners: newPrisoners });
                 transaction.update(capturingCitySlotRef, { capturedHero: deleteField() });
     
-                //  Atomically remove the 'capturedIn' field without overwriting other hero data.
+                // # Atomically remove the 'capturedIn' field without overwriting other hero data.
                 heroOwnerCitiesSnap.forEach(cityDoc => {
                     // We only need to update if the hero object exists in this city's data.
                     if (cityDoc.data().heroes?.[prisonerToRelease.heroId]) {

@@ -242,6 +242,7 @@ src/hooks/actions/useWorkerActions.js
 src/hooks/movementProcessors/processAttackMovement.js
 src/hooks/movementProcessors/processFoundingMovement.js
 src/hooks/movementProcessors/processReinforceMovement.js
+src/hooks/movementProcessors/processRescueMovement.js
 src/hooks/movementProcessors/processReturnMovement.js
 src/hooks/movementProcessors/processScoutMovement.js
 src/hooks/useCityActions.js
@@ -14970,6 +14971,7 @@ import MovementsPanel from './MovementsPanel';
 import ReinforcementModal from '../city/ReinforcementModal';
 import { useAuth } from '../../contexts/AuthContext';
 import EmptyCityModal from './EmptyCityModal';
+import RescueModal from './RescueModal';
 
 const MapModals = ({
     modalState,
@@ -15062,6 +15064,9 @@ const MapModals = ({
             if (canWithdraw) {
                 allActions.push({ label: 'Withdraw Troops', icon: '🛡️', handler: () => onWithdraw(selectedCity) });
             }
+            if (selectedCity.capturedHero && selectedCity.capturedHero[1] === currentUser.uid) {
+                allActions.push({ label: 'Rescue Hero', icon: '🗝️', handler: () => handleActionClick('rescue', selectedCity) });
+            }
         }
 
         const centerAction = allActions.find(a => a.label === 'Select City');
@@ -15100,6 +15105,7 @@ const MapModals = ({
                     gameState={gameState}
                     travelTimeInfo={travelTimeInfo}
                     setMessage={setMessage}
+                    movements={movements}
                 />
             )}
             {modalState.isMovementsPanelOpen && (
@@ -15127,6 +15133,14 @@ const MapModals = ({
                     onClose={() => closeModal('emptyCity')}
                     onFoundCity={onFoundCity}
                     cityGameState={gameState}
+                />
+            )}
+            {modalState.isRescueModalOpen && (
+                 <RescueModal
+                    targetCity={modalState.rescueModalData}
+                    onClose={() => closeModal('rescue')}
+                    onSend={handleSendMovement}
+                    setMessage={setMessage}
                 />
             )}
         </>
@@ -15738,7 +15752,7 @@ const WindInfo = ({ weather, windSpeed }) => {
 
 
 // MovementModal component allows players to send units or resources for various actions.
-const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlayerUnits, playerResources: initialPlayerResources, travelTimeInfo, onSend, onClose, setMessage }) => {
+const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlayerUnits, playerResources: initialPlayerResources, travelTimeInfo, onSend, onClose, setMessage, movements }) => {
     const { gameState, worldState } = useGame();
     const [windSpeed, setWindSpeed] = useState(0);
 
@@ -15958,7 +15972,11 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         const availableHeroes = Object.keys(currentHeroes).filter(heroId => {
             const heroData = currentHeroes[heroId];
             if (!heroData.active || heroData.capturedIn) return false;
-    
+            
+            // # Check if hero is in another movement
+            const isTraveling = (movements || []).some(m => m.hero === heroId);
+            if(isTraveling) return false;
+
             //  Check if the hero is wounded
             const woundedUntilDate = heroData.woundedUntil?.toDate ? heroData.woundedUntil.toDate() : (heroData.woundedUntil ? new Date(heroData.woundedUntil) : null);
             const isWounded = woundedUntilDate && woundedUntilDate > new Date();
@@ -16859,6 +16877,7 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
     if (!city) return null;
 
     const isOwnCity = city.ownerId === currentUser.uid;
+    const canRescue = city.capturedHero && city.capturedHero[1] === currentUser.uid;
 
     const resourceImages = {
         wood: woodImage,
@@ -16994,6 +17013,14 @@ const OtherCityModal = ({ city, onClose, onGoTo, onAction, isVillageTarget }) =>
                                                 className="action-btn"
                                             >
                                                 Withdraw Troops
+                                            </button>
+                                        )}
+                                        {canRescue && (
+                                            <button
+                                                onClick={() => onAction('rescue', city)}
+                                                className="action-btn"
+                                            >
+                                                Rescue Hero
                                             </button>
                                         )}
                                         <button 
@@ -17477,6 +17504,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import godTownImage from '../../images/god-town.png';
 import unitConfig from '../../gameData/units.json';
 import allianceWonders from '../../gameData/alliance_wonders.json';
+import heroesConfig from '../../gameData/heroes.json';
+
 const images = {};
 const imageContexts = [
     require.context('../../images', false, /\.(png|jpe?g|svg)$/),
@@ -17552,6 +17581,14 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         } else if (scoutedCities && scoutedCities[slotData.id]) {
             troopsHTML = formatUnitsForTooltip(scoutedCities[slotData.id]);
         }
+        
+        const capturedHeroData = slotData.capturedHero;
+        let capturedHeroText = '';
+        if (capturedHeroData && Array.isArray(capturedHeroData) && capturedHeroData.length === 2) {
+            const heroName = heroesConfig[capturedHeroData[0]]?.name || 'Unknown Hero';
+            capturedHeroText = `<br><b style="color: red;">Imprisoned: ${heroName}</b>`;
+        }
+
         const baseInfo = `
             <div class="tooltip-info-section">
                 <b>${slotData.cityName}</b><br>
@@ -17560,7 +17597,8 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
                 Alliance: ${cityAllianceName || 'None'}
             </div>
         `;
-        tooltipText = `${baseInfo}${troopsHTML}`;
+        tooltipText = `${baseInfo}${capturedHeroText}${troopsHTML}`;
+
         if (slotData.ownerId !== currentUser.uid && slotData.ownerId !== 'ghost') {
             if (playerAlliance && playerAlliance.tag && cityAllianceTag) {
                 const allies = playerAlliance.diplomacy?.allies || [];
@@ -29505,6 +29543,9 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         }
     
         const capturingCityRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'cities', activeCityId);
+        const capturingCityData = cityGameState;
+        const capturingCitySlotId = capturingCityData.slotId;
+        const capturingCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', capturingCitySlotId);
         
         try {
             //  Fetch all cities of the hero's owner BEFORE the transaction
@@ -29525,6 +29566,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
                 }
     
                 transaction.update(capturingCityRef, { prisoners: newPrisoners });
+                transaction.update(capturingCitySlotRef, { capturedHero: deleteField() });
     
                 //  Atomically remove the 'capturedIn' field without overwriting other hero data.
                 heroOwnerCitiesSnap.forEach(cityDoc => {
@@ -30447,10 +30489,11 @@ export const useWorkerActions = ({ cityGameState, saveGameState, getMaxWorkerSlo
 </file>
 
 <file path="src/hooks/movementProcessors/processAttackMovement.js">
-import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp} from 'firebase/firestore';
+import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp, deleteField} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveCombat, getVillageTroops } from '../../utils/combat';
 import unitConfig from '../../gameData/units.json';
+import { v4 as uuidv4 } from 'uuid';
 
 // # processes all attack-related movements
 export const processAttackMovement = async (
@@ -30665,7 +30708,8 @@ export const processAttackMovement = async (
         null,
         null,
         movement.hero,
-        Object.keys(targetCityState.heroes || {}).find(id => targetCityState.heroes[id].cityId === movement.targetCityId) || null
+        Object.keys(targetCityState.heroes || {}).find(id => targetCityState.heroes[id].cityId === movement.targetCityId) || null,
+        targetCityState
     );
     
     await runTransaction(db, async (transaction) => {
@@ -30733,10 +30777,53 @@ export const processAttackMovement = async (
     }
     
     const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
-    batch.update(targetCityRef, { units: newDefenderUnits, resources: newDefenderResources, reinforcements: newReinforcements });
     
+    // # Hero state updates
+    const newDefenderHeroes = { ...(targetCityState.heroes || {}) };
+    const newAttackerHeroes = { ...(originCityState.heroes || {}) };
+    const newPrisoners = targetCityState.prisoners || [];
+    let capturedHeroForSlot = null;
+
+    if (result.capturedHero) {
+        const { heroId, capturedBy } = result.capturedHero;
+        if (capturedBy === 'defender') { // Attacker's hero was captured
+            newAttackerHeroes[heroId].capturedIn = movement.targetCityId;
+            newPrisoners.push({
+                heroId: heroId,
+                ownerId: movement.originOwnerId,
+                ownerUsername: movement.originOwnerUsername,
+                capturedAt: new Date(),
+                originCityId: movement.originCityId,
+                originCityName: originCityState.cityName,
+                originCityCoords: { x: originCityState.x, y: originCityState.y },
+                captureId: uuidv4()
+            });
+            capturedHeroForSlot = [heroId, movement.originOwnerId];
+        }
+    } else {
+        // # If no hero was captured, ensure the field is cleared
+        capturedHeroForSlot = deleteField();
+    }
+
+    if (result.woundedHero) {
+        const { heroId, side } = result.woundedHero;
+        const woundDuration = 3600 * 1000 * 6; // 6 hours
+        const woundedUntil = new Date(Date.now() + woundDuration);
+        if (side === 'attacker') {
+            newAttackerHeroes[heroId].woundedUntil = woundedUntil;
+        } else {
+            newDefenderHeroes[heroId].woundedUntil = woundedUntil;
+        }
+    }
+
+    batch.update(targetCityRef, { units: newDefenderUnits, resources: newDefenderResources, reinforcements: newReinforcements, heroes: newDefenderHeroes, prisoners: newPrisoners });
+    
+    const attackerCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
+    batch.update(attackerCityRef, { heroes: newAttackerHeroes });
+
+
     const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
-    batch.update(targetCitySlotRef, { reinforcements: newReinforcements });
+    batch.update(targetCitySlotRef, { reinforcements: newReinforcements, capturedHero: capturedHeroForSlot });
 
     const hasSurvivingLandOrMythic = Object.keys(movement.units).some(unitId => {
         const unit = unitConfig[unitId];
@@ -30820,7 +30907,7 @@ export const processAttackMovement = async (
         }
     }
     
-    const heroSurvives = movement.hero && (!result.capturedHero || result.capturedHero.heroId !== movement.hero);
+    const heroSurvives = movement.hero && (!result.capturedHero || result.capturedHero.heroId !== movement.hero) && (!result.woundedHero || result.woundedHero.heroId !== movement.hero || result.woundedHero.side !== 'attacker');
     if (Object.keys(survivingAttackers).length > 0 || Object.keys(result.wounded).length > 0 || heroSurvives) {
         const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
         const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
@@ -31026,6 +31113,101 @@ export const processReinforceMovement = async (movement, movementDoc, worldId, t
 
         transaction.delete(movementDoc.ref);
     });
+};
+</file>
+
+<file path="src/hooks/movementProcessors/processRescueMovement.js">
+import { doc,  writeBatch, collection, serverTimestamp, deleteField } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { calculateDistance, calculateTravelTime } from '../../utils/travel';
+
+// # handles the logic for a hero rescue mission
+export const processRescueMovement = async (movement, movementDoc, worldId, originCityState, targetCityState) => {
+    const batch = writeBatch(db);
+    const attackerReportRef = doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`));
+    const defenderReportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
+    const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
+    const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
+
+    const defenderCaveSilver = targetCityState.cave?.silver || 0;
+    const success = movement.silver > defenderCaveSilver;
+
+    if (success) {
+        // # SUCCESSFUL RESCUE
+        const newPrisoners = targetCityState.prisoners.filter(p => p.heroId !== movement.heroToRescueId);
+        batch.update(targetCityRef, { prisoners: newPrisoners });
+        batch.update(targetCitySlotRef, { capturedHero: deleteField() });
+
+        // # Create a return movement for the freed hero
+        const returnMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
+        const distance = calculateDistance(targetCityState, originCityState);
+        const travelSeconds = calculateTravelTime(distance, 10); // Hero travels at a base speed
+        const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
+        
+        const returnMovement = {
+            type: 'return',
+            status: 'returning',
+            hero: movement.heroToRescueId,
+            originCityId: movement.targetCityId,
+            originCoords: { x: targetCityState.x, y: targetCityState.y },
+            targetCityId: movement.originCityId,
+            targetCoords: { x: originCityState.x, y: originCityState.y },
+            targetOwnerId: movement.originOwnerId,
+            departureTime: serverTimestamp(),
+            arrivalTime: arrivalTime,
+            involvedParties: [movement.originOwnerId, movement.targetOwnerId]
+        };
+        batch.set(returnMovementRef, returnMovement);
+        
+        // # Update hero's status to remove 'capturedIn'
+        const heroOwnerCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
+        batch.update(heroOwnerCityRef, { [`heroes.${movement.heroToRescueId}.capturedIn`]: deleteField() });
+
+
+        // # Reports
+        const attackerReport = {
+            type: 'rescue_success',
+            title: `Rescue Successful!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your Liberator successfully rescued your hero from ${targetCityState.cityName}!` },
+            read: false,
+        };
+        batch.set(attackerReportRef, attackerReport);
+
+        const defenderReport = {
+            type: 'rescue_foiled',
+            title: `Prison Break!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `A Liberator from ${originCityState.cityName} infiltrated your prison and freed a captured hero!` },
+            read: false,
+        };
+        batch.set(defenderReportRef, defenderReport);
+
+    } else {
+        // # FAILED RESCUE
+        // # Reports
+        const attackerReport = {
+            type: 'rescue_failure',
+            title: `Rescue Failed!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your Liberator was caught and eliminated while trying to rescue your hero from ${targetCityState.cityName}.` },
+            read: false,
+        };
+        batch.set(attackerReportRef, attackerReport);
+
+        const defenderReport = {
+            type: 'rescue_thwarted',
+            title: `Spy Caught!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your guards caught a Liberator from ${originCityState.cityName} attempting a prison break!` },
+            read: false,
+        };
+        batch.set(defenderReportRef, defenderReport);
+    }
+
+    // # Delete the rescue movement itself
+    batch.delete(movementDoc.ref);
+    await batch.commit();
 };
 </file>
 
@@ -32079,13 +32261,16 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         } else if (mode === 'profile') {
             openModal('profile', { userId: targetCity.ownerId });
             closeModal('city');
+        } else if (mode === 'rescue') {
+            openModal('rescue', targetCity);
+            closeModal('city');
         } else if (['information', 'rally'].includes(mode)) {
             setMessage(`${mode.charAt(0).toUpperCase() + mode.slice(1)} is not yet implemented.`);
         }
     }, [openModal, closeModal, setMessage]);
 
     const handleSendMovement = useCallback(async (movementDetails) => {
-        const { mode, targetCity, units, resources, attackFormation, hero } = movementDetails;
+        const { mode, targetCity, units, resources, attackFormation, hero, silver, heroToRescueId } = movementDetails;
 
         if (!playerCity) {
             setMessage("Cannot send movement: Your city data could not be found.");
@@ -32151,7 +32336,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const distance = calculateDistance(playerCity, targetCity);
         const unitsBeingSent = Object.entries(units || {}).filter(([, count]) => count > 0);
         
-        if (unitsBeingSent.length === 0 && !['trade', 'scout'].includes(mode) && !hero) {
+        if (unitsBeingSent.length === 0 && !['trade', 'scout', 'rescue_hero'].includes(mode) && !hero) {
             setMessage("No units or hero selected for movement.");
             return;
         }
@@ -32166,7 +32351,29 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         let movementData;
 
-        if (mode === 'attack' && targetCity.isGodTownTarget) {
+        if (mode === 'rescue_hero') {
+            movementData = {
+                type: 'rescue_hero',
+                originCityId: playerCity.id,
+                originCoords: { x: playerCity.x, y: playerCity.y },
+                originOwnerId: currentUser.uid,
+                originCityName: playerCity.cityName,
+                originOwnerUsername: userProfile.username,
+                targetCityId: targetCityDocId,
+                targetSlotId: targetCity.id,
+                targetCoords: { x: targetCity.x, y: targetCity.y },
+                targetOwnerId: finalTargetOwnerId,
+                ownerUsername: targetCity.ownerUsername,
+                targetCityName: targetCity.cityName,
+                silver: silver,
+                heroToRescueId: heroToRescueId,
+                agent: 'liberator',
+                departureTime: serverTimestamp(),
+                arrivalTime: arrivalTime,
+                status: 'moving',
+                involvedParties: [currentUser.uid, finalTargetOwnerId],
+            };
+        } else if (mode === 'attack' && targetCity.isGodTownTarget) {
             movementData = {
                 type: 'attack_god_town',
                 originCityId: playerCity.id,
@@ -32272,10 +32479,17 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         const updatedResources = { ...gameState.resources };
         const updatedCave = { ...gameState.cave };
+        const updatedAgents = { ...gameState.agents };
+
         if (mode === 'scout') {
             if (resources && resources.silver) {
                 updatedCave.silver = (updatedCave.silver || 0) - resources.silver;
             }
+        } else if (mode === 'rescue_hero') {
+            if (silver) {
+                updatedCave.silver = (updatedCave.silver || 0) - silver;
+            }
+            updatedAgents.liberator = (updatedAgents.liberator || 0) - 1;
         } else if (resources) {
             for (const resource in resources) {
                 updatedResources[resource] -= resources[resource];
@@ -32291,7 +32505,8 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             units: updatedUnits,
             resources: updatedResources,
             cave: updatedCave,
-            heroes: updatedHeroes
+            heroes: updatedHeroes,
+            agents: updatedAgents
         });
 
         const newGameState = {
@@ -32299,7 +32514,8 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             units: updatedUnits,
             resources: updatedResources,
             cave: updatedCave,
-            heroes: updatedHeroes
+            heroes: updatedHeroes,
+            agents: updatedAgents
         };
 
         try {
@@ -33118,6 +33334,8 @@ export const useModalState = () => {
         viewingAllianceId: null,
         isEmptyCityModalOpen: false,
         emptyCityModalData: null,
+        isRescueModalOpen: false,
+        rescueModalData: null,
     });
 
     //  Opens a modal of a given type with optional data.
@@ -33145,6 +33363,7 @@ export const useModalState = () => {
                 case 'withdraw': return { ...prevState, isWithdrawModalOpen: true, withdrawModalData: data };
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: true, reinforcementsModalData: data };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: true, emptyCityModalData: data };
+                case 'rescue': return { ...prevState, isRescueModalOpen: true, rescueModalData: data };
                 default: return prevState;
             }
         });
@@ -33175,6 +33394,7 @@ export const useModalState = () => {
                 case 'withdraw': return { ...prevState, isWithdrawModalOpen: false, withdrawModalData: null };
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: false, reinforcementsModalData: null };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: false, emptyCityModalData: null };
+                case 'rescue': return { ...prevState, isRescueModalOpen: false, rescueModalData: null };
                 default: return prevState;
             }
         });
@@ -33199,6 +33419,7 @@ import { processReturnMovement } from './movementProcessors/processReturnMovemen
 import { processFoundingMovement } from './movementProcessors/processFoundingMovement';
 import { processReinforceMovement } from './movementProcessors/processReinforceMovement';
 import { processScoutMovement } from './movementProcessors/processScoutMovement';
+import { processRescueMovement } from './movementProcessors/processRescueMovement';
 
 
 export const useMovementProcessor = (worldId) => {
@@ -33269,6 +33490,9 @@ export const useMovementProcessor = (worldId) => {
                     break;
                 case 'scout':
                     await processScoutMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
+                    break;
+                case 'rescue_hero':
+                    await processRescueMovement(movement, movementDoc, worldId, originCityState, targetCityState);
                     break;
                 // # trade and other movements would have cases here
                 default:
@@ -34725,7 +34949,7 @@ export function getVillageTroops(villageData) {
     }
     return troops;
 }
-export function resolveCombat(attackingUnits, defendingUnits, defendingResources, isNavalAttack, attackerPhalanx, attackerSupport, defenderPhalanx, defenderSupport, attackingHero, defendingHero) {
+export function resolveCombat(attackingUnits, defendingUnits, defendingResources, isNavalAttack, attackerPhalanx, attackerSupport, defenderPhalanx, defenderSupport, attackingHero, defendingHero, defendingCityState) {
     console.log("[Combat] Resolving combat. Naval Attack:", isNavalAttack);
     console.log("[Combat] Attacking Units:", attackingUnits);
     console.log("[Combat] Defending Units:", defendingUnits);
@@ -34786,7 +35010,6 @@ export function resolveCombat(attackingUnits, defendingUnits, defendingResources
         }
     }
 
-    //  A hero is captured if they are present, their side loses, and all land units on their side are annihilated.
     const allAttackerLandUnitsLost = Object.entries(attackingUnits)
         .filter(([id]) => unitConfig[id]?.type === 'land')
         .every(([id, count]) => (totalAttackerLosses[id] || 0) >= count);
@@ -34795,35 +35018,40 @@ export function resolveCombat(attackingUnits, defendingUnits, defendingResources
         .filter(([id]) => unitConfig[id]?.type === 'land')
         .every(([id, count]) => (totalDefenderLosses[id] || 0) >= count);
 
-    if (attackerWon && defendingHero && allDefenderLandUnitsLost) {
-        capturedHero = { heroId: defendingHero, capturedBy: 'attacker' };
-    } else if (!attackerWon && attackingHero && allAttackerLandUnitsLost) {
-        capturedHero = { heroId: attackingHero, capturedBy: 'defender' };
-    }
-
-    //  Increased Wounded Hero probability
+    // # Hero capture/wound logic
     if (landBattle) {
+        const prisonLevel = defendingCityState?.buildings?.prison?.level || 0;
+        const prisonCapacity = prisonLevel > 0 ? prisonLevel + 4 : 0;
+        const currentPrisoners = defendingCityState?.prisoners?.length || 0;
+        const hasPrisonSpace = prisonCapacity > currentPrisoners;
+
         if (attackerWon) {
-            // Attacker won, but check if it was a close call.
-            if (attackingHero && landBattle.attackerLossRatio > 0.5 && Math.random() < 0.75) { // 75% chance if winner's losses > 50%
-                woundedHero = { heroId: attackingHero, side: 'attacker' };
-            }
-            // Defender lost, standard chance of being wounded.
-            if (defendingHero && Math.random() < 0.75) { // 75% chance
+            if (defendingHero && allDefenderLandUnitsLost) {
                 woundedHero = { heroId: defendingHero, side: 'defender' };
+            }
+            if (attackingHero) {
+                // # Winning hero has a small chance to be wounded, increased by closeness of battle
+                const woundChance = 0.02 + (landBattle.attackerLossRatio * 0.2); // Base 2% + up to 20%
+                if (Math.random() < woundChance) {
+                    woundedHero = { heroId: attackingHero, side: 'attacker' };
+                }
             }
         } else { // Defender won
-            // Attacker lost, standard chance of being wounded.
-            if (attackingHero && Math.random() < 0.75) { // 75% chance
-                woundedHero = { heroId: attackingHero, side: 'attacker' };
+            if (attackingHero && allAttackerLandUnitsLost) {
+                if (prisonLevel > 0 && hasPrisonSpace) {
+                    capturedHero = { heroId: attackingHero, capturedBy: 'defender' };
+                } else {
+                    woundedHero = { heroId: attackingHero, side: 'attacker' };
+                }
             }
-            // Defender won, but check if it was a close call.
-            if (defendingHero && landBattle.defenderLossRatio > 0.5 && Math.random() < 0.75) { // 75% chance if winner's losses > 50%
-                woundedHero = { heroId: defendingHero, side: 'defender' };
+            if (defendingHero) {
+                const woundChance = 0.02 + (landBattle.defenderLossRatio * 0.2);
+                if (Math.random() < woundChance) {
+                    woundedHero = { heroId: defendingHero, side: 'defender' };
+                }
             }
         }
     }
-
 
     // Calculate wounded troops from attacker losses
     for (const unitId in totalAttackerLosses) {

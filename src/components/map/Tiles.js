@@ -1,3 +1,4 @@
+// src/components/map/Tiles.js
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import godTownImage from '../../images/god-town.png';
@@ -24,7 +25,7 @@ const _WaterTile = ({ gameSettings = defaultSettings }) => {
     return <div className="w-full h-full bg-transparent" />;
 };
 const _LandTile = ({ gameSettings = defaultSettings }) => {
-    //  Make land tiles transparent so the island images in MapView are visible.
+    // # Make land tiles transparent so the island images in MapView are visible.
     const bgClass = gameSettings.showVisuals ? 'bg-transparent' : 'bg-gray-800';
     const borderClass = gameSettings.showGrid
         ? `border-r border-b ${gameSettings.showVisuals ? 'border-green-700/20' : 'border-gray-700'}`
@@ -61,11 +62,11 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         const ownerName = slotData.ownerUsername || 'Unknown';
         const isOwn = slotData.ownerId === currentUser.uid;
 
-        //  Use playerAlliance context for consistent alliance info for own cities
+        // # Use playerAlliance context for consistent alliance info for own cities
         const cityAllianceTag = isOwn ? playerAlliance?.tag : slotData.alliance;
         const cityAllianceName = isOwn ? playerAlliance?.name : slotData.allianceName;
         
-        //  Use the correct key to find city points for own cities vs other players' cities
+        // # Use the correct key to find city points for own cities vs other players' cities
         const pointsKey = isOwn ? slotData.slotId : slotData.id;
         const points = cityPoints[pointsKey] || 0;
 
