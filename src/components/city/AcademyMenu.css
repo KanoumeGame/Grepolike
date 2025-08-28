@@ -90,39 +90,31 @@
 }
 
 .research-tooltip {
-    visibility: hidden;
-    opacity: 0;
-    width: 240px; /* Increased width */
-    background-color: #F5DEB3;
-    color: #4a2c2a;
-    text-align: left;
-    border-radius: 6px;
-    padding: 10px;
-    position: absolute;
-    z-index: 10;
-    top: 110%; /* Position below the icon */
-    left: 50%;
-    transform: translate(-50%, -10px); /* Start slightly higher for transition */
-    transition: opacity 0.3s, transform 0.3s;
-    border: 2px solid #8B4513;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    pointer-events: none; /* Allow clicks to pass through to the icon */
-}
-.research-tooltip::after {
-    content: "";
-    position: absolute;
-    bottom: 100%; /* At the top of the tooltip */
-    left: 50%;
-    margin-left: -8px;
-    border-width: 8px;
-    border-style: solid;
-    border-color: transparent transparent #8B4513 transparent; /* Arrow pointing up */
+  position: fixed; /* follows mouse placement */
+  background-color: #F5DEB3;
+  color: #4a2c2a;
+  border: 2px solid #8B4513;
+  border-radius: 6px;
+  padding: 10px;
+  width: 240px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 100;
+  pointer-events: none;
+  transform: translate(-50%, 0);
 }
 
-.tooltip-title { font-weight: bold; font-size: 1rem; color: #8B4513; border-bottom: 1px solid #d2b48c; padding-bottom: 4px; margin-bottom: 4px; }
+.tooltip-title {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #8B4513;
+  border-bottom: 1px solid #d2b48c;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
 .tooltip-desc { font-size: 0.8rem; margin: 4px 0; }
 .tooltip-cost { font-size: 0.75rem; font-style: italic; }
-.tooltip-req { font-size: 0.75rem; color: #dc2626; margin-top: 4px;}
+.tooltip-req { font-size: 0.75rem; color: #dc2626; margin-top: 4px; }
+
 
 
 .research-btn {
