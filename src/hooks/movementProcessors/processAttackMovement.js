@@ -1,5 +1,5 @@
 // src/hooks/movementProcessors/processAttackMovement.js
-import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp, deleteField} from 'firebase/firestore';
+import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveCombat, getVillageTroops } from '../../utils/combat';
 import unitConfig from '../../gameData/units.json';

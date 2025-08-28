@@ -1,7 +1,7 @@
 // src/hooks/useMovementProcessor.js
 import { useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
-import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { useCityState } from './useCityState';
 // import all the new processor functions
 import { processAttackMovement } from './movementProcessors/processAttackMovement';
@@ -28,6 +28,25 @@ export const useMovementProcessor = (worldId) => {
     
                     const cityData = cityDoc.data();
                     const heroes = cityData.heroes || {};
+                    
+                    // # Atomically check if a hero is already assigned to this city upon arrival
+                    for (const hId in heroes) {
+                        if (heroes[hId].cityId === movement.targetCityId) {
+                            // A hero is already there. Cancel this assignment and send a report.
+                            const failureReport = {
+                                type: 'assign_hero_failed',
+                                title: `Hero Assignment Failed`,
+                                timestamp: serverTimestamp(),
+                                outcome: { message: `Could not assign your hero to ${cityData.cityName} because it is already occupied by another hero.` },
+                                read: false,
+                            };
+                            const reportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
+                            transaction.set(reportRef, failureReport);
+                            transaction.delete(movementDoc.ref);
+                            return; // Exit transaction
+                        }
+                    }
+
                     const newHeroes = { ...heroes, [movement.hero]: { ...heroes[movement.hero], cityId: movement.targetCityId } };
     
                     transaction.update(targetCityRef, { heroes: newHeroes });

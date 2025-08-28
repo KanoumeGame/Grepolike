@@ -2,7 +2,7 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
 import { db } from '../../firebase/config';
-import { doc, runTransaction, collection, serverTimestamp, getDocs, deleteField } from 'firebase/firestore';
+import { doc, runTransaction, collection, serverTimestamp, getDocs, deleteField, query, where } from 'firebase/firestore';
 import heroesConfig from '../../gameData/heroes.json';
 import { calculateDistance, calculateTravelTime } from '../../utils/travel';
 
@@ -118,6 +118,14 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
     
         try {
+            // # Check for incoming hero assignments to prevent race conditions
+            const movementsRef = collection(db, 'worlds', worldId, 'movements');
+            const q = query(movementsRef, where('type', '==', 'assign_hero'), where('targetCityId', '==', activeCityId));
+            const incomingHeroMovements = await getDocs(q);
+            if (!incomingHeroMovements.empty) {
+                throw new Error("A hero is already on their way to this city.");
+            }
+
             await runTransaction(db, async (transaction) => {
                 const cityDoc = await transaction.get(cityDocRef);
                 if (!cityDoc.exists()) throw new Error("City data not found.");
@@ -226,7 +234,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
     
                 const movementData = {
                     type: 'return',
-                    status: 'moving',
+                    status: 'returning',
                     hero: prisonerToRelease.heroId,
                     originCityId: activeCityId,
                     originCoords: { x: capturingCityData.x, y: capturingCityData.y },
