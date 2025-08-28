@@ -90,6 +90,7 @@ const MapView = ({
     const [godTowns, setGodTowns] = useState({});
     const [allWonders, setAllWonders] = useState([]);
     const [wonderInfo, setWonderInfo] = useState(null);
+    const [combinedSlots, setCombinedSlots] = useState({});
 
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
@@ -256,7 +257,8 @@ const MapView = ({
 
     const handleOpenAlliance = () => openModal('alliance');
 
-    const combinedSlots = useMemo(() => {
+    // Combine player cities with visible slots using useEffect for better state synchronization
+    useEffect(() => {
         const newSlots = { ...visibleSlots };
         for (const cityId in playerCities) {
             const pCity = playerCities[cityId];
@@ -270,8 +272,8 @@ const MapView = ({
                 };
             }
         }
-        return newSlots;
-    }, [visibleSlots, playerCities, currentUser.uid, userProfile.username]);
+        setCombinedSlots(newSlots);
+    }, [visibleSlots, playerCities, currentUser, userProfile]);
 
     useEffect(() => {
         if (initialMapAction?.type === 'open_city_modal') {
