@@ -1,4 +1,4 @@
-// src/hooks/useMapActions.js
+// src/hooks/actions/useMapActions.js
 import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -16,12 +16,9 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
     const handleActionClick = useCallback((mode, targetCity) => {
         if (['attack', 'reinforce', 'scout', 'trade', 'collect_wreckage'].includes(mode)) {
+            openModal('action', { mode, city: targetCity });
             closeModal('city');
             closeModal('village');
-            if (mode === 'collect_wreckage') {
-                closeModal('wreckage');
-            }
-            openModal('action', { mode, city: targetCity });
         } else if (mode === 'withdraw') {
             openModal('withdraw', targetCity);
             closeModal('city');
@@ -54,17 +51,23 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             return;
         }
         const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget || targetCity.isWreckageTarget ? true : playerCity.islandId !== targetCity.islandId;
-        let hasLandUnits = false, hasNavalUnits = false, hasFlyingUnits = false, totalTransportCapacity = 0, totalLandUnitsToSend = 0;
+        let hasLandUnits = false, hasNavalUnits = false, hasFlyingUnits = false, totalTransportCapacity = 0, totalLandUnitsLoad = 0;
 
         for (const unitId in units) {
             if (units[unitId] > 0) {
                 const config = unitConfig[unitId];
                 if (config.type === 'land') {
                     hasLandUnits = true;
-                    totalLandUnitsToSend += units[unitId];
-                    if (config.flying) hasFlyingUnits = true;
+                    if (config.flying) {
+                        hasFlyingUnits = true;
+                    } else {
+                        // Only non-flying land units need transport
+                        totalLandUnitsLoad += (config.cost.population || 0) * units[unitId]; 
+                    }
+                } else if (config.type === 'naval') {
+                    hasNavalUnits = true;
+                    totalTransportCapacity += (config.capacity || 0) * units[unitId];
                 }
-                else if (config.type === 'naval') { hasNavalUnits = true; totalTransportCapacity += (config.capacity || 0) * units[unitId]; }
             }
         }
 
@@ -74,8 +77,10 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             return;
         }
         
-        if (isCrossIsland && hasLandUnits && !hasNavalUnits && !hasFlyingUnits) { setMessage("Ground troops cannot travel across the sea without transport ships."); return; }
-        if (isCrossIsland && hasLandUnits && totalTransportCapacity < totalLandUnitsToSend && !hasFlyingUnits) { setMessage(`Not enough transport ship capacity. Need ${totalLandUnitsToSend - totalTransportCapacity} more capacity.`); return; }
+        if (isCrossIsland && totalLandUnitsLoad > totalTransportCapacity) {
+            setMessage(`Not enough transport ship capacity. Need ${totalLandUnitsLoad - totalTransportCapacity} more capacity for your ground troops.`);
+            return;
+        }
         
         const unitTypes = [];
         if (hasLandUnits) unitTypes.push('land');
@@ -590,3 +595,4 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         handleFoundCity,
     };
 };
+

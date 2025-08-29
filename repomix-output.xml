@@ -15871,7 +15871,7 @@ imageContexts.forEach(context => {
     });
 });
 
-//  Displays the current weather and wind conditions
+// Displays the current weather and wind conditions
 const WindInfo = ({ weather, windSpeed }) => {
     const [windRange, setWindRange] = useState('');
     const weatherIcons = {
@@ -15940,7 +15940,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                 case 'Stormy': min = 9; max = 10; break;
                 default: break;
             }
-            //  Calculate a random wind speed within the weather's range for this specific movement
+            // Calculate a random wind speed within the weather's range for this specific movement
             setWindSpeed(getSecureRandomFloat() * (max - min) + min);
         }
     }, [worldState?.weather]);
@@ -15949,8 +15949,16 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     const transportCapacity = useMemo(() => {
         let capacity = 0;
         for (const unitId in selectedUnits) {
-            if (unitConfig[unitId]?.type === 'naval' && unitConfig[unitId]?.capacity) {
-                capacity += selectedUnits[unitId] * unitConfig[unitId].capacity;
+            const unit = unitConfig[unitId];
+            if (unit) {
+                // Naval units have explicit capacity
+                if (unit.type === 'naval' && unit.capacity) {
+                    capacity += selectedUnits[unitId] * unit.capacity;
+                }
+                // Flying units can also carry resources (their population cost is their capacity)
+                if (unit.flying) {
+                    capacity += selectedUnits[unitId] * (unit.cost.population || 1);
+                }
             }
         }
         return capacity;
@@ -15959,8 +15967,10 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     const currentUnitsLoad = useMemo(() => {
         let load = 0;
         for (const unitId in selectedUnits) {
-            if (unitConfig[unitId]?.type === 'land' && unitConfig[unitId]?.cost?.population) {
-                load += selectedUnits[unitId] * unitConfig[unitId].cost.population;
+            const unit = unitConfig[unitId];
+            // Only non-flying land units require transport capacity
+            if (unit?.type === 'land' && !unit?.flying && unit?.cost?.population) {
+                load += selectedUnits[unitId] * unit.cost.population;
             }
         }
         return load;
@@ -15986,7 +15996,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         setSelectedUnits(prev => ({ ...prev, [unitId]: amount }));
     };
 
-    //  Toggles selecting all units of a type or deselecting them.
+    // Toggles selecting all units of a type or deselecting them.
     const handleUnitIconClick = (unitId, maxAmount) => {
         const currentAmount = selectedUnits[unitId] || 0;
         const newAmount = currentAmount === maxAmount ? 0 : maxAmount;
@@ -16064,10 +16074,20 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
             return;
         }
 
-        const hasLandUnitsSelected = Object.keys(selectedUnits).some(unitId => unitConfig[unitId]?.type === 'land' && selectedUnits[unitId] > 0);
+        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget || targetCity.isWreckageTarget ? true : playerCity.islandId !== targetCity.islandId;
+        const hasNonFlyingLandUnits = Object.keys(selectedUnits).some(unitId => 
+            selectedUnits[unitId] > 0 && 
+            unitConfig[unitId]?.type === 'land' && 
+            !unitConfig[unitId]?.flying
+        );
         const hasNavalUnitsSelected = Object.keys(selectedUnits).some(unitId => unitConfig[unitId]?.type === 'naval' && selectedUnits[unitId] > 0);
 
-        if (hasLandUnitsSelected && hasNavalUnitsSelected && currentUnitsLoad > transportCapacity) {
+        if (isCrossIsland && hasNonFlyingLandUnits && !hasNavalUnitsSelected) {
+            setMessage("Ground troops cannot travel across the sea without transport ships.");
+            return;
+        }
+
+        if (isCrossIsland && hasNonFlyingLandUnits && currentUnitsLoad > transportCapacity) {
             setMessage(`Not enough transport ship capacity. You need ${currentUnitsLoad - transportCapacity} more capacity.`);
             return;
         }
@@ -16166,7 +16186,32 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         if (mode === 'collect_wreckage') {
             return (
                 <div className="space-y-4">
-                     {navalUnitsList.length > 0 && (
+                     {landUnitsList.length > 0 && (
+                        <div className="unit-selection-section">
+                            <h4 className="unit-selection-header">Land Units to Send</h4>
+                            <div className="unit-grid">
+                                {landUnitsList.map(unit => (
+                                    <div key={unit.id} className="unit-item">
+                                        <div className="unit-image-container" title={`Select all/none of ${unit.name}`} onClick={() => handleUnitIconClick(unit.id, unit.currentCount)}>
+                                            <img src={images[unit.image]} alt={unit.name} className="unit-image" />
+                                             <span className="unit-count-badge">
+                                                {unit.currentCount}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={selectedUnits[unit.id] || 0}
+                                            onChange={(e) => handleUnitChange(unit.id, e.target.value)}
+                                            className="unit-input hide-number-spinners"
+                                            min="0"
+                                            max={unit.currentCount}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                     {navalUnitsList.filter(u => u.capacity > 0).length > 0 && (
                         <div className="unit-selection-section">
                             <h4 className="unit-selection-header">Transport Ships</h4>
                             <div className="unit-grid">
@@ -16189,6 +16234,23 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+                    {transportCapacity > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-700">
+                            <h4 className="text-lg font-bold">Transport Capacity</h4>
+                            <div className="w-full bg-gray-700 rounded-full h-6 relative">
+                                <div 
+                                    className={`h-full rounded-full ${progressBarColor}`} 
+                                    style={{ width: `${Math.min(100, capacityProgress)}%` }}
+                                ></div>
+                                <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
+                                    {currentUnitsLoad} / {transportCapacity}
+                                </div>
+                            </div>
+                            {capacityProgress > 100 && (
+                                <p className="text-red-500 text-sm mt-1">Over capacity!</p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -17904,7 +17966,7 @@ const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }
     const resourceType = Object.keys(wreckageData.resources)[0];
     const tooltipText = `Sea Resources<br>${resourceType}: ${wreckageData.resources[resourceType].toLocaleString()}`;
     const WreckageSVG = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80 pointer-events-none">
             <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v5.239a.75.75 0 00.25.53l4.5 4.5a.75.75 0 001.06 0l4.5-4.5a.75.75 0 00.25-.53V4.5a.75.75 0 00-.75-.75h-.75a.75.75 0 00-.75.75v3.19l-2.47-2.47a.75.75 0 00-1.06 0z" />
             <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v5.239a.75.75 0 01-.25.53l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 01-.25-.53V4.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v3.19l2.47-2.47a.75.75 0 011.06 0z" />
         </svg>
@@ -17913,7 +17975,10 @@ const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }
     return (
         <div className={`w-full h-full flex justify-center items-center`}>
             <div
-                onClick={(e) => onClick(e, wreckageData)}
+                onClick={(e) => {
+                    console.log("WreckageTile's div was clicked!"); // ADDED LOG
+                    onClick(e, wreckageData);
+                }}
                 className="wreckage-slot"
             >
                 <WreckageSVG />
@@ -18813,10 +18878,9 @@ const WreckageModal = ({ wreckage, onClose, onCollect }) => {
         silver: silverImage,
     };
 
-    // # Triggers the action to open the movement modal
+    // Triggers the action to open the movement modal
     const handleCollect = () => {
         onCollect('collect_wreckage', { ...wreckage, isWreckageTarget: true, name: 'Sea Resources' });
-        onClose();
     };
 
     return (
@@ -18938,6 +19002,11 @@ const MapView = ({
     const [godTowns, setGodTowns] = useState({});
     const [allWonders, setAllWonders] = useState([]);
     const [wonderInfo, setWonderInfo] = useState(null);
+
+    // LOG: Add a log to see modal state changes
+    useEffect(() => {
+        console.log("MapView: Modal state changed:", modalState);
+    }, [modalState]);
 
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
@@ -32849,9 +32918,12 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
     const handleActionClick = useCallback((mode, targetCity) => {
         if (['attack', 'reinforce', 'scout', 'trade', 'collect_wreckage'].includes(mode)) {
-            openModal('action', { mode, city: targetCity });
             closeModal('city');
             closeModal('village');
+            if (mode === 'collect_wreckage') {
+                closeModal('wreckage');
+            }
+            openModal('action', { mode, city: targetCity });
         } else if (mode === 'withdraw') {
             openModal('withdraw', targetCity);
             closeModal('city');
@@ -33552,6 +33624,7 @@ export const useMapClickHandler = ({
 
     // # Handles clicks on wreckage tiles
     const onWreckageClick = (e, wreckageData) => {
+        console.log("useMapClickHandler: Wreckage clicked:", wreckageData); // LOG 1
         if (!playerCity) {
             setMessage("Your city data is still loading. Please wait a moment.");
             return;
@@ -33560,6 +33633,7 @@ export const useMapClickHandler = ({
         closeModal('village');
         const distance = calculateDistance(playerCity, wreckageData);
         setTravelTimeInfo({ distance });
+        console.log("useMapClickHandler: Opening wreckage modal for:", wreckageData.id); // LOG 2
         openModal('wreckage', wreckageData);
     };
 
@@ -33848,7 +33922,7 @@ export const useMapInteraction = (viewportRef, mapContainerRef, worldState, play
         return () => window.removeEventListener('resize', handleResize);
     }, [worldState, viewportRef]);
 
-    //  This effect now only runs when the active city changes, preventing the map from resetting during panning.
+    // This effect now only runs when the active city changes, preventing the map from resetting during panning.
     useEffect(() => {
         if (playerCity) {
             centerOnCity();
@@ -33895,6 +33969,10 @@ export const useMapInteraction = (viewportRef, mapContainerRef, worldState, play
 
     const handleMouseDown = useCallback((e) => {
         if (e.button !== 0) return;
+        // Check if the click target is an interactive map object and prevent panning if so
+        if (e.target.closest('.city-slot, .village-slot, .ruin-slot, .god-town-slot, .wreckage-slot, .wonder-spot-tile, .constructing-wonder-tile')) {
+            return;
+        }
         setStartPos({ x: e.clientX - pan.x, y: e.clientY - pan.y });
         setIsPanning(true);
     }, [pan]);
