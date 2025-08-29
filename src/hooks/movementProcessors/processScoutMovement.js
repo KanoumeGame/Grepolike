@@ -44,7 +44,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             },
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), scoutReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-scout`);
+        batch.set(reportRef, scoutReport);
     } else {
         const failedScoutAttackerReport = {
             type: 'scout',
@@ -54,7 +55,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             message: result.message,
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failedScoutAttackerReport);
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-scout-fail`);
+        batch.set(attackerReportRef, failedScoutAttackerReport);
         
         if (result.silverLostByDefender > 0) {
             const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
@@ -70,7 +72,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             silverGained: 0,
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), spyCaughtReport);
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-spy-caught`);
+        batch.set(defenderReportRef, spyCaughtReport);
     }
 
     batch.delete(movementDoc.ref);

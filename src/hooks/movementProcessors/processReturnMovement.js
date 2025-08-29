@@ -82,7 +82,8 @@ export const processReturnMovement = async (movement, movementDoc, worldId, getH
         wounded: movement.wounded || {},
         read: false,
     };
-    batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), returnReport);
+    const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-ret`);
+    batch.set(reportRef, returnReport);
 
     batch.update(originCityRef, { units: newUnits, resources: newResources, wounded: newWounded });
     batch.delete(movementDoc.ref);

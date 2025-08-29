@@ -49,7 +49,8 @@ export const processFoundingMovement = async (movement, movementDoc, worldId, or
                         outcome: { message: `The plot at (${movement.targetCoords.x}, ${movement.targetCoords.y}) was claimed before your party arrived.` },
                         read: false,
                     };
-                    transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failureReport);
+                    const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-fail`);
+                    transaction.set(reportRef, failureReport);
                     return;
                 }
 
@@ -96,7 +97,8 @@ export const processFoundingMovement = async (movement, movementDoc, worldId, or
                     outcome: { message: `You have founded the city of ${movement.newCityName} at (${movement.targetCoords.x}, ${movement.targetCoords.y}).` },
                     read: false,
                 };
-                transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), successReport);
+                const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-succ`);
+                transaction.set(reportRef, successReport);
                 
                 transaction.delete(movementDoc.ref);
             });

@@ -189,14 +189,6 @@ const VipDisplay = () => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div className={`vip-tooltip ${isHovered ? 'active' : ''}`}>
-                <p>Level {vipLevel} Experience</p>
-                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
-                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
-                <hr className="vip-tooltip-hr" />
-                <p>Next daily chest: {nextClaimTimer}</p>
-            </div>
-            
             <div className="vip-header">
                 <span>VIP {vipLevel}</span>
                 {canClaim && <button className="vip-claim-btn" onClick={handleClaimVipPoints} disabled={isClaiming}>Claim Chest</button>}
@@ -204,9 +196,15 @@ const VipDisplay = () => {
             <div className="vip-progress-bar-bg">
                 <div className="vip-progress-bar" style={{ width: `${progress}%` }}></div>
             </div>
+            <div className={`vip-tooltip ${isHovered ? 'active' : ''}`}>
+                <p>Level {vipLevel}</p>
+                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
+                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
+                <hr className="vip-tooltip-hr" />
+                <p>Next daily chest: {nextClaimTimer}</p>
+            </div>
         </div>
     );
 };
 
 export default VipDisplay;
-

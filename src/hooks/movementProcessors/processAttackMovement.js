@@ -65,7 +65,8 @@ export const processAttackMovement = async (
             attackerReport.reward = ruinData.researchReward;
         }
         
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+        batch.set(reportRef, attackerReport);
         
         const survivingAttackers = {};
         for (const unitId in movement.units) {
@@ -148,7 +149,8 @@ export const processAttackMovement = async (
             },
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+        batch.set(reportRef, attackerReport);
 
         const survivingAttackers = {};
         let anySurvivors = false;
@@ -396,9 +398,11 @@ export const processAttackMovement = async (
         read: false,
     };
     
-    batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+    const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+    batch.set(attackerReportRef, attackerReport);
     if (movement.targetOwnerId) {
-        batch.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), defenderReport);
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def`);
+        batch.set(defenderReportRef, defenderReport);
     }
     
     const survivingAttackers = {};

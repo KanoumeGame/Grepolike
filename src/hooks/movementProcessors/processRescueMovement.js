@@ -6,8 +6,6 @@ import { calculateDistance, calculateTravelTime } from '../../utils/travel';
 // # handles the logic for a hero rescue mission
 export const processRescueMovement = async (movement, movementDoc, worldId, originCityState, targetCityState) => {
     const batch = writeBatch(db);
-    const attackerReportRef = doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`));
-    const defenderReportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
     const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
     const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
 
@@ -54,6 +52,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your Liberator successfully rescued your hero from ${targetCityState.cityName}!` },
             read: false,
         };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-succ`);
         batch.set(attackerReportRef, attackerReport);
 
         const defenderReport = {
@@ -63,6 +62,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `A Liberator from ${originCityState.cityName} infiltrated your prison and freed a captured hero!` },
             read: false,
         };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-foil`);
         batch.set(defenderReportRef, defenderReport);
 
     } else {
@@ -75,6 +75,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your Liberator was caught and eliminated while trying to rescue your hero from ${targetCityState.cityName}.` },
             read: false,
         };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-fail`);
         batch.set(attackerReportRef, attackerReport);
 
         const defenderReport = {
@@ -84,6 +85,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your guards caught a Liberator from ${originCityState.cityName} attempting a prison break!` },
             read: false,
         };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-thwart`);
         batch.set(defenderReportRef, defenderReport);
     }
 

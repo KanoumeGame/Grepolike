@@ -56,14 +56,16 @@ export const processReinforceMovement = async (movement, movementDoc, worldId, t
             }
         };
         
-        transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), reinforceReport);
+        const originReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-ori`);
+        transaction.set(originReportRef, reinforceReport);
         
         if (movement.targetOwnerId) {
             const arrivalReport = {
                 ...reinforceReport,
                 title: `Reinforcements from ${movement.originCityName}`,
             };
-            transaction.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), arrivalReport);
+            const targetReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-tar`);
+            transaction.set(targetReportRef, arrivalReport);
         }
 
         transaction.delete(movementDoc.ref);
