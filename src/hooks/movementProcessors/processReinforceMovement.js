@@ -1,4 +1,4 @@
-import { doc, runTransaction, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 // # handles reinforcement arrivals
