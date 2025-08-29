@@ -77,6 +77,15 @@ const VipDisplay = () => {
     const [canClaim, setCanClaim] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
     const [nextClaimTimer, setNextClaimTimer] = useState('');
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+    };
 
     useEffect(() => {
         if (playerGameData?.lastVipPointsClaimed) {
@@ -177,8 +186,10 @@ const VipDisplay = () => {
     return (
         <div 
             className="vip-container"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
-            <div className="vip-tooltip">
+            <div className={`vip-tooltip ${isHovered ? 'active' : ''}`}>
                 <p>Level {vipLevel} Experience</p>
                 <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
                 {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}

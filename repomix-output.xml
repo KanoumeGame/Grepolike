@@ -117,6 +117,7 @@ src/components/city/SpecialBuildingMenu.js
 src/components/city/SpecialBuildingPanel.js
 src/components/city/specialBuildingPlotpls.js
 src/components/city/TempleMenu.js
+src/components/city/Tooltip.js
 src/components/city/UnitQueue.css
 src/components/city/UnitQueue.js
 src/components/city/WithdrawModal.js
@@ -9673,7 +9674,8 @@ import { db } from '../../firebase/config';
 import buildingConfig from '../../gameData/buildings.json';
 import specialBuildingsConfig from '../../gameData/specialBuildings.json';
 import BuildQueue from './BuildQueue';
-import './SenateView.css'; 
+import Tooltip from './Tooltip'; // Import the Tooltip component
+import './SenateView.css';
 
 const buildingImages = {};
 const contexts = [
@@ -9687,7 +9689,7 @@ contexts.forEach(context => {
     });
 });
 
-//  A reusable confirmation modal
+// A reusable confirmation modal
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]">
         <div className="bg-gray-800 p-6 rounded-lg text-white">
@@ -9700,7 +9702,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     </div>
 );
 
-//  Component to manage workers in production buildings
+// Component to manage workers in production buildings
 const WorkerManager = ({ buildings, onAddWorker, onRemoveWorker, getMaxWorkerSlots, availablePopulation }) => {
     const productionBuildings = ['timber_camp', 'quarry', 'silver_mine'];
     return (
@@ -9776,7 +9778,7 @@ const PresetManager = ({ presets, selectedPresetId, setSelectedPresetId, handleA
     );
 };
 
-const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, onUpgrade, isQueueFull, isMaxLevel }) => {
+const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, onUpgrade, isQueueFull, isMaxLevel, onMouseEnter, onMouseLeave }) => {
     let buttonText;
     if (level === 0 && finalQueuedLevel === 0) {
         buttonText = 'Build';
@@ -9787,7 +9789,6 @@ const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, on
     let disabledReason = '';
     if (isMaxLevel) disabledReason = 'Max Level';
     else if (isQueueFull) disabledReason = 'Queue Full';
-    else if (!canAfford) disabledReason = 'Not enough resources/pop';
 
     return (
         <div className="bg-gray-700/80 border-2 border-gray-600 rounded-lg p-2 w-48 text-center flex flex-col items-center relative shadow-lg">
@@ -9797,13 +9798,12 @@ const BuildingCard = ({ id, config, level, finalQueuedLevel, cost, canAfford, on
                 Level {level} {finalQueuedLevel > level ? `(-> ${finalQueuedLevel})` : ''}
             </p>
             <img src={buildingImages[config.image]} alt={config.name} className="w-20 h-20 object-contain my-1" />
-            <div className="text-xs text-gray-400 mb-2">
-                <span>{cost.wood}W</span>, <span>{cost.stone}S</span>, <span>{cost.silver}Ag</span>, <span>{cost.population}P</span>
-            </div>
             <button
                 onClick={() => onUpgrade(id)}
-                disabled={!canAfford || isQueueFull || isMaxLevel}
-                className={`w-full py-1.5 rounded font-bold text-sm transition-colors ${!canAfford || isQueueFull || isMaxLevel ? 'btn-disabled' : 'btn-upgrade'}`}
+                disabled={isQueueFull || isMaxLevel}
+                className={`w-full py-1.5 rounded font-bold text-sm transition-colors mt-auto ${!canAfford || isQueueFull || isMaxLevel ? 'btn-disabled' : 'btn-upgrade'}`}
+                onMouseEnter={(e) => onMouseEnter(e, id, finalQueuedLevel + 1)}
+                onMouseLeave={onMouseLeave}
             >
                 {disabledReason || buttonText}
             </button>
@@ -9824,7 +9824,7 @@ const SpecialBuildingCard = ({ cityGameState, onOpenSpecialBuildingMenu }) => {
             <button
                 onClick={onOpenSpecialBuildingMenu}
                 disabled={!!specialBuildingId}
-                className={`w-full py-1.5 rounded font-bold text-sm transition-colors ${!!specialBuildingId ? 'btn-disabled' : 'btn-upgrade'}`}
+                className={`w-full py-1.5 rounded font-bold text-sm transition-colors mt-auto ${!!specialBuildingId ? 'btn-disabled' : 'btn-upgrade'}`}
             >
                 {specialBuildingId ? 'Constructed' : 'Build Wonder'}
             </button>
@@ -9843,6 +9843,66 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [activeTooltip, setActiveTooltip] = useState({ visible: false, buildingId: null, level: 0, x: 0, y: 0 });
+
+    const handleMouseEnter = (e, buildingId, level) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setActiveTooltip({
+            visible: true,
+            buildingId,
+            level,
+            x: rect.left + rect.width / 2,
+            y: rect.bottom,
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setActiveTooltip(prev => ({ ...prev, visible: false }));
+    };
+
+    const handleUpgradeWrapper = (buildingId) => {
+        onUpgrade(buildingId);
+        setActiveTooltip(prev => {
+            if (prev.visible && prev.buildingId === buildingId) {
+                return { ...prev, level: prev.level + 1 };
+            }
+            return prev;
+        });
+    };
+
+    const generateTooltipContent = (buildingId, level) => {
+        const config = buildingConfig[buildingId] || specialBuildingsConfig[buildingId];
+        if (!config || level > (config.maxLevel || 99)) return null;
+
+        const cost = getUpgradeCost(buildingId, level);
+        const requirements = config.requirements;
+        let reqElements = [];
+        if (requirements) {
+            for (const reqId in requirements) {
+                const reqLevel = requirements[reqId];
+                const currentLevel = buildings[reqId]?.level || 0;
+                const reqConfig = buildingConfig[reqId];
+                const color = currentLevel >= reqLevel ? 'text-green-800' : 'text-red-800';
+                reqElements.push(
+                    <p key={reqId} className={`font-semibold ${color}`}>
+                        Requires: {reqConfig.name} Lvl {reqLevel} (Current: {currentLevel})
+                    </p>
+                );
+            }
+        }
+
+        return (
+            <div className="text-left">
+                <h4 className="font-bold text-lg mb-1">{config.name} - Level {level}</h4>
+                <p className="text-sm mb-2">{config.description}</p>
+                <div className="text-xs space-y-0.5">
+                    <p><strong>Cost:</strong> {cost.wood}W ({Math.floor(resources.wood)}), {cost.stone}S ({Math.floor(resources.stone)}), {cost.silver}Ag ({Math.floor(resources.silver)}), {cost.population}P</p>
+                    <p><strong>Time:</strong> {cost.time}s</p>
+                    {reqElements}
+                </div>
+            </div>
+        );
+    };
 
     useEffect(() => {
     if (senateRef.current) {
@@ -9868,11 +9928,8 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         if (isDragging) {
             const newX = e.clientX - dragStart.x;
             const newY = e.clientY - dragStart.y;
-
-            // Clamp to visible window
             const clampedX = Math.max(0, Math.min(newX, window.innerWidth - senateRef.current.offsetWidth));
             const clampedY = Math.max(0, Math.min(newY, window.innerHeight - senateRef.current.offsetHeight));
-
             setPosition({ x: clampedX, y: clampedY });
         }
     }, [isDragging, dragStart]);
@@ -9906,7 +9963,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         ['special_building_plot']
     ];
 
-    //  Fetch user's building presets
     useEffect(() => {
         if (!currentUser || !worldId) return;
         const presetsRef = collection(db, `users/${currentUser.uid}/games/${worldId}/presets`);
@@ -9943,7 +9999,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             setIsSavingPreset(false);
             return;
         }
-
         const onConfirmSave = async () => {
             const currentWorkers = {};
             const productionBuildings = ['timber_camp', 'quarry', 'silver_mine'];
@@ -9961,7 +10016,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
             setConfirmAction(null);
             setMessage(`Preset '${presetData.name}' saved successfully!`);
         };
-
         if (existingPreset) {
             setConfirmAction({
                 message: `A preset named "${newPresetName.trim()}" already exists. Do you want to overwrite it?`,
@@ -9972,7 +10026,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         }
     };
 
-    //  Delete the selected preset after confirmation
     const handleDeletePreset = async () => {
         if (!selectedPresetId) return;
         const presetName = presets.find(p => p.id === selectedPresetId)?.name;
@@ -9988,7 +10041,6 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
         });
     };
 
-    //  Apply worker distribution from the selected preset
     const handleApplyPreset = () => {
         const selectedPreset = presets.find(p => p.id === selectedPresetId);
         if (!selectedPreset) {
@@ -10000,6 +10052,12 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30">
+            <Tooltip
+                visible={activeTooltip.visible}
+                content={generateTooltipContent(activeTooltip.buildingId, activeTooltip.level)}
+                x={activeTooltip.x}
+                y={activeTooltip.y}
+            />
             {confirmAction && (
                 <ConfirmationModal
                     message={confirmAction.message}
@@ -10081,9 +10139,11 @@ const SenateView = ({ buildings, resources, onUpgrade, onDemolish, getUpgradeCos
                                                 finalQueuedLevel={finalQueuedLevel}
                                                 cost={cost}
                                                 canAfford={canAfford}
-                                                onUpgrade={onUpgrade}
+                                                onUpgrade={handleUpgradeWrapper}
                                                 isQueueFull={isQueueFull}
                                                 isMaxLevel={isMaxLevel}
+                                                onMouseEnter={handleMouseEnter}
+                                                onMouseLeave={handleMouseLeave}
                                             />
                                         );
                                     })}
@@ -10781,6 +10841,29 @@ const TempleMenu = ({ city, onWorship, onClose, favorData }) => {
 };
 
 export default TempleMenu;
+</file>
+
+<file path="src/components/city/Tooltip.js">
+import React from 'react';
+import '../../styles/tooltips.css';
+
+const Tooltip = ({ visible, content, x, y }) => {
+    if (!visible) return null;
+
+    const style = {
+        left: `${x}px`,
+        top: `${y}px`,
+        transform: 'translate(-50%, 10px)', // Position below and centered
+    };
+
+    return (
+        <div className="senate-tooltip" style={style}>
+            {content}
+        </div>
+    );
+};
+
+export default Tooltip;
 </file>
 
 <file path="src/components/city/UnitQueue.css">
@@ -21355,7 +21438,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
         'Reinforce': ['reinforce'],
         'Trade': ['trade'],
         'Scout': ['scout', 'spy_caught'],
-        'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail'],
+        'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail', 'found_city_success', 'found_city_failed', 'assign_hero_failed', 'rescue_success', 'rescue_foiled', 'rescue_failure', 'rescue_thwarted'],
     };
 
     // Handle dragging the modal window
@@ -21738,6 +21821,13 @@ const ReportsView = ({ onClose, onActionClick }) => {
             case 'spell_cast':
             case 'spell_received':
             case 'spell_fail':
+            case 'found_city_success':
+            case 'found_city_failed':
+            case 'assign_hero_failed':
+            case 'rescue_success':
+            case 'rescue_foiled':
+            case 'rescue_failure':
+            case 'rescue_thwarted':
                 return (
                     <div className="space-y-2 text-center">
                         <p className="font-bold text-lg">{report.title}</p>
@@ -23938,7 +24028,7 @@ export default TroopDisplay;
 # in whole or in part, is strictly prohibited without prior written permission.
 */
 .vip-container {
-    @apply flex items-center gap-2 p-1 rounded-full;
+    @apply flex items-center gap-2 p-1 rounded-full relative;
     background: rgba(0,0,0,0.1);
     border: 1px solid #8B4513;
 }
@@ -23957,11 +24047,34 @@ export default TroopDisplay;
 .vip-claim-btn:disabled {
     @apply opacity-50 cursor-not-allowed;
 }
+
 .vip-progress-bar-bg {
     @apply w-20 h-3 bg-black/20 rounded-full overflow-hidden cursor-pointer;
 }
 .vip-progress-bar {
     @apply h-full bg-yellow-500 rounded-full;
+}
+
+.vip-tooltip {
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 rounded-md shadow-lg text-xs text-center w-max pointer-events-none z-50;
+    background-color: rgba(10, 10, 20, 0.9);
+    border: 1px solid #a17c48;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.vip-container:hover .vip-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.vip-tooltip p {
+    @apply text-white m-0.5;
+}
+
+.vip-tooltip-hr {
+    @apply my-1 border-t border-[#a17c48];
 }
 </file>
 
@@ -24044,6 +24157,7 @@ const VipDisplay = () => {
     const { worldId, playerGameData, addNotification } = useGame();
     const [canClaim, setCanClaim] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
+    const [nextClaimTimer, setNextClaimTimer] = useState('');
 
     useEffect(() => {
         if (playerGameData?.lastVipPointsClaimed) {
@@ -24058,6 +24172,34 @@ const VipDisplay = () => {
             setCanClaim(true);
         }
     }, [playerGameData]);
+
+    // This effect calculates the time until the next claim can be made.
+    useEffect(() => {
+        if (canClaim) {
+            setNextClaimTimer('Ready to claim!');
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const now = new Date();
+            const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+            const diff = nextMidnight.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setNextClaimTimer('Ready to claim!');
+                setCanClaim(true);
+                clearInterval(interval);
+            } else {
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                setNextClaimTimer(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [canClaim]);
+
 
     const handleClaimVipPoints = async () => {
         if (!canClaim || isClaiming || !playerGameData) return;
@@ -24104,16 +24246,32 @@ const VipDisplay = () => {
     
     const vipLevel = playerGameData?.vipLevel || 1;
     const currentVipPoints = playerGameData?.vipPoints || 0;
+    const pointsForCurrentLevel = vipConfig.pointsPerLevel[vipLevel - 1] || 0;
     const pointsForNextLevel = vipConfig.pointsPerLevel[vipLevel] || Infinity;
-    const progress = pointsForNextLevel === Infinity ? 100 : (currentVipPoints / pointsForNextLevel) * 100;
+
+    const expHaving = currentVipPoints - pointsForCurrentLevel;
+    const maxExp = pointsForNextLevel - pointsForCurrentLevel;
+    const expNeeded = pointsForNextLevel === Infinity ? 0 : pointsForNextLevel - currentVipPoints;
+    
+    const progress = maxExp === Infinity ? 100 : (expHaving / maxExp) * 100;
 
     return (
-        <div className="vip-container">
+        <div 
+            className="vip-container"
+        >
+            <div className="vip-tooltip">
+                <p>Level {vipLevel} Experience</p>
+                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
+                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
+                <hr className="vip-tooltip-hr" />
+                <p>Next daily chest: {nextClaimTimer}</p>
+            </div>
+            
             <div className="vip-header">
                 <span>VIP {vipLevel}</span>
                 {canClaim && <button className="vip-claim-btn" onClick={handleClaimVipPoints} disabled={isClaiming}>Claim Chest</button>}
             </div>
-            <div className="vip-progress-bar-bg" title={`${currentVipPoints} / ${pointsForNextLevel === Infinity ? 'MAX' : pointsForNextLevel} VIP Points`}>
+            <div className="vip-progress-bar-bg">
                 <div className="vip-progress-bar" style={{ width: `${progress}%` }}></div>
             </div>
         </div>
@@ -29426,7 +29584,7 @@ export const useDivineActions = ({
 import { useAuth } from '../../contexts/AuthContext';
 import { useGame } from '../../contexts/GameContext';
 import { db } from '../../firebase/config';
-import { doc, runTransaction, collection, serverTimestamp, getDocs, deleteField } from 'firebase/firestore';
+import { doc, runTransaction, collection, serverTimestamp, getDocs, deleteField, query, where } from 'firebase/firestore';
 import heroesConfig from '../../gameData/heroes.json';
 import { calculateDistance, calculateTravelTime } from '../../utils/travel';
 
@@ -29542,6 +29700,14 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
     
         try {
+            // # Check for incoming hero assignments to prevent race conditions
+            const movementsRef = collection(db, 'worlds', worldId, 'movements');
+            const q = query(movementsRef, where('type', '==', 'assign_hero'), where('targetCityId', '==', activeCityId));
+            const incomingHeroMovements = await getDocs(q);
+            if (!incomingHeroMovements.empty) {
+                throw new Error("A hero is already on their way to this city.");
+            }
+
             await runTransaction(db, async (transaction) => {
                 const cityDoc = await transaction.get(cityDocRef);
                 if (!cityDoc.exists()) throw new Error("City data not found.");
@@ -29650,7 +29816,7 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
     
                 const movementData = {
                     type: 'return',
-                    status: 'moving',
+                    status: 'returning',
                     hero: prisonerToRelease.heroId,
                     originCityId: activeCityId,
                     originCoords: { x: capturingCityData.x, y: capturingCityData.y },
@@ -30549,7 +30715,7 @@ export const useWorkerActions = ({ cityGameState, saveGameState, getMaxWorkerSlo
 
 <file path="src/hooks/movementProcessors/processAttackMovement.js">
 // src/hooks/movementProcessors/processAttackMovement.js
-import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp, deleteField} from 'firebase/firestore';
+import { doc, getDoc, writeBatch, runTransaction, collection, serverTimestamp} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveCombat, getVillageTroops } from '../../utils/combat';
 import unitConfig from '../../gameData/units.json';
@@ -33476,7 +33642,7 @@ export const useModalState = () => {
 // src/hooks/useMovementProcessor.js
 import { useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
-import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { useCityState } from './useCityState';
 // import all the new processor functions
 import { processAttackMovement } from './movementProcessors/processAttackMovement';
@@ -33503,6 +33669,25 @@ export const useMovementProcessor = (worldId) => {
     
                     const cityData = cityDoc.data();
                     const heroes = cityData.heroes || {};
+                    
+                    // # Atomically check if a hero is already assigned to this city upon arrival
+                    for (const hId in heroes) {
+                        if (heroes[hId].cityId === movement.targetCityId) {
+                            // A hero is already there. Cancel this assignment and send a report.
+                            const failureReport = {
+                                type: 'assign_hero_failed',
+                                title: `Hero Assignment Failed`,
+                                timestamp: serverTimestamp(),
+                                outcome: { message: `Could not assign your hero to ${cityData.cityName} because it is already occupied by another hero.` },
+                                read: false,
+                            };
+                            const reportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
+                            transaction.set(reportRef, failureReport);
+                            transaction.delete(movementDoc.ref);
+                            return; // Exit transaction
+                        }
+                    }
+
                     const newHeroes = { ...heroes, [movement.hero]: { ...heroes[movement.hero], cityId: movement.targetCityId } };
     
                     transaction.update(targetCityRef, { heroes: newHeroes });
@@ -34766,6 +34951,21 @@ body {
     right: 0%;
     transform: none;
     margin-right: 10px;
+}
+.senate-tooltip {
+    position: fixed;
+    background-color: #ae9670;
+    border: 2px solid #4a2c2a;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 1000;
+    pointer-events: none;
+    font-size: 0.9em;
+    color: #4a2c2a;
+    max-width: 300px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    transition: opacity 0.2s;
+    white-space: pre-wrap;
 }
 </file>
 
