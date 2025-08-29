@@ -245,6 +245,7 @@ src/hooks/movementProcessors/processAttackMovement.js
 src/hooks/movementProcessors/processCollectWreckageMovement.js
 src/hooks/movementProcessors/processFoundingMovement.js
 src/hooks/movementProcessors/processReinforceMovement.js
+src/hooks/movementProcessors/processRescueMovement copy.js
 src/hooks/movementProcessors/processRescueMovement.js
 src/hooks/movementProcessors/processReturnMovement.js
 src/hooks/movementProcessors/processScoutMovement.js
@@ -15116,7 +15117,7 @@ import ReinforcementModal from '../city/ReinforcementModal';
 import { useAuth } from '../../contexts/AuthContext';
 import EmptyCityModal from './EmptyCityModal';
 import RescueModal from './RescueModal';
-import WreckageModal from './WreckageModal'; // Import the new modal
+import WreckageModal from './WreckageModal';
 
 const MapModals = ({
     modalState,
@@ -15155,7 +15156,7 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
-        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget || selectedCity.isWreckageTarget) { // check for wreckage
+        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget || selectedCity.isWreckageTarget) {
             return (
                 <OtherCityModal
                     city={selectedCity}
@@ -15289,7 +15290,6 @@ const MapModals = ({
                     setMessage={setMessage}
                 />
             )}
-            {/* Render the new wreckage modal */}
             {modalState.isWreckageModalOpen && (
                 <WreckageModal
                     wreckage={modalState.wreckageModalData}
@@ -18923,7 +18923,7 @@ const MapView = ({
     const mapContainerRef = useRef(null);
     const { isPlacingDummyCity, setIsPlacingDummyCity } = useMapState();
     const { pan, zoom, viewportSize, borderOpacity, isPanning, handleMouseDown, goToCoordinates } = useMapInteraction(viewportRef, mapContainerRef, worldState, playerCity, centerOnCity);
-    const { visibleSlots, visibleVillages, visibleRuins, invalidateChunkCache } = useMapData(currentUser, worldId, worldState, pan, zoom, viewportSize);
+    const { visibleSlots, visibleVillages, visibleRuins, visibleWreckages, invalidateChunkCache } = useMapData(currentUser, worldId, worldState, pan, zoom, viewportSize);
     const [message, setMessage] = useState('');
     const { travelTimeInfo, setTravelTimeInfo, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity, handleActionClick } = useMapActions(openModal, closeModal, showCity, invalidateChunkCache, setMessage);
     const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, calculateTotalPoints, getProductionRates, getWarehouseCapacity } = useCityState(worldId);
@@ -19073,7 +19073,7 @@ const MapView = ({
         }
     }, [panToCoords, goToCoordinates, setPanToCoords]);
 
-    const { onCitySlotClick, onVillageClick, onRuinClick } = useMapClickHandler({
+    const { onCitySlotClick, onVillageClick, onRuinClick, onWreckageClick } = useMapClickHandler({
         playerCity,
         isPlacingDummyCity,
         handleCreateDummyCity,
@@ -19374,6 +19374,8 @@ const MapView = ({
         };
         mergeWithGrid(combinedSlots, 'city_slot');
         mergeWithGrid(visibleVillages, 'village');
+        // # Add wreckages to the grid
+        mergeWithGrid(visibleWreckages, 'wreckage');
         Object.values(visibleRuins).forEach(ruin => {
             const x = Math.round(ruin.x), y = Math.round(ruin.y);
             if (grid[y]?.[x]) grid[y][x] = { type: 'ruin', data: ruin };
@@ -19395,7 +19397,7 @@ const MapView = ({
             }
         });
         return grid;
-    }, [worldState, combinedSlots, visibleVillages, visibleRuins, godTowns, wonderSpots, allWonders]);
+    }, [worldState, combinedSlots, visibleVillages, visibleRuins, visibleWreckages, godTowns, wonderSpots, allWonders]);
     const combinedCityPoints = useMemo(() => {
         return { ...cityPoints, ...playerCityPoints };
     }, [cityPoints, playerCityPoints]);
@@ -19500,6 +19502,7 @@ const MapView = ({
                                         onGodTownClick={onGodTownClick}
                                         onWonderSpotClick={handleWonderSpotClick}
                                         onConstructingWonderClick={handleConstructingWonderClick}
+                                        onWreckageClick={onWreckageClick}
                                         isPlacingDummyCity={isPlacingDummyCity}
                                         movements={movements}
                                         combinedSlots={combinedSlots}
@@ -31610,6 +31613,104 @@ export const processReinforceMovement = async (movement, movementDoc, worldId, t
 };
 </file>
 
+<file path="src/hooks/movementProcessors/processRescueMovement copy.js">
+// src/hooks/movementProcessors/processRescueMovement.js
+import { doc,  writeBatch, collection, serverTimestamp, deleteField } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { calculateDistance, calculateTravelTime } from '../../utils/travel';
+
+// # handles the logic for a hero rescue mission
+export const processRescueMovement = async (movement, movementDoc, worldId, originCityState, targetCityState) => {
+    const batch = writeBatch(db);
+    const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
+    const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
+
+    const defenderCaveSilver = targetCityState.cave?.silver || 0;
+    const success = movement.silver > defenderCaveSilver;
+
+    if (success) {
+        // # SUCCESSFUL RESCUE
+        const newPrisoners = targetCityState.prisoners.filter(p => p.heroId !== movement.heroToRescueId);
+        batch.update(targetCityRef, { prisoners: newPrisoners });
+        batch.update(targetCitySlotRef, { capturedHero: deleteField() });
+
+        // # Create a return movement for the freed hero
+        const returnMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
+        const distance = calculateDistance(targetCityState, originCityState);
+        const travelSeconds = calculateTravelTime(distance, 10); // Hero travels at a base speed
+        const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
+        
+        const returnMovement = {
+            type: 'return',
+            status: 'returning',
+            hero: movement.heroToRescueId,
+            originCityId: movement.targetCityId,
+            originCoords: { x: targetCityState.x, y: targetCityState.y },
+            targetCityId: movement.originCityId,
+            targetCoords: { x: originCityState.x, y: originCityState.y },
+            targetOwnerId: movement.originOwnerId,
+            departureTime: serverTimestamp(),
+            arrivalTime: arrivalTime,
+            involvedParties: [movement.originOwnerId, movement.targetOwnerId]
+        };
+        batch.set(returnMovementRef, returnMovement);
+        
+        // # Update hero's status to remove 'capturedIn'
+        const heroOwnerCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
+        batch.update(heroOwnerCityRef, { [`heroes.${movement.heroToRescueId}.capturedIn`]: deleteField() });
+
+
+        // # Reports
+        const attackerReport = {
+            type: 'rescue_success',
+            title: `Rescue Successful!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your Liberator successfully rescued your hero from ${targetCityState.cityName}!` },
+            read: false,
+        };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-succ`);
+        batch.set(attackerReportRef, attackerReport);
+
+        const defenderReport = {
+            type: 'rescue_foiled',
+            title: `Prison Break!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `A Liberator from ${originCityState.cityName} infiltrated your prison and freed a captured hero!` },
+            read: false,
+        };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-foil`);
+        batch.set(defenderReportRef, defenderReport);
+
+    } else {
+        // # FAILED RESCUE
+        // # Reports
+        const attackerReport = {
+            type: 'rescue_failure',
+            title: `Rescue Failed!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your Liberator was caught and eliminated while trying to rescue your hero from ${targetCityState.cityName}.` },
+            read: false,
+        };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-fail`);
+        batch.set(attackerReportRef, attackerReport);
+
+        const defenderReport = {
+            type: 'rescue_thwarted',
+            title: `Spy Caught!`,
+            timestamp: serverTimestamp(),
+            outcome: { message: `Your guards caught a Liberator from ${originCityState.cityName} attempting a prison break!` },
+            read: false,
+        };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-thwart`);
+        batch.set(defenderReportRef, defenderReport);
+    }
+
+    // # Delete the rescue movement itself
+    batch.delete(movementDoc.ref);
+    await batch.commit();
+};
+</file>
+
 <file path="src/hooks/movementProcessors/processRescueMovement.js">
 // src/hooks/movementProcessors/processRescueMovement.js
 import { doc,  writeBatch, collection, serverTimestamp, deleteField } from 'firebase/firestore';
@@ -33480,6 +33581,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
     const [visibleSlots, setVisibleSlots] = useState({});
     const [visibleVillages, setVisibleVillages] = useState({});
     const [visibleRuins, setVisibleRuins] = useState({});
+    const [visibleWreckages, setVisibleWreckages] = useState({}); // Wreckages state
     const activeListenersRef = useRef({});
 
     const invalidateChunkCache = useCallback((x, y) => {
@@ -33536,7 +33638,8 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         requiredChunks.forEach(chunkKey => {
             if (!activeListenersRef.current[chunkKey]) {
                 const [chunkX, chunkY] = chunkKey.split(',').map(Number);
-                const collectionsToFetch = ['citySlots', 'villages', 'ruins'];
+                // # Add 'wreckages' to the list of collections to fetch
+                const collectionsToFetch = ['citySlots', 'villages', 'ruins', 'wreckages'];
                 const unsubscribers = [];
 
                 collectionsToFetch.forEach(colName => {
@@ -33585,6 +33688,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         const newVisibleSlots = {};
         const newVisibleVillages = {};
         const newVisibleRuins = {};
+        const newVisibleWreckages = {}; // # Logic to handle wreckages
 
         Object.values(cachedData).forEach(chunk => {
             Object.values(chunk.citySlots || {}).forEach(slot => {
@@ -33605,10 +33709,17 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
                     newVisibleRuins[ruin.id] = ruin;
                 }
             });
+            // # Populate visible wreckages
+            Object.values(chunk.wreckages || {}).forEach(wreckage => {
+                if (wreckage.x >= viewStartCol && wreckage.x <= viewEndCol && wreckage.y >= viewStartRow && wreckage.y <= viewEndRow) {
+                    newVisibleWreckages[wreckage.id] = wreckage;
+                }
+            });
         });
         setVisibleSlots(newVisibleSlots);
         setVisibleVillages(newVisibleVillages);
         setVisibleRuins(newVisibleRuins);
+        setVisibleWreckages(newVisibleWreckages); // # Set the state for visible wreckages
 
     }, [cachedData, pan, zoom, viewportSize]);
 
@@ -33617,6 +33728,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         visibleSlots,
         visibleVillages,
         visibleRuins,
+        visibleWreckages, // # Return visible wreckages
         invalidateChunkCache
     };
 };

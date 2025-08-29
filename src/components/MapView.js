@@ -92,6 +92,11 @@ const MapView = ({
     const [allWonders, setAllWonders] = useState([]);
     const [wonderInfo, setWonderInfo] = useState(null);
 
+    // LOG: Add a log to see modal state changes
+    useEffect(() => {
+        console.log("MapView: Modal state changed:", modalState);
+    }, [modalState]);
+
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
         showCity();

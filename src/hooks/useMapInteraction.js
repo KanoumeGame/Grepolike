@@ -68,7 +68,7 @@ export const useMapInteraction = (viewportRef, mapContainerRef, worldState, play
         return () => window.removeEventListener('resize', handleResize);
     }, [worldState, viewportRef]);
 
-    //  This effect now only runs when the active city changes, preventing the map from resetting during panning.
+    // This effect now only runs when the active city changes, preventing the map from resetting during panning.
     useEffect(() => {
         if (playerCity) {
             centerOnCity();
@@ -115,6 +115,10 @@ export const useMapInteraction = (viewportRef, mapContainerRef, worldState, play
 
     const handleMouseDown = useCallback((e) => {
         if (e.button !== 0) return;
+        // Check if the click target is an interactive map object and prevent panning if so
+        if (e.target.closest('.city-slot, .village-slot, .ruin-slot, .god-town-slot, .wreckage-slot, .wonder-spot-tile, .constructing-wonder-tile')) {
+            return;
+        }
         setStartPos({ x: e.clientX - pan.x, y: e.clientY - pan.y });
         setIsPanning(true);
     }, [pan]);

@@ -16,9 +16,12 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
     const handleActionClick = useCallback((mode, targetCity) => {
         if (['attack', 'reinforce', 'scout', 'trade', 'collect_wreckage'].includes(mode)) {
-            openModal('action', { mode, city: targetCity });
             closeModal('city');
             closeModal('village');
+            if (mode === 'collect_wreckage') {
+                closeModal('wreckage');
+            }
+            openModal('action', { mode, city: targetCity });
         } else if (mode === 'withdraw') {
             openModal('withdraw', targetCity);
             closeModal('city');

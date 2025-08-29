@@ -127,6 +127,7 @@ export const useMapClickHandler = ({
 
     // # Handles clicks on wreckage tiles
     const onWreckageClick = (e, wreckageData) => {
+        console.log("useMapClickHandler: Wreckage clicked:", wreckageData); // LOG 1
         if (!playerCity) {
             setMessage("Your city data is still loading. Please wait a moment.");
             return;
@@ -135,6 +136,7 @@ export const useMapClickHandler = ({
         closeModal('village');
         const distance = calculateDistance(playerCity, wreckageData);
         setTravelTimeInfo({ distance });
+        console.log("useMapClickHandler: Opening wreckage modal for:", wreckageData.id); // LOG 2
         openModal('wreckage', wreckageData);
     };
 

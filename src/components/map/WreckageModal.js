@@ -15,10 +15,9 @@ const WreckageModal = ({ wreckage, onClose, onCollect }) => {
         silver: silverImage,
     };
 
-    // # Triggers the action to open the movement modal
+    // Triggers the action to open the movement modal
     const handleCollect = () => {
         onCollect('collect_wreckage', { ...wreckage, isWreckageTarget: true, name: 'Sea Resources' });
-        onClose();
     };
 
     return (
@@ -44,4 +43,3 @@ const WreckageModal = ({ wreckage, onClose, onCollect }) => {
 };
 
 export default WreckageModal;
-

@@ -31,7 +31,7 @@ imageContexts.forEach(context => {
     });
 });
 
-//  Displays the current weather and wind conditions
+// Displays the current weather and wind conditions
 const WindInfo = ({ weather, windSpeed }) => {
     const [windRange, setWindRange] = useState('');
     const weatherIcons = {
@@ -100,7 +100,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                 case 'Stormy': min = 9; max = 10; break;
                 default: break;
             }
-            //  Calculate a random wind speed within the weather's range for this specific movement
+            // Calculate a random wind speed within the weather's range for this specific movement
             setWindSpeed(getSecureRandomFloat() * (max - min) + min);
         }
     }, [worldState?.weather]);
@@ -109,8 +109,16 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     const transportCapacity = useMemo(() => {
         let capacity = 0;
         for (const unitId in selectedUnits) {
-            if (unitConfig[unitId]?.type === 'naval' && unitConfig[unitId]?.capacity) {
-                capacity += selectedUnits[unitId] * unitConfig[unitId].capacity;
+            const unit = unitConfig[unitId];
+            if (unit) {
+                // Naval units have explicit capacity
+                if (unit.type === 'naval' && unit.capacity) {
+                    capacity += selectedUnits[unitId] * unit.capacity;
+                }
+                // Flying units can also carry resources (their population cost is their capacity)
+                if (unit.flying) {
+                    capacity += selectedUnits[unitId] * (unit.cost.population || 1);
+                }
             }
         }
         return capacity;
@@ -119,8 +127,10 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     const currentUnitsLoad = useMemo(() => {
         let load = 0;
         for (const unitId in selectedUnits) {
-            if (unitConfig[unitId]?.type === 'land' && unitConfig[unitId]?.cost?.population) {
-                load += selectedUnits[unitId] * unitConfig[unitId].cost.population;
+            const unit = unitConfig[unitId];
+            // Only non-flying land units require transport capacity
+            if (unit?.type === 'land' && !unit?.flying && unit?.cost?.population) {
+                load += selectedUnits[unitId] * unit.cost.population;
             }
         }
         return load;
@@ -146,7 +156,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         setSelectedUnits(prev => ({ ...prev, [unitId]: amount }));
     };
 
-    //  Toggles selecting all units of a type or deselecting them.
+    // Toggles selecting all units of a type or deselecting them.
     const handleUnitIconClick = (unitId, maxAmount) => {
         const currentAmount = selectedUnits[unitId] || 0;
         const newAmount = currentAmount === maxAmount ? 0 : maxAmount;
@@ -224,10 +234,20 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
             return;
         }
 
-        const hasLandUnitsSelected = Object.keys(selectedUnits).some(unitId => unitConfig[unitId]?.type === 'land' && selectedUnits[unitId] > 0);
+        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget || targetCity.isWreckageTarget ? true : playerCity.islandId !== targetCity.islandId;
+        const hasNonFlyingLandUnits = Object.keys(selectedUnits).some(unitId => 
+            selectedUnits[unitId] > 0 && 
+            unitConfig[unitId]?.type === 'land' && 
+            !unitConfig[unitId]?.flying
+        );
         const hasNavalUnitsSelected = Object.keys(selectedUnits).some(unitId => unitConfig[unitId]?.type === 'naval' && selectedUnits[unitId] > 0);
 
-        if (hasLandUnitsSelected && hasNavalUnitsSelected && currentUnitsLoad > transportCapacity) {
+        if (isCrossIsland && hasNonFlyingLandUnits && !hasNavalUnitsSelected) {
+            setMessage("Ground troops cannot travel across the sea without transport ships.");
+            return;
+        }
+
+        if (isCrossIsland && hasNonFlyingLandUnits && currentUnitsLoad > transportCapacity) {
             setMessage(`Not enough transport ship capacity. You need ${currentUnitsLoad - transportCapacity} more capacity.`);
             return;
         }
@@ -326,7 +346,32 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         if (mode === 'collect_wreckage') {
             return (
                 <div className="space-y-4">
-                     {navalUnitsList.length > 0 && (
+                     {landUnitsList.length > 0 && (
+                        <div className="unit-selection-section">
+                            <h4 className="unit-selection-header">Land Units to Send</h4>
+                            <div className="unit-grid">
+                                {landUnitsList.map(unit => (
+                                    <div key={unit.id} className="unit-item">
+                                        <div className="unit-image-container" title={`Select all/none of ${unit.name}`} onClick={() => handleUnitIconClick(unit.id, unit.currentCount)}>
+                                            <img src={images[unit.image]} alt={unit.name} className="unit-image" />
+                                             <span className="unit-count-badge">
+                                                {unit.currentCount}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={selectedUnits[unit.id] || 0}
+                                            onChange={(e) => handleUnitChange(unit.id, e.target.value)}
+                                            className="unit-input hide-number-spinners"
+                                            min="0"
+                                            max={unit.currentCount}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                     {navalUnitsList.filter(u => u.capacity > 0).length > 0 && (
                         <div className="unit-selection-section">
                             <h4 className="unit-selection-header">Transport Ships</h4>
                             <div className="unit-grid">
@@ -349,6 +394,23 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+                    {transportCapacity > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-700">
+                            <h4 className="text-lg font-bold">Transport Capacity</h4>
+                            <div className="w-full bg-gray-700 rounded-full h-6 relative">
+                                <div 
+                                    className={`h-full rounded-full ${progressBarColor}`} 
+                                    style={{ width: `${Math.min(100, capacityProgress)}%` }}
+                                ></div>
+                                <div className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold">
+                                    {currentUnitsLoad} / {transportCapacity}
+                                </div>
+                            </div>
+                            {capacityProgress > 100 && (
+                                <p className="text-red-500 text-sm mt-1">Over capacity!</p>
+                            )}
                         </div>
                     )}
                 </div>

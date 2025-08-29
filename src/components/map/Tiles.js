@@ -224,7 +224,7 @@ const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }
     const resourceType = Object.keys(wreckageData.resources)[0];
     const tooltipText = `Sea Resources<br>${resourceType}: ${wreckageData.resources[resourceType].toLocaleString()}`;
     const WreckageSVG = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80 pointer-events-none">
             <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v5.239a.75.75 0 00.25.53l4.5 4.5a.75.75 0 001.06 0l4.5-4.5a.75.75 0 00.25-.53V4.5a.75.75 0 00-.75-.75h-.75a.75.75 0 00-.75.75v3.19l-2.47-2.47a.75.75 0 00-1.06 0z" />
             <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v5.239a.75.75 0 01-.25.53l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 01-.25-.53V4.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v3.19l2.47-2.47a.75.75 0 011.06 0z" />
         </svg>
@@ -233,7 +233,10 @@ const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }
     return (
         <div className={`w-full h-full flex justify-center items-center`}>
             <div
-                onClick={(e) => onClick(e, wreckageData)}
+                onClick={(e) => {
+                    console.log("WreckageTile's div was clicked!"); // ADDED LOG
+                    onClick(e, wreckageData);
+                }}
                 className="wreckage-slot"
             >
                 <WreckageSVG />
@@ -280,3 +283,4 @@ export const GodTownTile = React.memo(_GodTownTile);
 export const WreckageTile = React.memo(_WreckageTile);
 export const WonderSpotTile = React.memo(_WonderSpotTile);
 export const ConstructingWonderTile = React.memo(_ConstructingWonderTile);
+
