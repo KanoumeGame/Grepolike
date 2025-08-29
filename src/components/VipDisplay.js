@@ -76,6 +76,7 @@ const VipDisplay = () => {
     const { worldId, playerGameData, addNotification } = useGame();
     const [canClaim, setCanClaim] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
+    const [nextClaimTimer, setNextClaimTimer] = useState('');
 
     useEffect(() => {
         if (playerGameData?.lastVipPointsClaimed) {
@@ -90,6 +91,34 @@ const VipDisplay = () => {
             setCanClaim(true);
         }
     }, [playerGameData]);
+
+    // This effect calculates the time until the next claim can be made.
+    useEffect(() => {
+        if (canClaim) {
+            setNextClaimTimer('Ready to claim!');
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const now = new Date();
+            const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+            const diff = nextMidnight.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setNextClaimTimer('Ready to claim!');
+                setCanClaim(true);
+                clearInterval(interval);
+            } else {
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                setNextClaimTimer(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [canClaim]);
+
 
     const handleClaimVipPoints = async () => {
         if (!canClaim || isClaiming || !playerGameData) return;
@@ -136,16 +165,32 @@ const VipDisplay = () => {
     
     const vipLevel = playerGameData?.vipLevel || 1;
     const currentVipPoints = playerGameData?.vipPoints || 0;
+    const pointsForCurrentLevel = vipConfig.pointsPerLevel[vipLevel - 1] || 0;
     const pointsForNextLevel = vipConfig.pointsPerLevel[vipLevel] || Infinity;
-    const progress = pointsForNextLevel === Infinity ? 100 : (currentVipPoints / pointsForNextLevel) * 100;
+
+    const expHaving = currentVipPoints - pointsForCurrentLevel;
+    const maxExp = pointsForNextLevel - pointsForCurrentLevel;
+    const expNeeded = pointsForNextLevel === Infinity ? 0 : pointsForNextLevel - currentVipPoints;
+    
+    const progress = maxExp === Infinity ? 100 : (expHaving / maxExp) * 100;
 
     return (
-        <div className="vip-container">
+        <div 
+            className="vip-container"
+        >
+            <div className="vip-tooltip">
+                <p>Level {vipLevel} Experience</p>
+                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
+                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
+                <hr className="vip-tooltip-hr" />
+                <p>Next daily chest: {nextClaimTimer}</p>
+            </div>
+            
             <div className="vip-header">
                 <span>VIP {vipLevel}</span>
                 {canClaim && <button className="vip-claim-btn" onClick={handleClaimVipPoints} disabled={isClaiming}>Claim Chest</button>}
             </div>
-            <div className="vip-progress-bar-bg" title={`${currentVipPoints} / ${pointsForNextLevel === Infinity ? 'MAX' : pointsForNextLevel} VIP Points`}>
+            <div className="vip-progress-bar-bg">
                 <div className="vip-progress-bar" style={{ width: `${progress}%` }}></div>
             </div>
         </div>
@@ -153,3 +198,4 @@ const VipDisplay = () => {
 };
 
 export default VipDisplay;
+

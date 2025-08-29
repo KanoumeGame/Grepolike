@@ -7,7 +7,7 @@
 # in whole or in part, is strictly prohibited without prior written permission.
 */
 .vip-container {
-    @apply flex items-center gap-2 p-1 rounded-full;
+    @apply flex items-center gap-2 p-1 rounded-full relative;
     background: rgba(0,0,0,0.1);
     border: 1px solid #8B4513;
 }
@@ -26,9 +26,33 @@
 .vip-claim-btn:disabled {
     @apply opacity-50 cursor-not-allowed;
 }
+
 .vip-progress-bar-bg {
     @apply w-20 h-3 bg-black/20 rounded-full overflow-hidden cursor-pointer;
 }
 .vip-progress-bar {
     @apply h-full bg-yellow-500 rounded-full;
 }
+
+.vip-tooltip {
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 rounded-md shadow-lg text-xs text-center w-max pointer-events-none z-50;
+    background-color: rgba(10, 10, 20, 0.9);
+    border: 1px solid #a17c48;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.vip-container:hover .vip-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.vip-tooltip p {
+    @apply text-white m-0.5;
+}
+
+.vip-tooltip-hr {
+    @apply my-1 border-t border-[#a17c48];
+}
+
