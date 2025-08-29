@@ -1,4 +1,4 @@
-import { doc, writeBatch, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveScouting } from '../../utils/combat';
 
