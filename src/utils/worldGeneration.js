@@ -1,5 +1,12 @@
 // src/utils/worldGeneration.js
 
+// A cryptographically secure random number generator.
+const getSecureRandomFloat = () => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    return randomBuffer[0] / (0xFFFFFFFF + 1);
+};
+
 // Add a list of available island images
 const islandImages = ['island_1.png'];
 
@@ -45,7 +52,7 @@ export const generateIslands = (width, height, count) => {
             x: Math.floor(width / 2),
             y: Math.floor(height / 2),
             radius: radius,
-            imageName: islandImages[Math.floor(Math.random() * islandImages.length)],
+            imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
         });
         return islands;
     }
@@ -56,7 +63,7 @@ export const generateIslands = (width, height, count) => {
                 Math.pow(newIsland.x - existing.x, 2) +
                 Math.pow(newIsland.y - existing.y, 2)
             );
-            const margin = minMargin + Math.random() * (maxMargin - minMargin);
+            const margin = minMargin + getSecureRandomFloat() * (maxMargin - minMargin);
             if (distance < newIsland.radius + existing.radius + margin) {
                 return true;
             }
@@ -70,7 +77,7 @@ export const generateIslands = (width, height, count) => {
         let attempts = 0;
 
         while (hasCollision && attempts < maxAttempts) {
-            const radius = Math.random() * 2 + 6; // Radius between 6 and 8 tiles
+            const radius = getSecureRandomFloat() * 2 + 6; // Radius between 6 and 8 tiles
 
             // Calculate spawnable area, considering map edge margin and island radius
             const spawnableWidth = width - (mapEdgeMargin * 2) - (radius * 2);
@@ -83,8 +90,8 @@ export const generateIslands = (width, height, count) => {
             }
 
             // Calculate random coordinates within the spawnable area
-            const randomX = Math.floor(Math.random() * spawnableWidth);
-            const randomY = Math.floor(Math.random() * spawnableHeight);
+            const randomX = Math.floor(getSecureRandomFloat() * spawnableWidth);
+            const randomY = Math.floor(getSecureRandomFloat() * spawnableHeight);
 
             island = {
                 id: `island-${Date.now()}-${i}`,
@@ -93,7 +100,7 @@ export const generateIslands = (width, height, count) => {
                 x: mapEdgeMargin + radius + randomX,
                 y: mapEdgeMargin + radius + randomY,
                 radius: radius,
-                imageName: islandImages[Math.floor(Math.random() * islandImages.length)],
+                imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
             };
             hasCollision = checkCollision(island, islands);
             attempts++;
@@ -170,14 +177,14 @@ export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHei
 
                 const villageId = `v${island.id}-${villageIndex++}`;
                 const resources = ['wood', 'stone', 'silver'];
-                let demands = resources.splice(Math.floor(Math.random() * resources.length), 1)[0];
-                let supplies = resources.splice(Math.floor(Math.random() * resources.length), 1)[0];
+                let demands = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
+                let supplies = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
 
                 villages[villageId] = {
-                    id: villageId, x, y, islandId: island.id, name: villageNames[Math.floor(Math.random() * villageNames.length)],
+                    id: villageId, x, y, islandId: island.id, name: villageNames[Math.floor(getSecureRandomFloat() * villageNames.length)],
                     level: 1, demandYield: { wood: 50, stone: 50, silver: 20 },
                     resources: { wood: 500, stone: 500, silver: 500 }, maxResources: 1200, lastDemandTime: 0,
-                    demandCooldown: demandCooldowns[Math.floor(Math.random() * demandCooldowns.length)],
+                    demandCooldown: demandCooldowns[Math.floor(getSecureRandomFloat() * demandCooldowns.length)],
                     troops: generateVillageTroops(1), tradeRatio: 1.25, demands, supplies
                 };
                 occupiedSlots.add(`${x},${y}`);
@@ -188,8 +195,8 @@ export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHei
             const centerY = Math.round(island.y);
             const numVillages = Math.min(Math.floor(island.radius), 5);
             for (let i = 0; i < numVillages; i++) {
-                const angle = Math.random() * 2 * Math.PI;
-                const distance = Math.random() * (island.radius - 3); // Place away from the edge
+                const angle = getSecureRandomFloat() * 2 * Math.PI;
+                const distance = getSecureRandomFloat() * (island.radius - 3); // Place away from the edge
                 const x = Math.round(centerX + distance * Math.cos(angle));
                 const y = Math.round(centerY + distance * Math.sin(angle));
 
@@ -225,8 +232,8 @@ export const generateRuins = (islands, worldWidth, worldHeight) => {
         let x, y;
         let attempts = 0;
         do {
-            x = Math.floor(Math.random() * worldWidth);
-            y = Math.floor(Math.random() * worldHeight);
+            x = Math.floor(getSecureRandomFloat() * worldWidth);
+            y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
 
@@ -239,9 +246,9 @@ export const generateRuins = (islands, worldWidth, worldHeight) => {
                 name: "Forgotten Ruins",
                 type: 'ruin', // To distinguish from villages
                 troops: {
-                    hoplite: 100 + Math.floor(Math.random() * 50),
-                    cavalry: 50 + Math.floor(Math.random() * 25),
-                    trireme: 20 + Math.floor(Math.random() * 10) // Naval defense
+                    hoplite: 100 + Math.floor(getSecureRandomFloat() * 50),
+                    cavalry: 50 + Math.floor(getSecureRandomFloat() * 25),
+                    trireme: 20 + Math.floor(getSecureRandomFloat() * 10) // Naval defense
                 },
                 researchReward: `qol_research_${i % 3}` // Example reward cycles through the 3 QoL researches
             };
@@ -269,8 +276,8 @@ export const generateGodTowns = (islands, worldWidth, worldHeight, count = 1) =>
         let x, y;
         let attempts = 0;
         do {
-            x = Math.floor(Math.random() * worldWidth);
-            y = Math.floor(Math.random() * worldHeight);
+            x = Math.floor(getSecureRandomFloat() * worldWidth);
+            y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
 
@@ -299,3 +306,4 @@ export const generateGodTowns = (islands, worldWidth, worldHeight, count = 1) =>
     }
     return godTowns;
 };
+

@@ -16,6 +16,14 @@ import { clearProfileCache } from '../../components/profile/ProfileView';
 import { clearMemberCache } from '../../components/alliance/AllianceMembers';
 import { clearLeaderboardCache } from '../../components/leaderboard/Leaderboard';
 
+// A cryptographically secure random number generator.
+const getSecureRandomInt = (max) => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    let randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+    return Math.floor(randomNumber * max);
+};
+
 export const useAdminActions = ({
     userProfile, worldId, cityGameState, currentUser,
     setIsInstantBuild, setIsInstantResearch, setIsInstantUnits,
@@ -50,7 +58,7 @@ export const useAdminActions = ({
     const handleCheat = async (amounts, troop, farmLevels, warehouseLevels, isInstantBuild, unresearchId, isInstantResearch, isInstantUnits, favorAmount, foundSecondCity, forceRefresh, healHero) => {
         if (!cityGameState || !userProfile?.is_admin) return;
 
-        //  Handle the new force refresh action
+        // Handle the new force refresh action
         if (forceRefresh) {
             clearProfileCache();
             clearMemberCache();
@@ -73,7 +81,8 @@ export const useAdminActions = ({
             try {
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
-                    const randomDoc = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.docs.length)];
+                    const randomIndex = getSecureRandomInt(querySnapshot.docs.length);
+                    const randomDoc = querySnapshot.docs[randomIndex];
                     selectedSlot = { id: randomDoc.id, ...randomDoc.data() };
                 }
             } catch (error) {
@@ -254,3 +263,4 @@ export const useAdminActions = ({
 
     return { handleSpawnGodTown, handleCheat };
 };
+

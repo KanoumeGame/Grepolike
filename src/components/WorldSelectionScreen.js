@@ -1,5 +1,5 @@
 // src/components/WorldSelectionScreen.js
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, doc, writeBatch, serverTimestamp, getDoc, deleteDoc, query, limit, onSnapshot } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
 import { db, auth } from '../firebase/config';
@@ -9,6 +9,14 @@ import { generateIslands, generateCitySlots, generateFarmingVillages, generateRu
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import './WorldSelectionScreen.css';
+
+// A cryptographically secure random number generator.
+const getSecureRandomInt = (max) => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    let randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+    return Math.floor(randomNumber * max);
+};
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
     if (!message) return null;

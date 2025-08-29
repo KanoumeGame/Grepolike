@@ -9,6 +9,13 @@ import TradePanel from './TradePanel';
 import ScoutPanel from './ScoutPanel';
 import { getTrainableNavalUnits, getTrainableUnits } from '../../utils/nationality';
 
+// A cryptographically secure random number generator.
+const getSecureRandomFloat = () => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    return randomBuffer[0] / (0xFFFFFFFF + 1);
+};
+
 // Dynamically import all images from the images folder (this is for unit images)
 const images = {};
 const imageContexts = [
@@ -94,7 +101,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                 default: break;
             }
             //  Calculate a random wind speed within the weather's range for this specific movement
-            setWindSpeed(Math.random() * (max - min) + min);
+            setWindSpeed(getSecureRandomFloat() * (max - min) + min);
         }
     }, [worldState?.weather]);
 
@@ -473,3 +480,4 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
 };
 
 export default MovementModal;
+
