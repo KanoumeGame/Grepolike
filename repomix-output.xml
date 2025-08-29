@@ -15816,6 +15816,13 @@ import TradePanel from './TradePanel';
 import ScoutPanel from './ScoutPanel';
 import { getTrainableNavalUnits, getTrainableUnits } from '../../utils/nationality';
 
+// A cryptographically secure random number generator.
+const getSecureRandomFloat = () => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    return randomBuffer[0] / (0xFFFFFFFF + 1);
+};
+
 // Dynamically import all images from the images folder (this is for unit images)
 const images = {};
 const imageContexts = [
@@ -15901,7 +15908,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
                 default: break;
             }
             //  Calculate a random wind speed within the weather's range for this specific movement
-            setWindSpeed(Math.random() * (max - min) + min);
+            setWindSpeed(getSecureRandomFloat() * (max - min) + min);
         }
     }, [worldState?.weather]);
 
@@ -24087,10 +24094,10 @@ export default TroopDisplay;
 
 .vip-tooltip {
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 0.5rem; /* mb-2 */
+    margin-top: 0.5rem;
     padding: 0.5rem; /* p-2 */
     border-radius: 0.375rem; /* rounded-md */
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
@@ -24316,20 +24323,19 @@ const VipDisplay = () => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div className={`vip-tooltip ${isHovered ? 'active' : ''}`}>
-                <p>Level {vipLevel} Experience</p>
-                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
-                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
-                <hr className="vip-tooltip-hr" />
-                <p>Next daily chest: {nextClaimTimer}</p>
-            </div>
-            
             <div className="vip-header">
                 <span>VIP {vipLevel}</span>
                 {canClaim && <button className="vip-claim-btn" onClick={handleClaimVipPoints} disabled={isClaiming}>Claim Chest</button>}
             </div>
             <div className="vip-progress-bar-bg">
                 <div className="vip-progress-bar" style={{ width: `${progress}%` }}></div>
+            </div>
+            <div className={`vip-tooltip ${isHovered ? 'active' : ''}`}>
+                <p>Level {vipLevel}</p>
+                <p>{expHaving.toLocaleString()} / {maxExp === Infinity ? 'MAX' : maxExp.toLocaleString()} XP</p>
+                {maxExp !== Infinity && <p>Next level in {expNeeded.toLocaleString()} XP</p>}
+                <hr className="vip-tooltip-hr" />
+                <p>Next daily chest: {nextClaimTimer}</p>
             </div>
         </div>
     );
@@ -24413,7 +24419,7 @@ export default VipDisplay;
 
 <file path="src/components/WorldSelectionScreen.js">
 // src/components/WorldSelectionScreen.js
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, doc, writeBatch, serverTimestamp, getDoc, deleteDoc, query, limit, onSnapshot } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
 import { db, auth } from '../firebase/config';
@@ -24423,6 +24429,14 @@ import { generateIslands, generateCitySlots, generateFarmingVillages, generateRu
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import './WorldSelectionScreen.css';
+
+// A cryptographically secure random number generator.
+const getSecureRandomInt = (max) => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    let randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+    return Math.floor(randomNumber * max);
+};
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
     if (!message) return null;
@@ -27353,6 +27367,14 @@ import { clearProfileCache } from '../../components/profile/ProfileView';
 import { clearMemberCache } from '../../components/alliance/AllianceMembers';
 import { clearLeaderboardCache } from '../../components/leaderboard/Leaderboard';
 
+// A cryptographically secure random number generator.
+const getSecureRandomInt = (max) => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    let randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
+    return Math.floor(randomNumber * max);
+};
+
 export const useAdminActions = ({
     userProfile, worldId, cityGameState, currentUser,
     setIsInstantBuild, setIsInstantResearch, setIsInstantUnits,
@@ -27387,7 +27409,7 @@ export const useAdminActions = ({
     const handleCheat = async (amounts, troop, farmLevels, warehouseLevels, isInstantBuild, unresearchId, isInstantResearch, isInstantUnits, favorAmount, foundSecondCity, forceRefresh, healHero) => {
         if (!cityGameState || !userProfile?.is_admin) return;
 
-        //  Handle the new force refresh action
+        // Handle the new force refresh action
         if (forceRefresh) {
             clearProfileCache();
             clearMemberCache();
@@ -27410,7 +27432,8 @@ export const useAdminActions = ({
             try {
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
-                    const randomDoc = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.docs.length)];
+                    const randomIndex = getSecureRandomInt(querySnapshot.docs.length);
+                    const randomDoc = querySnapshot.docs[randomIndex];
                     selectedSlot = { id: randomDoc.id, ...randomDoc.data() };
                 }
             } catch (error) {
@@ -30838,7 +30861,8 @@ export const processAttackMovement = async (
             attackerReport.reward = ruinData.researchReward;
         }
         
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+        batch.set(reportRef, attackerReport);
         
         const survivingAttackers = {};
         for (const unitId in movement.units) {
@@ -30921,7 +30945,8 @@ export const processAttackMovement = async (
             },
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+        batch.set(reportRef, attackerReport);
 
         const survivingAttackers = {};
         let anySurvivors = false;
@@ -31169,9 +31194,11 @@ export const processAttackMovement = async (
         read: false,
     };
     
-    batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), attackerReport);
+    const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk`);
+    batch.set(attackerReportRef, attackerReport);
     if (movement.targetOwnerId) {
-        batch.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), defenderReport);
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def`);
+        batch.set(defenderReportRef, defenderReport);
     }
     
     const survivingAttackers = {};
@@ -31258,7 +31285,8 @@ export const processFoundingMovement = async (movement, movementDoc, worldId, or
                         outcome: { message: `The plot at (${movement.targetCoords.x}, ${movement.targetCoords.y}) was claimed before your party arrived.` },
                         read: false,
                     };
-                    transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failureReport);
+                    const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-fail`);
+                    transaction.set(reportRef, failureReport);
                     return;
                 }
 
@@ -31305,7 +31333,8 @@ export const processFoundingMovement = async (movement, movementDoc, worldId, or
                     outcome: { message: `You have founded the city of ${movement.newCityName} at (${movement.targetCoords.x}, ${movement.targetCoords.y}).` },
                     read: false,
                 };
-                transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), successReport);
+                const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-succ`);
+                transaction.set(reportRef, successReport);
                 
                 transaction.delete(movementDoc.ref);
             });
@@ -31376,14 +31405,16 @@ export const processReinforceMovement = async (movement, movementDoc, worldId, t
             }
         };
         
-        transaction.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), reinforceReport);
+        const originReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-ori`);
+        transaction.set(originReportRef, reinforceReport);
         
         if (movement.targetOwnerId) {
             const arrivalReport = {
                 ...reinforceReport,
                 title: `Reinforcements from ${movement.originCityName}`,
             };
-            transaction.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), arrivalReport);
+            const targetReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-tar`);
+            transaction.set(targetReportRef, arrivalReport);
         }
 
         transaction.delete(movementDoc.ref);
@@ -31400,8 +31431,6 @@ import { calculateDistance, calculateTravelTime } from '../../utils/travel';
 // # handles the logic for a hero rescue mission
 export const processRescueMovement = async (movement, movementDoc, worldId, originCityState, targetCityState) => {
     const batch = writeBatch(db);
-    const attackerReportRef = doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`));
-    const defenderReportRef = doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`));
     const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
     const targetCitySlotRef = doc(db, 'worlds', worldId, 'citySlots', movement.targetSlotId);
 
@@ -31448,6 +31477,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your Liberator successfully rescued your hero from ${targetCityState.cityName}!` },
             read: false,
         };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-succ`);
         batch.set(attackerReportRef, attackerReport);
 
         const defenderReport = {
@@ -31457,6 +31487,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `A Liberator from ${originCityState.cityName} infiltrated your prison and freed a captured hero!` },
             read: false,
         };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-foil`);
         batch.set(defenderReportRef, defenderReport);
 
     } else {
@@ -31469,6 +31500,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your Liberator was caught and eliminated while trying to rescue your hero from ${targetCityState.cityName}.` },
             read: false,
         };
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-atk-fail`);
         batch.set(attackerReportRef, attackerReport);
 
         const defenderReport = {
@@ -31478,6 +31510,7 @@ export const processRescueMovement = async (movement, movementDoc, worldId, orig
             outcome: { message: `Your guards caught a Liberator from ${originCityState.cityName} attempting a prison break!` },
             read: false,
         };
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-def-thwart`);
         batch.set(defenderReportRef, defenderReport);
     }
 
@@ -31572,7 +31605,8 @@ export const processReturnMovement = async (movement, movementDoc, worldId, getH
         wounded: movement.wounded || {},
         read: false,
     };
-    batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), returnReport);
+    const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-ret`);
+    batch.set(reportRef, returnReport);
 
     batch.update(originCityRef, { units: newUnits, resources: newResources, wounded: newWounded });
     batch.delete(movementDoc.ref);
@@ -31582,7 +31616,7 @@ export const processReturnMovement = async (movement, movementDoc, worldId, getH
 </file>
 
 <file path="src/hooks/movementProcessors/processScoutMovement.js">
-import { doc, writeBatch, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { resolveScouting } from '../../utils/combat';
 
@@ -31628,7 +31662,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             },
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), scoutReport);
+        const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-scout`);
+        batch.set(reportRef, scoutReport);
     } else {
         const failedScoutAttackerReport = {
             type: 'scout',
@@ -31638,7 +31673,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             message: result.message,
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`)), failedScoutAttackerReport);
+        const attackerReportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-scout-fail`);
+        batch.set(attackerReportRef, failedScoutAttackerReport);
         
         if (result.silverLostByDefender > 0) {
             const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
@@ -31654,7 +31690,8 @@ export const processScoutMovement = async (movement, movementDoc, worldId, origi
             silverGained: 0,
             read: false,
         };
-        batch.set(doc(collection(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`)), spyCaughtReport);
+        const defenderReportRef = doc(db, `users/${movement.targetOwnerId}/worlds/${worldId}/reports`, `${movement.id}-spy-caught`);
+        batch.set(defenderReportRef, spyCaughtReport);
     }
 
     batch.delete(movementDoc.ref);
@@ -35764,6 +35801,13 @@ export function formatTravelTime(totalSeconds) {
 <file path="src/utils/worldGeneration.js">
 // src/utils/worldGeneration.js
 
+// A cryptographically secure random number generator.
+const getSecureRandomFloat = () => {
+    const randomBuffer = new Uint32Array(1);
+    window.crypto.getRandomValues(randomBuffer);
+    return randomBuffer[0] / (0xFFFFFFFF + 1);
+};
+
 // Add a list of available island images
 const islandImages = ['island_1.png'];
 
@@ -35809,7 +35853,7 @@ export const generateIslands = (width, height, count) => {
             x: Math.floor(width / 2),
             y: Math.floor(height / 2),
             radius: radius,
-            imageName: islandImages[Math.floor(Math.random() * islandImages.length)],
+            imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
         });
         return islands;
     }
@@ -35820,7 +35864,7 @@ export const generateIslands = (width, height, count) => {
                 Math.pow(newIsland.x - existing.x, 2) +
                 Math.pow(newIsland.y - existing.y, 2)
             );
-            const margin = minMargin + Math.random() * (maxMargin - minMargin);
+            const margin = minMargin + getSecureRandomFloat() * (maxMargin - minMargin);
             if (distance < newIsland.radius + existing.radius + margin) {
                 return true;
             }
@@ -35834,7 +35878,7 @@ export const generateIslands = (width, height, count) => {
         let attempts = 0;
 
         while (hasCollision && attempts < maxAttempts) {
-            const radius = Math.random() * 2 + 6; // Radius between 6 and 8 tiles
+            const radius = getSecureRandomFloat() * 2 + 6; // Radius between 6 and 8 tiles
 
             // Calculate spawnable area, considering map edge margin and island radius
             const spawnableWidth = width - (mapEdgeMargin * 2) - (radius * 2);
@@ -35847,8 +35891,8 @@ export const generateIslands = (width, height, count) => {
             }
 
             // Calculate random coordinates within the spawnable area
-            const randomX = Math.floor(Math.random() * spawnableWidth);
-            const randomY = Math.floor(Math.random() * spawnableHeight);
+            const randomX = Math.floor(getSecureRandomFloat() * spawnableWidth);
+            const randomY = Math.floor(getSecureRandomFloat() * spawnableHeight);
 
             island = {
                 id: `island-${Date.now()}-${i}`,
@@ -35857,7 +35901,7 @@ export const generateIslands = (width, height, count) => {
                 x: mapEdgeMargin + radius + randomX,
                 y: mapEdgeMargin + radius + randomY,
                 radius: radius,
-                imageName: islandImages[Math.floor(Math.random() * islandImages.length)],
+                imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
             };
             hasCollision = checkCollision(island, islands);
             attempts++;
@@ -35934,14 +35978,14 @@ export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHei
 
                 const villageId = `v${island.id}-${villageIndex++}`;
                 const resources = ['wood', 'stone', 'silver'];
-                let demands = resources.splice(Math.floor(Math.random() * resources.length), 1)[0];
-                let supplies = resources.splice(Math.floor(Math.random() * resources.length), 1)[0];
+                let demands = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
+                let supplies = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
 
                 villages[villageId] = {
-                    id: villageId, x, y, islandId: island.id, name: villageNames[Math.floor(Math.random() * villageNames.length)],
+                    id: villageId, x, y, islandId: island.id, name: villageNames[Math.floor(getSecureRandomFloat() * villageNames.length)],
                     level: 1, demandYield: { wood: 50, stone: 50, silver: 20 },
                     resources: { wood: 500, stone: 500, silver: 500 }, maxResources: 1200, lastDemandTime: 0,
-                    demandCooldown: demandCooldowns[Math.floor(Math.random() * demandCooldowns.length)],
+                    demandCooldown: demandCooldowns[Math.floor(getSecureRandomFloat() * demandCooldowns.length)],
                     troops: generateVillageTroops(1), tradeRatio: 1.25, demands, supplies
                 };
                 occupiedSlots.add(`${x},${y}`);
@@ -35952,8 +35996,8 @@ export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHei
             const centerY = Math.round(island.y);
             const numVillages = Math.min(Math.floor(island.radius), 5);
             for (let i = 0; i < numVillages; i++) {
-                const angle = Math.random() * 2 * Math.PI;
-                const distance = Math.random() * (island.radius - 3); // Place away from the edge
+                const angle = getSecureRandomFloat() * 2 * Math.PI;
+                const distance = getSecureRandomFloat() * (island.radius - 3); // Place away from the edge
                 const x = Math.round(centerX + distance * Math.cos(angle));
                 const y = Math.round(centerY + distance * Math.sin(angle));
 
@@ -35989,8 +36033,8 @@ export const generateRuins = (islands, worldWidth, worldHeight) => {
         let x, y;
         let attempts = 0;
         do {
-            x = Math.floor(Math.random() * worldWidth);
-            y = Math.floor(Math.random() * worldHeight);
+            x = Math.floor(getSecureRandomFloat() * worldWidth);
+            y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
 
@@ -36003,9 +36047,9 @@ export const generateRuins = (islands, worldWidth, worldHeight) => {
                 name: "Forgotten Ruins",
                 type: 'ruin', // To distinguish from villages
                 troops: {
-                    hoplite: 100 + Math.floor(Math.random() * 50),
-                    cavalry: 50 + Math.floor(Math.random() * 25),
-                    trireme: 20 + Math.floor(Math.random() * 10) // Naval defense
+                    hoplite: 100 + Math.floor(getSecureRandomFloat() * 50),
+                    cavalry: 50 + Math.floor(getSecureRandomFloat() * 25),
+                    trireme: 20 + Math.floor(getSecureRandomFloat() * 10) // Naval defense
                 },
                 researchReward: `qol_research_${i % 3}` // Example reward cycles through the 3 QoL researches
             };
@@ -36033,8 +36077,8 @@ export const generateGodTowns = (islands, worldWidth, worldHeight, count = 1) =>
         let x, y;
         let attempts = 0;
         do {
-            x = Math.floor(Math.random() * worldWidth);
-            y = Math.floor(Math.random() * worldHeight);
+            x = Math.floor(getSecureRandomFloat() * worldWidth);
+            y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
 

@@ -1,9 +1,9 @@
 // src/components/admin/EventTrigger.js
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { collection, doc, setDoc, getDocs, query, where, limit, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query as firestoreQuery, where, limit, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useGame } from '../../contexts/GameContext';
-import { generateGodTowns } from '../../utils/worldGeneration';
+import { generateGodTowns, generateWreckage } from '../../utils/worldGeneration';
 
 const EventTrigger = ({ onClose }) => {
     const { worldState, worldId } = useGame();
@@ -36,7 +36,7 @@ const EventTrigger = ({ onClose }) => {
         setMessage("Searching for ruins to transform...");
         try {
             const godTownsRef = collection(db, 'worlds', worldId, 'godTowns');
-            const q = query(godTownsRef, where('stage', '==', 'ruins'), limit(1));
+            const q = firestoreQuery(godTownsRef, where('stage', '==', 'ruins'), limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -61,7 +61,7 @@ const EventTrigger = ({ onClose }) => {
         setMessage("Searching for a God Town to despawn...");
         try {
             const godTownsRef = collection(db, 'worlds', worldId, 'godTowns');
-            const q = query(godTownsRef, limit(1));
+            const q = firestoreQuery(godTownsRef, limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -79,6 +79,64 @@ const EventTrigger = ({ onClose }) => {
         }
     };
 
+    // # Spawns multiple sea resource locations (wreckages)
+    const handleSpawnWreckage = async () => {
+        if (!worldState) {
+            setMessage("World data is not loaded.");
+            return;
+        }
+        setMessage("Spawning sea resources...");
+        try {
+            // Spawn 10 resource piles
+            const newWreckages = generateWreckage(worldState.islands, worldState.width, worldState.height, 10);
+            if (Object.keys(newWreckages).length === 0) {
+                throw new Error("Failed to find suitable locations in the sea. Try again.");
+            }
+
+            const batch = writeBatch(db);
+            const wreckagesRef = collection(db, 'worlds', worldId, 'wreckages');
+
+            Object.entries(newWreckages).forEach(([id, data]) => {
+                const wreckageDocRef = doc(wreckagesRef, id);
+                batch.set(wreckageDocRef, data);
+            });
+
+            await batch.commit();
+
+            setMessage(`${Object.keys(newWreckages).length} sea resource locations have spawned!`);
+        } catch (error) {
+            console.error("Error spawning wreckage:", error);
+            setMessage(`Failed to spawn wreckage: ${error.message}`);
+        }
+    };
+
+    // # Despawns all currently active sea resources
+    const handleDespawnWreckage = async () => {
+        setMessage("Searching for sea resources to despawn...");
+        try {
+            const wreckagesRef = collection(db, 'worlds', worldId, 'wreckages');
+            const q = firestoreQuery(wreckagesRef);
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                setMessage("No sea resources found to despawn.");
+                return;
+            }
+
+            const batch = writeBatch(db);
+            querySnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            setMessage(`Despawned ${querySnapshot.size} sea resource locations.`);
+
+        } catch (error) {
+            console.error("Error despawning wreckage:", error);
+            setMessage(`Failed to despawn wreckage: ${error.message}`);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
             <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600" onClick={e => e.stopPropagation()}>
@@ -88,11 +146,17 @@ const EventTrigger = ({ onClose }) => {
                     <button onClick={handleSpawnGodTown} className="btn btn-primary w-full py-2 bg-purple-600 hover:bg-purple-500">
                         Spawn God Town Event
                     </button>
+                    <button onClick={handleSpawnWreckage} className="btn btn-primary w-full py-2 bg-blue-600 hover:bg-blue-500">
+                        Spawn Sea Resources
+                    </button>
                     <button onClick={handleTransformRuins} className="btn btn-primary w-full py-2 bg-green-600 hover:bg-green-500">
                         Instantly Transform Ruins
                     </button>
                     <button onClick={handleDespawnGodTown} className="btn btn-danger w-full py-2">
                         Despawn God Town Event
+                    </button>
+                    <button onClick={handleDespawnWreckage} className="btn btn-danger w-full py-2">
+                        Despawn Sea Resources
                     </button>
                 </div>
             </div>

@@ -4,86 +4,42 @@
       "collectionGroup": "citySlots",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "godTowns",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "ruins",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "villages",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
-    }
-  ],
-  "fieldOverrides": [
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
+    },
     {
-      "collectionGroup": "games",
-      "fieldPath": "worldName",
-      "ttl": false,
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "DESCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "arrayConfig": "CONTAINS",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION_GROUP"
-        }
+      "collectionGroup": "wreckages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
       ]
     }
-  ]
+  ],
+  "fieldOverrides": []
 }

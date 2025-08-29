@@ -10,6 +10,7 @@ import { processFoundingMovement } from './movementProcessors/processFoundingMov
 import { processReinforceMovement } from './movementProcessors/processReinforceMovement';
 import { processScoutMovement } from './movementProcessors/processScoutMovement';
 import { processRescueMovement } from './movementProcessors/processRescueMovement';
+import { processCollectWreckageMovement } from './movementProcessors/processCollectWreckageMovement';
 
 
 export const useMovementProcessor = (worldId) => {
@@ -18,7 +19,6 @@ export const useMovementProcessor = (worldId) => {
     const processMovement = useCallback(async (movementDoc) => {
         const movement = { id: movementDoc.id, ...movementDoc.data() };
         
-        // # Handle hero assignment first as it has no origin city
         if (movement.type === 'assign_hero') {
             const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
             try {
@@ -29,10 +29,8 @@ export const useMovementProcessor = (worldId) => {
                     const cityData = cityDoc.data();
                     const heroes = cityData.heroes || {};
                     
-                    // # Atomically check if a hero is already assigned to this city upon arrival
                     for (const hId in heroes) {
                         if (heroes[hId].cityId === movement.targetCityId) {
-                            // A hero is already there. Cancel this assignment and send a report.
                             const failureReport = {
                                 type: 'assign_hero_failed',
                                 title: `Hero Assignment Failed`,
@@ -56,7 +54,7 @@ export const useMovementProcessor = (worldId) => {
                 console.error("Error processing hero assignment:", error);
                 await deleteDoc(movementDoc.ref);
             }
-            return; // # End processing for this movement
+            return;
         }
         
         const originCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
@@ -78,7 +76,6 @@ export const useMovementProcessor = (worldId) => {
         const originCityState = originCitySnap.data();
         const targetCityState = targetCitySnap?.exists() ? targetCitySnap.data() : null;
 
-        // # --- Dispatch based on status and type ---
         if (movement.status === 'returning') {
             await processReturnMovement(movement, movementDoc, worldId, getHospitalCapacity);
         
@@ -91,7 +88,6 @@ export const useMovementProcessor = (worldId) => {
                 case 'attack_village':
                 case 'attack_ruin':
                 case 'attack_god_town':
-                    // # Fetching alliance data would happen here in a full implementation
                     await processAttackMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
                     break;
                 case 'reinforce':
@@ -103,7 +99,9 @@ export const useMovementProcessor = (worldId) => {
                 case 'rescue_hero':
                     await processRescueMovement(movement, movementDoc, worldId, originCityState, targetCityState);
                     break;
-                // # trade and other movements would have cases here
+                case 'collect_wreckage':
+                    await processCollectWreckageMovement(movement, movementDoc, worldId);
+                    break;
                 default:
                     console.log(`Unknown movement type: ${movement.type}. Deleting movement ${movement.id}`);
                     await deleteDoc(movementDoc.ref);
@@ -112,7 +110,6 @@ export const useMovementProcessor = (worldId) => {
         }
     }, [worldId, getHospitalCapacity]);
 
-    // # this effect remains to find and trigger processing for arrived movements
     useEffect(() => {
         const processMovements = async () => {
             if (!worldId) return;

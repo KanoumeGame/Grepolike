@@ -14,7 +14,6 @@ const imageContexts = [
 imageContexts.forEach(context => {
     context.keys().forEach((item) => {
         const key = item.replace('./', '');
-        // To prevent overwrites if filenames are the same in different folders, check if key exists.
         if (!images[key]) {
             images[key] = context(item);
         }
@@ -25,7 +24,6 @@ const _WaterTile = ({ gameSettings = defaultSettings }) => {
     return <div className="w-full h-full bg-transparent" />;
 };
 const _LandTile = ({ gameSettings = defaultSettings }) => {
-    // # Make land tiles transparent so the island images in MapView are visible.
     const bgClass = gameSettings.showVisuals ? 'bg-transparent' : 'bg-gray-800';
     const borderClass = gameSettings.showGrid
         ? `border-r border-b ${gameSettings.showVisuals ? 'border-green-700/20' : 'border-gray-700'}`
@@ -62,11 +60,9 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         const ownerName = slotData.ownerUsername || 'Unknown';
         const isOwn = slotData.ownerId === currentUser.uid;
 
-        // # Use playerAlliance context for consistent alliance info for own cities
         const cityAllianceTag = isOwn ? playerAlliance?.tag : slotData.alliance;
         const cityAllianceName = isOwn ? playerAlliance?.name : slotData.allianceName;
         
-        // # Use the correct key to find city points for own cities vs other players' cities
         const pointsKey = isOwn ? slotData.slotId : slotData.id;
         const points = cityPoints[pointsKey] || 0;
 
@@ -222,6 +218,31 @@ const _GodTownTile = ({ townData, onClick, gameSettings = defaultSettings }) => 
         </div>
     );
 };
+
+// # A tile for sea resources (wreckages)
+const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }) => {
+    const resourceType = Object.keys(wreckageData.resources)[0];
+    const tooltipText = `Sea Resources<br>${resourceType}: ${wreckageData.resources[resourceType].toLocaleString()}`;
+    const WreckageSVG = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80">
+            <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v5.239a.75.75 0 00.25.53l4.5 4.5a.75.75 0 001.06 0l4.5-4.5a.75.75 0 00.25-.53V4.5a.75.75 0 00-.75-.75h-.75a.75.75 0 00-.75.75v3.19l-2.47-2.47a.75.75 0 00-1.06 0z" />
+            <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v5.239a.75.75 0 01-.25.53l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 01-.25-.53V4.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v3.19l2.47-2.47a.75.75 0 011.06 0z" />
+        </svg>
+    );
+
+    return (
+        <div className={`w-full h-full flex justify-center items-center`}>
+            <div
+                onClick={(e) => onClick(e, wreckageData)}
+                className="wreckage-slot"
+            >
+                <WreckageSVG />
+                <span className="map-object-tooltip" dangerouslySetInnerHTML={{ __html: tooltipText }}></span>
+            </div>
+        </div>
+    );
+};
+
 const _WonderSpotTile = ({ spotData, onClick, playerAlliance, controlledIslands }) => {
     const allianceTag = playerAlliance?.tag;
     const controllingAllianceTag = controlledIslands ? controlledIslands[spotData.islandId] : null;
@@ -256,5 +277,6 @@ export const CitySlotTile = React.memo(_CitySlotTile);
 export const FarmingVillageTile = React.memo(_FarmingVillageTile);
 export const RuinTile = React.memo(_RuinTile);
 export const GodTownTile = React.memo(_GodTownTile);
+export const WreckageTile = React.memo(_WreckageTile);
 export const WonderSpotTile = React.memo(_WonderSpotTile);
 export const ConstructingWonderTile = React.memo(_ConstructingWonderTile);

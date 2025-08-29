@@ -198,7 +198,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         let totalUnitsSelected = Object.values(selectedUnits).reduce((sum, count) => sum + count, 0);
         let totalResourcesSelected = Object.values(selectedResources).reduce((sum, amount) => sum + amount, 0);
 
-        if ((mode === 'attack' || mode === 'reinforce') && totalUnitsSelected === 0 && !selectedHero) {
+        if ((mode === 'attack' || mode === 'reinforce' || mode === 'collect_wreckage') && totalUnitsSelected === 0 && !selectedHero) {
             setMessage("Please select at least one unit or a hero to send.");
             return;
         }
@@ -215,6 +215,12 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         }
         if (mode === 'trade' && totalResourcesSelected === 0) {
             setMessage("Please select at least one resource to trade.");
+            return;
+        }
+        
+        const totalResourceAmount = targetCity.resources ? Object.values(targetCity.resources).reduce((a, b) => a + b, 0) : 0;
+        if (mode === 'collect_wreckage' && transportCapacity < totalResourceAmount) {
+            setMessage(`Not enough transport capacity. Need ${totalResourceAmount.toLocaleString()} capacity.`);
             return;
         }
 
@@ -258,7 +264,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         onSend({
             mode,
             targetCity,
-            units: mode === 'scout' || mode === 'trade' ? {} : selectedUnits,
+            units: (mode === 'scout' || mode === 'trade') ? {} : selectedUnits,
             hero: selectedHero,
             resources: resourcesToSend,
             travelTime: finalTravelTime,
@@ -294,11 +300,9 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
             const heroData = currentHeroes[heroId];
             if (!heroData.active || heroData.capturedIn) return false;
             
-            // # Check if hero is in another movement
             const isTraveling = (movements || []).some(m => m.hero === heroId);
             if(isTraveling) return false;
 
-            //  Check if the hero is wounded
             const woundedUntilDate = heroData.woundedUntil?.toDate ? heroData.woundedUntil.toDate() : (heroData.woundedUntil ? new Date(heroData.woundedUntil) : null);
             const isWounded = woundedUntilDate && woundedUntilDate > new Date();
             if (isWounded) return false;
@@ -319,6 +323,37 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         const capacityProgress = transportCapacity > 0 ? (currentUnitsLoad / transportCapacity) * 100 : 0;
         const progressBarColor = capacityProgress > 100 ? 'bg-red-500' : 'bg-green-500';
 
+        if (mode === 'collect_wreckage') {
+            return (
+                <div className="space-y-4">
+                     {navalUnitsList.length > 0 && (
+                        <div className="unit-selection-section">
+                            <h4 className="unit-selection-header">Transport Ships</h4>
+                            <div className="unit-grid">
+                                {navalUnitsList.filter(u => u.capacity > 0).map(unit => (
+                                    <div key={unit.id} className="unit-item">
+                                        <div className="unit-image-container" title={`Select all/none of ${unit.name}`} onClick={() => handleUnitIconClick(unit.id, unit.currentCount)}>
+                                            <img src={images[unit.image]} alt={unit.name} className="unit-image" />
+                                             <span className="unit-count-badge">
+                                                {unit.currentCount}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={selectedUnits[unit.id] || 0}
+                                            onChange={(e) => handleUnitChange(unit.id, e.target.value)}
+                                            className="unit-input hide-number-spinners"
+                                            min="0"
+                                            max={unit.currentCount}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
         if (mode === 'attack' || mode === 'reinforce') {
             return (
                 <div className="space-y-4">
@@ -463,7 +498,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
             <div className="movement-modal-container" onClick={e => e.stopPropagation()}>
-                <h3 className="movement-modal-header capitalize">{mode} {targetCity ? targetCity.cityName || targetCity.name : ''}</h3>
+                <h3 className="movement-modal-header capitalize">{mode.replace('_', ' ')} {targetCity ? targetCity.cityName || targetCity.name : ''}</h3>
                 <div className="movement-modal-content">
                     {renderContent()}
                 </div>
@@ -480,4 +515,3 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
 };
 
 export default MovementModal;
-

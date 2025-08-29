@@ -125,5 +125,18 @@ export const useMapClickHandler = ({
         openModal('city', targetData);
     };
 
-    return { onCitySlotClick, onVillageClick, onRuinClick };
+    // # Handles clicks on wreckage tiles
+    const onWreckageClick = (e, wreckageData) => {
+        if (!playerCity) {
+            setMessage("Your city data is still loading. Please wait a moment.");
+            return;
+        }
+        closeModal('city');
+        closeModal('village');
+        const distance = calculateDistance(playerCity, wreckageData);
+        setTravelTimeInfo({ distance });
+        openModal('wreckage', wreckageData);
+    };
+
+    return { onCitySlotClick, onVillageClick, onRuinClick, onWreckageClick };
 };

@@ -1,13 +1,13 @@
 // src/components/map/MapGrid.js
 import React, { useMemo } from 'react';
-import { WaterTile, LandTile, CitySlotTile, FarmingVillageTile, RuinTile, GodTownTile, WonderSpotTile, ConstructingWonderTile } from './Tiles';
+import { WaterTile, LandTile, CitySlotTile, FarmingVillageTile, RuinTile, GodTownTile, WonderSpotTile, ConstructingWonderTile, WreckageTile } from './Tiles';
 import MovementIndicator from './MovementIndicator';
 import { useGame } from '../../contexts/GameContext';
 
 const TILE_SIZE = 32;
 const defaultSettings = { animations: true, showVisuals: true, showGrid: true };
 
-const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick, onVillageClick, onRuinClick, onGodTownClick, onWonderSpotClick, onConstructingWonderClick, isPlacingDummyCity, movements, combinedSlots, villages, ruins, godTowns, playerAlliance, conqueredVillages, gameSettings = defaultSettings, cityPoints, scoutedCities, controlledIslands }) => {
+const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick, onVillageClick, onRuinClick, onGodTownClick, onWonderSpotClick, onConstructingWonderClick, onWreckageClick, isPlacingDummyCity, movements, combinedSlots, villages, ruins, godTowns, playerAlliance, conqueredVillages, gameSettings = defaultSettings, cityPoints, scoutedCities, controlledIslands }) => {
     const { playerCities } = useGame();
 
     const locationLookup = useMemo(() => {
@@ -49,8 +49,10 @@ const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick
                 case 'god_town':
                     tileContent = <GodTownTile townData={tile.data} onClick={onGodTownClick} gameSettings={gameSettings} />;
                     break;
+                case 'wreckage':
+                    tileContent = <WreckageTile wreckageData={tile.data} onClick={onWreckageClick} gameSettings={gameSettings} />;
+                    break;
                 case 'wonder_spot':
-                    //  Pass controlledIslands and playerAlliance to the WonderSpotTile
                     tileContent = <WonderSpotTile spotData={tile.data} onClick={onWonderSpotClick} playerAlliance={playerAlliance} controlledIslands={controlledIslands} />;
                     break;
                 case 'constructing_wonder':

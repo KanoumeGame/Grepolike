@@ -15,7 +15,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
     const [travelTimeInfo, setTravelTimeInfo] = useState(null);
 
     const handleActionClick = useCallback((mode, targetCity) => {
-        if (['attack', 'reinforce', 'scout', 'trade'].includes(mode)) {
+        if (['attack', 'reinforce', 'scout', 'trade', 'collect_wreckage'].includes(mode)) {
             openModal('action', { mode, city: targetCity });
             closeModal('city');
             closeModal('village');
@@ -50,7 +50,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             setMessage("You can only attack villages from a city on the same island.");
             return;
         }
-        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget ? true : playerCity.islandId !== targetCity.islandId;
+        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget || targetCity.isWreckageTarget ? true : playerCity.islandId !== targetCity.islandId;
         let hasLandUnits = false, hasNavalUnits = false, hasFlyingUnits = false, totalTransportCapacity = 0, totalLandUnitsToSend = 0;
 
         for (const unitId in units) {
@@ -59,14 +59,18 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
                 if (config.type === 'land') {
                     hasLandUnits = true;
                     totalLandUnitsToSend += units[unitId];
-                    if (config.flying) {
-                        hasFlyingUnits = true;
-                    }
+                    if (config.flying) hasFlyingUnits = true;
                 }
                 else if (config.type === 'naval') { hasNavalUnits = true; totalTransportCapacity += (config.capacity || 0) * units[unitId]; }
             }
         }
 
+        const totalResourceAmount = targetCity.resources ? Object.values(targetCity.resources).reduce((a, b) => a + b, 0) : 0;
+        if (mode === 'collect_wreckage' && totalTransportCapacity < totalResourceAmount) {
+            setMessage(`Not enough transport capacity. Need ${totalResourceAmount.toLocaleString()} capacity.`);
+            return;
+        }
+        
         if (isCrossIsland && hasLandUnits && !hasNavalUnits && !hasFlyingUnits) { setMessage("Ground troops cannot travel across the sea without transport ships."); return; }
         if (isCrossIsland && hasLandUnits && totalTransportCapacity < totalLandUnitsToSend && !hasFlyingUnits) { setMessage(`Not enough transport ship capacity. Need ${totalLandUnitsToSend - totalTransportCapacity} more capacity.`); return; }
         
@@ -82,7 +86,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const isOwnCityTarget = finalTargetOwnerId === currentUser.uid;
         let targetCityDocId = null;
 
-        if (!targetCity.isVillageTarget && !targetCity.isRuinTarget && !targetCity.isGodTownTarget && finalTargetOwnerId) {
+        if (!targetCity.isVillageTarget && !targetCity.isRuinTarget && !targetCity.isGodTownTarget && !targetCity.isWreckageTarget && finalTargetOwnerId) {
             if (isOwnCityTarget) {
                 targetCityDocId = targetCity.id;
             } else {
@@ -121,7 +125,24 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         let movementData;
 
-        if (mode === 'rescue_hero') {
+        if (mode === 'collect_wreckage') {
+            movementData = {
+                type: 'collect_wreckage',
+                originCityId: playerCity.id,
+                originCoords: { x: playerCity.x, y: playerCity.y },
+                originOwnerId: currentUser.uid,
+                originCityName: playerCity.cityName,
+                originOwnerUsername: userProfile.username,
+                targetWreckageId: targetCity.id,
+                targetCoords: { x: targetCity.x, y: targetCity.y },
+                units: units,
+                departureTime: serverTimestamp(),
+                arrivalTime: arrivalTime,
+                cancellableUntil: cancellableUntil,
+                status: 'moving',
+                involvedParties: [currentUser.uid],
+            };
+        } else if (mode === 'rescue_hero') {
             movementData = {
                 type: 'rescue_hero',
                 originCityId: playerCity.id,
@@ -391,7 +412,6 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
         const batch = writeBatch(db);
     
-        // Calculate travel time for the journey to the plot, then founding time separately.
         const slowestSpeed = Object.entries(units)
             .filter(([, count]) => count > 0)
             .map(([unitId]) => unitConfig[unitId].speed)

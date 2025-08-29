@@ -96,7 +96,6 @@
     @apply w-20 h-6 m-0 cursor-pointer relative transition-transform duration-150 bg-no-repeat;
     background-image: url('../images/villages.png');
     background-size: 300% 350%;
-    /* Add a subtle shadow to blend with the terrain */
     filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.4));
 }
 .village-slot:hover {
@@ -107,7 +106,6 @@
     @apply visible opacity-100;
 }
 
-/*  Define background positions for each village level */
 .village-level-1 { background-position: 0% 0%; }
 .village-level-2 { background-position: 100% 0%; }
 .village-level-3 { background-position: 0% 50%; }
@@ -116,12 +114,8 @@
 .village-level-6 { background-position: 100% 100%; }
 
 
-.my-village {
-    /* No special filter needed now */
-}
-.other-village-plot {
-   /* No special filter needed now */
-}
+.my-village {}
+.other-village-plot {}
 
 /* Ruin Styles */
 .ruin-slot {
@@ -138,13 +132,9 @@
     @apply visible opacity-100;
 }
 
-.ruin-unoccupied {
-    background-position: 0% 0%;
-}
+.ruin-unoccupied { background-position: 0% 0%; }
+.ruin-occupied { background-position: 100% 0%; }
 
-.ruin-occupied {
-    background-position: 100% 0%;
-}
 /* God Town Styles */
 .god-town-slot {
     @apply w-8 h-8 m-1 cursor-pointer relative transition-transform duration-150;
@@ -158,18 +148,27 @@
 .god-town-slot:hover .map-object-tooltip {
     @apply visible opacity-100;
 }
-.god-town-slot.ruins {
-    filter: hue-rotate(280deg) brightness(1.2);
+.god-town-slot.ruins { filter: hue-rotate(280deg) brightness(1.2); }
+.god-town-slot.city { filter: drop-shadow(0 0 8px #fde047); }
+
+/* Wreckage Styles */
+.wreckage-slot {
+    @apply w-6 h-6 m-1 cursor-pointer relative transition-transform duration-150;
+    filter: drop-shadow(0 0 4px #1e3a8a);
 }
-.god-town-slot.city {
-    filter: drop-shadow(0 0 8px #fde047);
+.wreckage-slot:hover {
+    @apply scale-125 z-20;
+    filter: drop-shadow(0 0 8px #facc15);
 }
+.wreckage-slot:hover .map-object-tooltip {
+    @apply visible opacity-100;
+}
+
 
 /* Wonder Styles */
 .wonder-spot-tile {
     @apply w-8 h-8 rounded-full relative bg-gray-600/50 border-2 border-gray-500;
 }
-
 .wonder-spot-tile.active {
     @apply cursor-pointer bg-yellow-400/50 border-yellow-300;
     animation: glowing-wonder-spot 2s infinite;

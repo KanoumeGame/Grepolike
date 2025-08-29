@@ -32,6 +32,8 @@ export const useModalState = () => {
         emptyCityModalData: null,
         isRescueModalOpen: false,
         rescueModalData: null,
+        isWreckageModalOpen: false,
+        wreckageModalData: null,
     });
 
     //  Opens a modal of a given type with optional data.
@@ -60,6 +62,7 @@ export const useModalState = () => {
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: true, reinforcementsModalData: data };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: true, emptyCityModalData: data };
                 case 'rescue': return { ...prevState, isRescueModalOpen: true, rescueModalData: data };
+                case 'wreckage': return { ...prevState, isWreckageModalOpen: true, wreckageModalData: data };
                 default: return prevState;
             }
         });
@@ -91,6 +94,7 @@ export const useModalState = () => {
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: false, reinforcementsModalData: null };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: false, emptyCityModalData: null };
                 case 'rescue': return { ...prevState, isRescueModalOpen: false, rescueModalData: null };
+                case 'wreckage': return { ...prevState, isWreckageModalOpen: false, wreckageModalData: null };
                 default: return prevState;
             }
         });
