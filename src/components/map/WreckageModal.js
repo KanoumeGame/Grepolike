@@ -44,3 +44,4 @@ const WreckageModal = ({ wreckage, onClose, onCollect }) => {
 };
 
 export default WreckageModal;
+

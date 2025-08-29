@@ -9,7 +9,7 @@ import ReinforcementModal from '../city/ReinforcementModal';
 import { useAuth } from '../../contexts/AuthContext';
 import EmptyCityModal from './EmptyCityModal';
 import RescueModal from './RescueModal';
-import WreckageModal from './WreckageModal'; // Import the new modal
+import WreckageModal from './WreckageModal';
 
 const MapModals = ({
     modalState,
@@ -48,7 +48,7 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
-        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget || selectedCity.isWreckageTarget) { // check for wreckage
+        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget || selectedCity.isWreckageTarget) {
             return (
                 <OtherCityModal
                     city={selectedCity}
@@ -182,7 +182,6 @@ const MapModals = ({
                     setMessage={setMessage}
                 />
             )}
-            {/* Render the new wreckage modal */}
             {modalState.isWreckageModalOpen && (
                 <WreckageModal
                     wreckage={modalState.wreckageModalData}
@@ -195,3 +194,4 @@ const MapModals = ({
 };
 
 export default MapModals;
+

@@ -169,6 +169,7 @@ src/components/map/TopBar.js
 src/components/map/TradePanel.js
 src/components/map/TradesToolTip.css
 src/components/map/TradesToolTip.js
+src/components/map/WreckageModal.js
 src/components/MapView.js
 src/components/messaging/MessagesView.css
 src/components/messaging/MessagesView.js
@@ -241,6 +242,7 @@ src/hooks/actions/useResearchActions.js
 src/hooks/actions/useUnitActions.js
 src/hooks/actions/useWorkerActions.js
 src/hooks/movementProcessors/processAttackMovement.js
+src/hooks/movementProcessors/processCollectWreckageMovement.js
 src/hooks/movementProcessors/processFoundingMovement.js
 src/hooks/movementProcessors/processReinforceMovement.js
 src/hooks/movementProcessors/processRescueMovement.js
@@ -640,88 +642,44 @@ firestore-backup/
       "collectionGroup": "citySlots",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "godTowns",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "ruins",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
     },
     {
       "collectionGroup": "villages",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "x",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "y",
-          "order": "ASCENDING"
-        }
-      ],
-      "density": "SPARSE_ALL"
-    }
-  ],
-  "fieldOverrides": [
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
+      ]
+    },
     {
-      "collectionGroup": "games",
-      "fieldPath": "worldName",
-      "ttl": false,
-      "indexes": [
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "DESCENDING",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "arrayConfig": "CONTAINS",
-          "queryScope": "COLLECTION"
-        },
-        {
-          "order": "ASCENDING",
-          "queryScope": "COLLECTION_GROUP"
-        }
+      "collectionGroup": "wreckages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "x", "order": "ASCENDING" },
+        { "fieldPath": "y", "order": "ASCENDING" }
       ]
     }
-  ]
+  ],
+  "fieldOverrides": []
 }
 </file>
 
@@ -975,9 +933,9 @@ export default App;
 // src/components/admin/EventTrigger.js
 import React, { useState } from 'react';
 import { db } from '../../firebase/config';
-import { collection, doc, setDoc, getDocs, query, where, limit, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query as firestoreQuery, where, limit, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useGame } from '../../contexts/GameContext';
-import { generateGodTowns } from '../../utils/worldGeneration';
+import { generateGodTowns, generateWreckage } from '../../utils/worldGeneration';
 
 const EventTrigger = ({ onClose }) => {
     const { worldState, worldId } = useGame();
@@ -1010,7 +968,7 @@ const EventTrigger = ({ onClose }) => {
         setMessage("Searching for ruins to transform...");
         try {
             const godTownsRef = collection(db, 'worlds', worldId, 'godTowns');
-            const q = query(godTownsRef, where('stage', '==', 'ruins'), limit(1));
+            const q = firestoreQuery(godTownsRef, where('stage', '==', 'ruins'), limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -1035,7 +993,7 @@ const EventTrigger = ({ onClose }) => {
         setMessage("Searching for a God Town to despawn...");
         try {
             const godTownsRef = collection(db, 'worlds', worldId, 'godTowns');
-            const q = query(godTownsRef, limit(1));
+            const q = firestoreQuery(godTownsRef, limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -1053,6 +1011,64 @@ const EventTrigger = ({ onClose }) => {
         }
     };
 
+    // # Spawns multiple sea resource locations (wreckages)
+    const handleSpawnWreckage = async () => {
+        if (!worldState) {
+            setMessage("World data is not loaded.");
+            return;
+        }
+        setMessage("Spawning sea resources...");
+        try {
+            // Spawn 10 resource piles
+            const newWreckages = generateWreckage(worldState.islands, worldState.width, worldState.height, 10);
+            if (Object.keys(newWreckages).length === 0) {
+                throw new Error("Failed to find suitable locations in the sea. Try again.");
+            }
+
+            const batch = writeBatch(db);
+            const wreckagesRef = collection(db, 'worlds', worldId, 'wreckages');
+
+            Object.entries(newWreckages).forEach(([id, data]) => {
+                const wreckageDocRef = doc(wreckagesRef, id);
+                batch.set(wreckageDocRef, data);
+            });
+
+            await batch.commit();
+
+            setMessage(`${Object.keys(newWreckages).length} sea resource locations have spawned!`);
+        } catch (error) {
+            console.error("Error spawning wreckage:", error);
+            setMessage(`Failed to spawn wreckage: ${error.message}`);
+        }
+    };
+
+    // # Despawns all currently active sea resources
+    const handleDespawnWreckage = async () => {
+        setMessage("Searching for sea resources to despawn...");
+        try {
+            const wreckagesRef = collection(db, 'worlds', worldId, 'wreckages');
+            const q = firestoreQuery(wreckagesRef);
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                setMessage("No sea resources found to despawn.");
+                return;
+            }
+
+            const batch = writeBatch(db);
+            querySnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            setMessage(`Despawned ${querySnapshot.size} sea resource locations.`);
+
+        } catch (error) {
+            console.error("Error despawning wreckage:", error);
+            setMessage(`Failed to despawn wreckage: ${error.message}`);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
             <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600" onClick={e => e.stopPropagation()}>
@@ -1062,11 +1078,17 @@ const EventTrigger = ({ onClose }) => {
                     <button onClick={handleSpawnGodTown} className="btn btn-primary w-full py-2 bg-purple-600 hover:bg-purple-500">
                         Spawn God Town Event
                     </button>
+                    <button onClick={handleSpawnWreckage} className="btn btn-primary w-full py-2 bg-blue-600 hover:bg-blue-500">
+                        Spawn Sea Resources
+                    </button>
                     <button onClick={handleTransformRuins} className="btn btn-primary w-full py-2 bg-green-600 hover:bg-green-500">
                         Instantly Transform Ruins
                     </button>
                     <button onClick={handleDespawnGodTown} className="btn btn-danger w-full py-2">
                         Despawn God Town Event
+                    </button>
+                    <button onClick={handleDespawnWreckage} className="btn btn-danger w-full py-2">
+                        Despawn Sea Resources
                     </button>
                 </div>
             </div>
@@ -14986,14 +15008,14 @@ export default GodTownModal;
 <file path="src/components/map/MapGrid.js">
 // src/components/map/MapGrid.js
 import React, { useMemo } from 'react';
-import { WaterTile, LandTile, CitySlotTile, FarmingVillageTile, RuinTile, GodTownTile, WonderSpotTile, ConstructingWonderTile } from './Tiles';
+import { WaterTile, LandTile, CitySlotTile, FarmingVillageTile, RuinTile, GodTownTile, WonderSpotTile, ConstructingWonderTile, WreckageTile } from './Tiles';
 import MovementIndicator from './MovementIndicator';
 import { useGame } from '../../contexts/GameContext';
 
 const TILE_SIZE = 32;
 const defaultSettings = { animations: true, showVisuals: true, showGrid: true };
 
-const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick, onVillageClick, onRuinClick, onGodTownClick, onWonderSpotClick, onConstructingWonderClick, isPlacingDummyCity, movements, combinedSlots, villages, ruins, godTowns, playerAlliance, conqueredVillages, gameSettings = defaultSettings, cityPoints, scoutedCities, controlledIslands }) => {
+const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick, onVillageClick, onRuinClick, onGodTownClick, onWonderSpotClick, onConstructingWonderClick, onWreckageClick, isPlacingDummyCity, movements, combinedSlots, villages, ruins, godTowns, playerAlliance, conqueredVillages, gameSettings = defaultSettings, cityPoints, scoutedCities, controlledIslands }) => {
     const { playerCities } = useGame();
 
     const locationLookup = useMemo(() => {
@@ -15035,8 +15057,10 @@ const MapGrid = ({ mapGrid, worldState, pan, zoom, viewportSize, onCitySlotClick
                 case 'god_town':
                     tileContent = <GodTownTile townData={tile.data} onClick={onGodTownClick} gameSettings={gameSettings} />;
                     break;
+                case 'wreckage':
+                    tileContent = <WreckageTile wreckageData={tile.data} onClick={onWreckageClick} gameSettings={gameSettings} />;
+                    break;
                 case 'wonder_spot':
-                    //  Pass controlledIslands and playerAlliance to the WonderSpotTile
                     tileContent = <WonderSpotTile spotData={tile.data} onClick={onWonderSpotClick} playerAlliance={playerAlliance} controlledIslands={controlledIslands} />;
                     break;
                 case 'constructing_wonder':
@@ -15092,6 +15116,7 @@ import ReinforcementModal from '../city/ReinforcementModal';
 import { useAuth } from '../../contexts/AuthContext';
 import EmptyCityModal from './EmptyCityModal';
 import RescueModal from './RescueModal';
+import WreckageModal from './WreckageModal'; // Import the new modal
 
 const MapModals = ({
     modalState,
@@ -15130,7 +15155,7 @@ const MapModals = ({
     const renderCityInteraction = () => {
         if (!selectedCity) return null;
 
-        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget) {
+        if (selectedCity.isRuinTarget || selectedCity.isVillageTarget || selectedCity.isWreckageTarget) { // check for wreckage
             return (
                 <OtherCityModal
                     city={selectedCity}
@@ -15262,6 +15287,14 @@ const MapModals = ({
                     onClose={() => closeModal('rescue')}
                     onSend={handleSendMovement}
                     setMessage={setMessage}
+                />
+            )}
+            {/* Render the new wreckage modal */}
+            {modalState.isWreckageModalOpen && (
+                <WreckageModal
+                    wreckage={modalState.wreckageModalData}
+                    onClose={() => closeModal('wreckage')}
+                    onCollect={handleActionClick}
                 />
             )}
         </>
@@ -16005,7 +16038,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         let totalUnitsSelected = Object.values(selectedUnits).reduce((sum, count) => sum + count, 0);
         let totalResourcesSelected = Object.values(selectedResources).reduce((sum, amount) => sum + amount, 0);
 
-        if ((mode === 'attack' || mode === 'reinforce') && totalUnitsSelected === 0 && !selectedHero) {
+        if ((mode === 'attack' || mode === 'reinforce' || mode === 'collect_wreckage') && totalUnitsSelected === 0 && !selectedHero) {
             setMessage("Please select at least one unit or a hero to send.");
             return;
         }
@@ -16022,6 +16055,12 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         }
         if (mode === 'trade' && totalResourcesSelected === 0) {
             setMessage("Please select at least one resource to trade.");
+            return;
+        }
+        
+        const totalResourceAmount = targetCity.resources ? Object.values(targetCity.resources).reduce((a, b) => a + b, 0) : 0;
+        if (mode === 'collect_wreckage' && transportCapacity < totalResourceAmount) {
+            setMessage(`Not enough transport capacity. Need ${totalResourceAmount.toLocaleString()} capacity.`);
             return;
         }
 
@@ -16065,7 +16104,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         onSend({
             mode,
             targetCity,
-            units: mode === 'scout' || mode === 'trade' ? {} : selectedUnits,
+            units: (mode === 'scout' || mode === 'trade') ? {} : selectedUnits,
             hero: selectedHero,
             resources: resourcesToSend,
             travelTime: finalTravelTime,
@@ -16101,11 +16140,9 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
             const heroData = currentHeroes[heroId];
             if (!heroData.active || heroData.capturedIn) return false;
             
-            // # Check if hero is in another movement
             const isTraveling = (movements || []).some(m => m.hero === heroId);
             if(isTraveling) return false;
 
-            //  Check if the hero is wounded
             const woundedUntilDate = heroData.woundedUntil?.toDate ? heroData.woundedUntil.toDate() : (heroData.woundedUntil ? new Date(heroData.woundedUntil) : null);
             const isWounded = woundedUntilDate && woundedUntilDate > new Date();
             if (isWounded) return false;
@@ -16126,6 +16163,37 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
         const capacityProgress = transportCapacity > 0 ? (currentUnitsLoad / transportCapacity) * 100 : 0;
         const progressBarColor = capacityProgress > 100 ? 'bg-red-500' : 'bg-green-500';
 
+        if (mode === 'collect_wreckage') {
+            return (
+                <div className="space-y-4">
+                     {navalUnitsList.length > 0 && (
+                        <div className="unit-selection-section">
+                            <h4 className="unit-selection-header">Transport Ships</h4>
+                            <div className="unit-grid">
+                                {navalUnitsList.filter(u => u.capacity > 0).map(unit => (
+                                    <div key={unit.id} className="unit-item">
+                                        <div className="unit-image-container" title={`Select all/none of ${unit.name}`} onClick={() => handleUnitIconClick(unit.id, unit.currentCount)}>
+                                            <img src={images[unit.image]} alt={unit.name} className="unit-image" />
+                                             <span className="unit-count-badge">
+                                                {unit.currentCount}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={selectedUnits[unit.id] || 0}
+                                            onChange={(e) => handleUnitChange(unit.id, e.target.value)}
+                                            className="unit-input hide-number-spinners"
+                                            min="0"
+                                            max={unit.currentCount}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
         if (mode === 'attack' || mode === 'reinforce') {
             return (
                 <div className="space-y-4">
@@ -16270,7 +16338,7 @@ const MovementModal = ({ mode, targetCity, playerCity, playerUnits: initialPlaye
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
             <div className="movement-modal-container" onClick={e => e.stopPropagation()}>
-                <h3 className="movement-modal-header capitalize">{mode} {targetCity ? targetCity.cityName || targetCity.name : ''}</h3>
+                <h3 className="movement-modal-header capitalize">{mode.replace('_', ' ')} {targetCity ? targetCity.cityName || targetCity.name : ''}</h3>
                 <div className="movement-modal-content">
                     {renderContent()}
                 </div>
@@ -17626,7 +17694,6 @@ const imageContexts = [
 imageContexts.forEach(context => {
     context.keys().forEach((item) => {
         const key = item.replace('./', '');
-        // To prevent overwrites if filenames are the same in different folders, check if key exists.
         if (!images[key]) {
             images[key] = context(item);
         }
@@ -17637,7 +17704,6 @@ const _WaterTile = ({ gameSettings = defaultSettings }) => {
     return <div className="w-full h-full bg-transparent" />;
 };
 const _LandTile = ({ gameSettings = defaultSettings }) => {
-    // # Make land tiles transparent so the island images in MapView are visible.
     const bgClass = gameSettings.showVisuals ? 'bg-transparent' : 'bg-gray-800';
     const borderClass = gameSettings.showGrid
         ? `border-r border-b ${gameSettings.showVisuals ? 'border-green-700/20' : 'border-gray-700'}`
@@ -17674,11 +17740,9 @@ const _CitySlotTile = ({ slotData, onClick, isPlacingDummyCity, playerAlliance, 
         const ownerName = slotData.ownerUsername || 'Unknown';
         const isOwn = slotData.ownerId === currentUser.uid;
 
-        // # Use playerAlliance context for consistent alliance info for own cities
         const cityAllianceTag = isOwn ? playerAlliance?.tag : slotData.alliance;
         const cityAllianceName = isOwn ? playerAlliance?.name : slotData.allianceName;
         
-        // # Use the correct key to find city points for own cities vs other players' cities
         const pointsKey = isOwn ? slotData.slotId : slotData.id;
         const points = cityPoints[pointsKey] || 0;
 
@@ -17834,6 +17898,31 @@ const _GodTownTile = ({ townData, onClick, gameSettings = defaultSettings }) => 
         </div>
     );
 };
+
+// # A tile for sea resources (wreckages)
+const _WreckageTile = ({ wreckageData, onClick, gameSettings = defaultSettings }) => {
+    const resourceType = Object.keys(wreckageData.resources)[0];
+    const tooltipText = `Sea Resources<br>${resourceType}: ${wreckageData.resources[resourceType].toLocaleString()}`;
+    const WreckageSVG = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-yellow-600 opacity-80">
+            <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v5.239a.75.75 0 00.25.53l4.5 4.5a.75.75 0 001.06 0l4.5-4.5a.75.75 0 00.25-.53V4.5a.75.75 0 00-.75-.75h-.75a.75.75 0 00-.75.75v3.19l-2.47-2.47a.75.75 0 00-1.06 0z" />
+            <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v5.239a.75.75 0 01-.25.53l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 01-.25-.53V4.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v3.19l2.47-2.47a.75.75 0 011.06 0z" />
+        </svg>
+    );
+
+    return (
+        <div className={`w-full h-full flex justify-center items-center`}>
+            <div
+                onClick={(e) => onClick(e, wreckageData)}
+                className="wreckage-slot"
+            >
+                <WreckageSVG />
+                <span className="map-object-tooltip" dangerouslySetInnerHTML={{ __html: tooltipText }}></span>
+            </div>
+        </div>
+    );
+};
+
 const _WonderSpotTile = ({ spotData, onClick, playerAlliance, controlledIslands }) => {
     const allianceTag = playerAlliance?.tag;
     const controllingAllianceTag = controlledIslands ? controlledIslands[spotData.islandId] : null;
@@ -17868,6 +17957,7 @@ export const CitySlotTile = React.memo(_CitySlotTile);
 export const FarmingVillageTile = React.memo(_FarmingVillageTile);
 export const RuinTile = React.memo(_RuinTile);
 export const GodTownTile = React.memo(_GodTownTile);
+export const WreckageTile = React.memo(_WreckageTile);
 export const WonderSpotTile = React.memo(_WonderSpotTile);
 export const ConstructingWonderTile = React.memo(_ConstructingWonderTile);
 </file>
@@ -18703,6 +18793,55 @@ const TradesTooltip = ({ movements, combinedSlots, onCancel, isLocked, countdown
 };
 
 export default TradesTooltip;
+</file>
+
+<file path="src/components/map/WreckageModal.js">
+import React from 'react';
+import woodImage from '../../images/resources/wood.png';
+import stoneImage from '../../images/resources/stone.png';
+import silverImage from '../../images/resources/silver.png';
+
+const WreckageModal = ({ wreckage, onClose, onCollect }) => {
+    if (!wreckage) return null;
+
+    const resourceType = Object.keys(wreckage.resources)[0];
+    const resourceAmount = wreckage.resources[resourceType];
+
+    const resourceImages = {
+        wood: woodImage,
+        stone: stoneImage,
+        silver: silverImage,
+    };
+
+    // # Triggers the action to open the movement modal
+    const handleCollect = () => {
+        onCollect('collect_wreckage', { ...wreckage, isWreckageTarget: true, name: 'Sea Resources' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
+            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600 text-white" onClick={e => e.stopPropagation()}>
+                <h3 className="font-title text-2xl text-white mb-4">Sea Resources</h3>
+                <p className="mb-4">A shipwreck's cargo is floating on the waves, waiting to be collected.</p>
+                <div className="flex items-center justify-center bg-gray-700 p-4 rounded-lg">
+                    <img src={resourceImages[resourceType]} alt={resourceType} className="w-12 h-12 mr-4" />
+                    <div>
+                        <p className="text-lg font-bold capitalize">{resourceType}</p>
+                        <p className="text-xl text-yellow-400">{resourceAmount.toLocaleString()}</p>
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                    <button onClick={handleCollect} className="btn btn-primary">
+                        Send Collection Party
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default WreckageModal;
 </file>
 
 <file path="src/components/MapView.js">
@@ -24419,7 +24558,7 @@ export default VipDisplay;
 
 <file path="src/components/WorldSelectionScreen.js">
 // src/components/WorldSelectionScreen.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect} from 'react';
 import { collection, getDocs, doc, writeBatch, serverTimestamp, getDoc, deleteDoc, query, limit, onSnapshot } from 'firebase/firestore';
 import { signOut } from "firebase/auth";
 import { db, auth } from '../firebase/config';
@@ -24429,14 +24568,6 @@ import { generateIslands, generateCitySlots, generateFarmingVillages, generateRu
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import './WorldSelectionScreen.css';
-
-// A cryptographically secure random number generator.
-const getSecureRandomInt = (max) => {
-    const randomBuffer = new Uint32Array(1);
-    window.crypto.getRandomValues(randomBuffer);
-    let randomNumber = randomBuffer[0] / (0xFFFFFFFF + 1);
-    return Math.floor(randomNumber * max);
-};
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
     if (!message) return null;
@@ -31233,6 +31364,63 @@ export const processAttackMovement = async (
 };
 </file>
 
+<file path="src/hooks/movementProcessors/processCollectWreckageMovement.js">
+import { doc, writeBatch, serverTimestamp, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+
+// # Processes the arrival of a 'collect_wreckage' movement
+export const processCollectWreckageMovement = async (movement, movementDoc, worldId) => {
+    const batch = writeBatch(db);
+    const wreckageRef = doc(db, 'worlds', worldId, 'wreckages', movement.targetWreckageId);
+    const originCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
+
+    const [wreckageSnap, originCitySnap] = await Promise.all([
+        getDoc(wreckageRef),
+        getDoc(originCityRef)
+    ]);
+
+    if (!originCitySnap.exists()) {
+        // Origin city might have been destroyed, just delete movement
+        batch.delete(movementDoc.ref);
+        await batch.commit();
+        return;
+    }
+
+    let collectedResources = {};
+    if (wreckageSnap.exists()) {
+        collectedResources = wreckageSnap.data().resources;
+        batch.delete(wreckageRef); // Wreckage is collected and disappears
+    }
+
+    // Create a return movement for the ships, carrying the resources
+    const travelDuration = movement.arrivalTime.toMillis() - movement.departureTime.toMillis();
+    const returnArrivalTime = new Date(movement.arrivalTime.toDate().getTime() + travelDuration);
+    batch.update(movementDoc.ref, {
+        status: 'returning',
+        units: movement.units,
+        resources: collectedResources,
+        arrivalTime: returnArrivalTime,
+    });
+
+    // Generate a report for the player
+    const reportMessage = wreckageSnap.exists()
+        ? `Your collection party successfully retrieved ${Object.entries(collectedResources).map(([res, amount]) => `${amount.toLocaleString()} ${res}`).join(', ')} from the sea.`
+        : 'Your collection party arrived at the location, but the resources were already gone.';
+
+    const report = {
+        type: 'collect_wreckage',
+        title: 'Sea Resources Collected',
+        timestamp: serverTimestamp(),
+        outcome: { message: reportMessage, resources: collectedResources },
+        read: false,
+    };
+    const reportRef = doc(db, `users/${movement.originOwnerId}/worlds/${worldId}/reports`, `${movement.id}-collect`);
+    batch.set(reportRef, report);
+
+    await batch.commit();
+};
+</file>
+
 <file path="src/hooks/movementProcessors/processFoundingMovement.js">
 import { doc, runTransaction, collection, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -31347,7 +31535,7 @@ export const processFoundingMovement = async (movement, movementDoc, worldId, or
 </file>
 
 <file path="src/hooks/movementProcessors/processReinforceMovement.js">
-import { doc, runTransaction, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 // # handles reinforcement arrivals
@@ -32559,7 +32747,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
     const [travelTimeInfo, setTravelTimeInfo] = useState(null);
 
     const handleActionClick = useCallback((mode, targetCity) => {
-        if (['attack', 'reinforce', 'scout', 'trade'].includes(mode)) {
+        if (['attack', 'reinforce', 'scout', 'trade', 'collect_wreckage'].includes(mode)) {
             openModal('action', { mode, city: targetCity });
             closeModal('city');
             closeModal('village');
@@ -32594,7 +32782,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
             setMessage("You can only attack villages from a city on the same island.");
             return;
         }
-        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget ? true : playerCity.islandId !== targetCity.islandId;
+        const isCrossIsland = targetCity.isRuinTarget || targetCity.isGodTownTarget || targetCity.isWreckageTarget ? true : playerCity.islandId !== targetCity.islandId;
         let hasLandUnits = false, hasNavalUnits = false, hasFlyingUnits = false, totalTransportCapacity = 0, totalLandUnitsToSend = 0;
 
         for (const unitId in units) {
@@ -32603,14 +32791,18 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
                 if (config.type === 'land') {
                     hasLandUnits = true;
                     totalLandUnitsToSend += units[unitId];
-                    if (config.flying) {
-                        hasFlyingUnits = true;
-                    }
+                    if (config.flying) hasFlyingUnits = true;
                 }
                 else if (config.type === 'naval') { hasNavalUnits = true; totalTransportCapacity += (config.capacity || 0) * units[unitId]; }
             }
         }
 
+        const totalResourceAmount = targetCity.resources ? Object.values(targetCity.resources).reduce((a, b) => a + b, 0) : 0;
+        if (mode === 'collect_wreckage' && totalTransportCapacity < totalResourceAmount) {
+            setMessage(`Not enough transport capacity. Need ${totalResourceAmount.toLocaleString()} capacity.`);
+            return;
+        }
+        
         if (isCrossIsland && hasLandUnits && !hasNavalUnits && !hasFlyingUnits) { setMessage("Ground troops cannot travel across the sea without transport ships."); return; }
         if (isCrossIsland && hasLandUnits && totalTransportCapacity < totalLandUnitsToSend && !hasFlyingUnits) { setMessage(`Not enough transport ship capacity. Need ${totalLandUnitsToSend - totalTransportCapacity} more capacity.`); return; }
         
@@ -32626,7 +32818,7 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const isOwnCityTarget = finalTargetOwnerId === currentUser.uid;
         let targetCityDocId = null;
 
-        if (!targetCity.isVillageTarget && !targetCity.isRuinTarget && !targetCity.isGodTownTarget && finalTargetOwnerId) {
+        if (!targetCity.isVillageTarget && !targetCity.isRuinTarget && !targetCity.isGodTownTarget && !targetCity.isWreckageTarget && finalTargetOwnerId) {
             if (isOwnCityTarget) {
                 targetCityDocId = targetCity.id;
             } else {
@@ -32665,7 +32857,24 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
 
         let movementData;
 
-        if (mode === 'rescue_hero') {
+        if (mode === 'collect_wreckage') {
+            movementData = {
+                type: 'collect_wreckage',
+                originCityId: playerCity.id,
+                originCoords: { x: playerCity.x, y: playerCity.y },
+                originOwnerId: currentUser.uid,
+                originCityName: playerCity.cityName,
+                originOwnerUsername: userProfile.username,
+                targetWreckageId: targetCity.id,
+                targetCoords: { x: targetCity.x, y: targetCity.y },
+                units: units,
+                departureTime: serverTimestamp(),
+                arrivalTime: arrivalTime,
+                cancellableUntil: cancellableUntil,
+                status: 'moving',
+                involvedParties: [currentUser.uid],
+            };
+        } else if (mode === 'rescue_hero') {
             movementData = {
                 type: 'rescue_hero',
                 originCityId: playerCity.id,
@@ -32935,7 +33144,6 @@ export const useMapActions = (openModal, closeModal, showCity, invalidateChunkCa
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
         const batch = writeBatch(db);
     
-        // Calculate travel time for the journey to the plot, then founding time separately.
         const slowestSpeed = Object.entries(units)
             .filter(([, count]) => count > 0)
             .map(([unitId]) => unitConfig[unitId].speed)
@@ -33241,7 +33449,20 @@ export const useMapClickHandler = ({
         openModal('city', targetData);
     };
 
-    return { onCitySlotClick, onVillageClick, onRuinClick };
+    // # Handles clicks on wreckage tiles
+    const onWreckageClick = (e, wreckageData) => {
+        if (!playerCity) {
+            setMessage("Your city data is still loading. Please wait a moment.");
+            return;
+        }
+        closeModal('city');
+        closeModal('village');
+        const distance = calculateDistance(playerCity, wreckageData);
+        setTravelTimeInfo({ distance });
+        openModal('wreckage', wreckageData);
+    };
+
+    return { onCitySlotClick, onVillageClick, onRuinClick, onWreckageClick };
 };
 </file>
 
@@ -33660,6 +33881,8 @@ export const useModalState = () => {
         emptyCityModalData: null,
         isRescueModalOpen: false,
         rescueModalData: null,
+        isWreckageModalOpen: false,
+        wreckageModalData: null,
     });
 
     //  Opens a modal of a given type with optional data.
@@ -33688,6 +33911,7 @@ export const useModalState = () => {
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: true, reinforcementsModalData: data };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: true, emptyCityModalData: data };
                 case 'rescue': return { ...prevState, isRescueModalOpen: true, rescueModalData: data };
+                case 'wreckage': return { ...prevState, isWreckageModalOpen: true, wreckageModalData: data };
                 default: return prevState;
             }
         });
@@ -33719,6 +33943,7 @@ export const useModalState = () => {
                 case 'reinforcements': return { ...prevState, isReinforcementsModalOpen: false, reinforcementsModalData: null };
                 case 'emptyCity': return { ...prevState, isEmptyCityModalOpen: false, emptyCityModalData: null };
                 case 'rescue': return { ...prevState, isRescueModalOpen: false, rescueModalData: null };
+                case 'wreckage': return { ...prevState, isWreckageModalOpen: false, wreckageModalData: null };
                 default: return prevState;
             }
         });
@@ -33745,6 +33970,7 @@ import { processFoundingMovement } from './movementProcessors/processFoundingMov
 import { processReinforceMovement } from './movementProcessors/processReinforceMovement';
 import { processScoutMovement } from './movementProcessors/processScoutMovement';
 import { processRescueMovement } from './movementProcessors/processRescueMovement';
+import { processCollectWreckageMovement } from './movementProcessors/processCollectWreckageMovement';
 
 
 export const useMovementProcessor = (worldId) => {
@@ -33753,7 +33979,6 @@ export const useMovementProcessor = (worldId) => {
     const processMovement = useCallback(async (movementDoc) => {
         const movement = { id: movementDoc.id, ...movementDoc.data() };
         
-        // # Handle hero assignment first as it has no origin city
         if (movement.type === 'assign_hero') {
             const targetCityRef = doc(db, `users/${movement.targetOwnerId}/games`, worldId, 'cities', movement.targetCityId);
             try {
@@ -33764,10 +33989,8 @@ export const useMovementProcessor = (worldId) => {
                     const cityData = cityDoc.data();
                     const heroes = cityData.heroes || {};
                     
-                    // # Atomically check if a hero is already assigned to this city upon arrival
                     for (const hId in heroes) {
                         if (heroes[hId].cityId === movement.targetCityId) {
-                            // A hero is already there. Cancel this assignment and send a report.
                             const failureReport = {
                                 type: 'assign_hero_failed',
                                 title: `Hero Assignment Failed`,
@@ -33791,7 +34014,7 @@ export const useMovementProcessor = (worldId) => {
                 console.error("Error processing hero assignment:", error);
                 await deleteDoc(movementDoc.ref);
             }
-            return; // # End processing for this movement
+            return;
         }
         
         const originCityRef = doc(db, `users/${movement.originOwnerId}/games`, worldId, 'cities', movement.originCityId);
@@ -33813,7 +34036,6 @@ export const useMovementProcessor = (worldId) => {
         const originCityState = originCitySnap.data();
         const targetCityState = targetCitySnap?.exists() ? targetCitySnap.data() : null;
 
-        // # --- Dispatch based on status and type ---
         if (movement.status === 'returning') {
             await processReturnMovement(movement, movementDoc, worldId, getHospitalCapacity);
         
@@ -33826,7 +34048,6 @@ export const useMovementProcessor = (worldId) => {
                 case 'attack_village':
                 case 'attack_ruin':
                 case 'attack_god_town':
-                    // # Fetching alliance data would happen here in a full implementation
                     await processAttackMovement(movement, movementDoc, worldId, originCityState, targetCityState, null, null);
                     break;
                 case 'reinforce':
@@ -33838,7 +34059,9 @@ export const useMovementProcessor = (worldId) => {
                 case 'rescue_hero':
                     await processRescueMovement(movement, movementDoc, worldId, originCityState, targetCityState);
                     break;
-                // # trade and other movements would have cases here
+                case 'collect_wreckage':
+                    await processCollectWreckageMovement(movement, movementDoc, worldId);
+                    break;
                 default:
                     console.log(`Unknown movement type: ${movement.type}. Deleting movement ${movement.id}`);
                     await deleteDoc(movementDoc.ref);
@@ -33847,7 +34070,6 @@ export const useMovementProcessor = (worldId) => {
         }
     }, [worldId, getHospitalCapacity]);
 
-    // # this effect remains to find and trigger processing for arrived movements
     useEffect(() => {
         const processMovements = async () => {
             if (!worldId) return;
@@ -34714,7 +34936,6 @@ body {
     @apply w-20 h-6 m-0 cursor-pointer relative transition-transform duration-150 bg-no-repeat;
     background-image: url('../images/villages.png');
     background-size: 300% 350%;
-    /* Add a subtle shadow to blend with the terrain */
     filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.4));
 }
 .village-slot:hover {
@@ -34725,7 +34946,6 @@ body {
     @apply visible opacity-100;
 }
 
-/*  Define background positions for each village level */
 .village-level-1 { background-position: 0% 0%; }
 .village-level-2 { background-position: 100% 0%; }
 .village-level-3 { background-position: 0% 50%; }
@@ -34734,12 +34954,8 @@ body {
 .village-level-6 { background-position: 100% 100%; }
 
 
-.my-village {
-    /* No special filter needed now */
-}
-.other-village-plot {
-   /* No special filter needed now */
-}
+.my-village {}
+.other-village-plot {}
 
 /* Ruin Styles */
 .ruin-slot {
@@ -34756,13 +34972,9 @@ body {
     @apply visible opacity-100;
 }
 
-.ruin-unoccupied {
-    background-position: 0% 0%;
-}
+.ruin-unoccupied { background-position: 0% 0%; }
+.ruin-occupied { background-position: 100% 0%; }
 
-.ruin-occupied {
-    background-position: 100% 0%;
-}
 /* God Town Styles */
 .god-town-slot {
     @apply w-8 h-8 m-1 cursor-pointer relative transition-transform duration-150;
@@ -34776,18 +34988,27 @@ body {
 .god-town-slot:hover .map-object-tooltip {
     @apply visible opacity-100;
 }
-.god-town-slot.ruins {
-    filter: hue-rotate(280deg) brightness(1.2);
+.god-town-slot.ruins { filter: hue-rotate(280deg) brightness(1.2); }
+.god-town-slot.city { filter: drop-shadow(0 0 8px #fde047); }
+
+/* Wreckage Styles */
+.wreckage-slot {
+    @apply w-6 h-6 m-1 cursor-pointer relative transition-transform duration-150;
+    filter: drop-shadow(0 0 4px #1e3a8a);
 }
-.god-town-slot.city {
-    filter: drop-shadow(0 0 8px #fde047);
+.wreckage-slot:hover {
+    @apply scale-125 z-20;
+    filter: drop-shadow(0 0 8px #facc15);
 }
+.wreckage-slot:hover .map-object-tooltip {
+    @apply visible opacity-100;
+}
+
 
 /* Wonder Styles */
 .wonder-spot-tile {
     @apply w-8 h-8 rounded-full relative bg-gray-600/50 border-2 border-gray-500;
 }
-
 .wonder-spot-tile.active {
     @apply cursor-pointer bg-yellow-400/50 border-yellow-300;
     animation: glowing-wonder-spot 2s infinite;
@@ -35808,27 +36029,14 @@ const getSecureRandomFloat = () => {
     return randomBuffer[0] / (0xFFFFFFFF + 1);
 };
 
-// Add a list of available island images
 const islandImages = ['island_1.png'];
 
-// INDICATORS:
-// You can manually adjust the coordinates for city and village placements for each island image here.
-// The 'x' and 'y' values are relative to the center of the island image.
-// Positive 'x' is to the right, negative 'x' is to the left.
-// Positive 'y' is down, negative 'y' is up.
 const islandLayouts = {
     'island_1.png': {
         citySlots: [
-            { x: -1, y: 4 },    // Bottom bay
-            { x: 5, y: 1 },    // Right side
-            { x: 2, y: 5 },    // Bottom right
-            { x: 5, y: -1 },   // Far right peninsula
-            { x: -6, y: 1 },   // Far left
-            { x: -6, y: 1 },   // Left side
-            { x: -3, y: 1 },   // Bottom left
-            { x: -6, y: -2 },  // Far left top
-            { x: 4, y: -4 },   // Top right
-            { x: 0, y: -5 }    // Top middle
+            { x: -1, y: 4 }, { x: 5, y: 1 }, { x: 2, y: 5 }, { x: 5, y: -1 },
+            { x: -6, y: 1 }, { x: -6, y: 1 }, { x: -3, y: 1 }, { x: -6, y: -2 },
+            { x: 4, y: -4 }, { x: 0, y: -5 }
         ],
         villages: [
             { x: -3, y: -1 }, { x: 1, y: -1}, { x: 4, y: -1 }, { x: 0, y: 0}, { x:-2, y: 0}
@@ -35836,22 +36044,19 @@ const islandLayouts = {
     },
 };
 
-
+// # Generates random islands on the world map
 export const generateIslands = (width, height, count) => {
     const islands = [];
-    const minMargin = 10; // Margin between islands
-    const maxMargin = 12; // Margin between islands
-    const mapEdgeMargin = 10; // Margin from the map edge
+    const minMargin = 10;
+    const maxMargin = 12;
+    const mapEdgeMargin = 10;
     const maxAttempts = 20;
 
-    // If only one island is to be generated, create a large central one.
     if (count === 1) {
-        const radius = Math.min(width, height) / 2.5; // Make it large
+        const radius = Math.min(width, height) / 2.5;
         islands.push({
-            id: `island-0`,
-            name: `The Central Isle`,
-            x: Math.floor(width / 2),
-            y: Math.floor(height / 2),
+            id: `island-0`, name: `The Central Isle`,
+            x: Math.floor(width / 2), y: Math.floor(height / 2),
             radius: radius,
             imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
         });
@@ -35860,14 +36065,9 @@ export const generateIslands = (width, height, count) => {
 
     const checkCollision = (newIsland, existingIslands) => {
         for (const existing of existingIslands) {
-            const distance = Math.sqrt(
-                Math.pow(newIsland.x - existing.x, 2) +
-                Math.pow(newIsland.y - existing.y, 2)
-            );
+            const distance = Math.sqrt(Math.pow(newIsland.x - existing.x, 2) + Math.pow(newIsland.y - existing.y, 2));
             const margin = minMargin + getSecureRandomFloat() * (maxMargin - minMargin);
-            if (distance < newIsland.radius + existing.radius + margin) {
-                return true;
-            }
+            if (distance < newIsland.radius + existing.radius + margin) return true;
         }
         return false;
     };
@@ -35876,111 +36076,67 @@ export const generateIslands = (width, height, count) => {
         let island = {};
         let hasCollision = true;
         let attempts = 0;
-
         while (hasCollision && attempts < maxAttempts) {
-            const radius = getSecureRandomFloat() * 2 + 6; // Radius between 6 and 8 tiles
-
-            // Calculate spawnable area, considering map edge margin and island radius
+            const radius = getSecureRandomFloat() * 2 + 6;
             const spawnableWidth = width - (mapEdgeMargin * 2) - (radius * 2);
             const spawnableHeight = height - (mapEdgeMargin * 2) - (radius * 2);
-
-            if (spawnableWidth <= 0 || spawnableHeight <= 0) {
-                // This can happen if the map is too small for the margins and islands
-                console.error("Map is too small to generate islands with the specified margins.");
-                break; // Exit the while loop
-            }
-
-            // Calculate random coordinates within the spawnable area
+            if (spawnableWidth <= 0 || spawnableHeight <= 0) break;
             const randomX = Math.floor(getSecureRandomFloat() * spawnableWidth);
             const randomY = Math.floor(getSecureRandomFloat() * spawnableHeight);
-
             island = {
-                id: `island-${Date.now()}-${i}`,
-                name: `Island ${i + 1}`,
-                // Offset coordinates by the margin and radius
-                x: mapEdgeMargin + radius + randomX,
-                y: mapEdgeMargin + radius + randomY,
+                id: `island-${Date.now()}-${i}`, name: `Island ${i + 1}`,
+                x: mapEdgeMargin + radius + randomX, y: mapEdgeMargin + radius + randomY,
                 radius: radius,
                 imageName: islandImages[Math.floor(getSecureRandomFloat() * islandImages.length)],
             };
             hasCollision = checkCollision(island, islands);
             attempts++;
         }
-
-        if (!hasCollision) {
-            islands.push(island);
-        }
+        if (!hasCollision) islands.push(island);
     }
     return islands;
 };
 
+// # Generates city slots on islands
 export const generateCitySlots = (islands, worldWidth, worldHeight) => {
     const citySlots = {};
     let slotIndex = 0;
-
     islands.forEach(island => {
         const layout = islandLayouts[island.imageName];
         if (layout) {
-            // Use predefined layout for cities
             layout.citySlots.forEach(relativePos => {
                 const x = Math.round(island.x + relativePos.x);
                 const y = Math.round(island.y + relativePos.y);
-
                 if (x >= 0 && x < worldWidth && y >= 0 && y < worldHeight) {
                     const slotId = `${island.id}-slot-${slotIndex++}`;
-                    citySlots[slotId] = {
-                        islandId: island.id,
-                        x,
-                        y,
-                        ownerId: null,
-                        cityName: 'Unclaimed',
-                        ownerEmail: null,
-                        ownerUsername: null,
-                        ownerFaction: null
-                    };
+                    citySlots[slotId] = { islandId: island.id, x, y, ownerId: null, cityName: 'Unclaimed', ownerEmail: null, ownerUsername: null, ownerFaction: null };
                 }
             });
         }
-        // NOTE: The procedural fallback has been removed to ensure consistency.
-        // If an island image does not have a layout in islandLayouts, it will not have cities.
     });
-
     return citySlots;
 };
 
+function generateVillageTroops(level) { return { swordsman: 15, archer: 10 }; }
+const villageNames = ["Oakhaven", "Willow Creek", "Stonebridge", "Riverbend", "Greenfield", "Fairview", "Maplewood", "Pinehurst", "Cedarbrook", "Elmwood", "Ashworth", "Birchwood", "Silver Creek", "Goldcrest", "Ironwood", "Copperhill", "Crystal Falls", "Amberwood"];
 
-function generateVillageTroops(level) {
-    return { swordsman: 15, archer: 10 };
-}
-
-const villageNames = [
-    "Oakhaven", "Willow Creek", "Stonebridge", "Riverbend", "Greenfield", "Fairview",
-    "Maplewood", "Pinehurst", "Cedarbrook", "Elmwood", "Ashworth", "Birchwood",
-    "Silver Creek", "Goldcrest", "Ironwood", "Copperhill", "Crystal Falls", "Amberwood"
-];
-
-
+// # Generates farming villages on islands
 export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHeight) => {
     const villages = {};
     const occupiedSlots = new Set(Object.values(citySlots).map(slot => `${slot.x},${slot.y}`));
     let villageIndex = 0;
-
     const demandCooldowns = [300, 1200, 5400, 14400];
-
     islands.forEach(island => {
         const layout = islandLayouts[island.imageName];
         if (layout) {
-            // Use predefined layout for villages
             layout.villages.forEach(relativePos => {
                 const x = Math.round(island.x + relativePos.x);
                 const y = Math.round(island.y + relativePos.y);
                 if (occupiedSlots.has(`${x},${y}`)) return;
-
                 const villageId = `v${island.id}-${villageIndex++}`;
                 const resources = ['wood', 'stone', 'silver'];
                 let demands = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
                 let supplies = resources.splice(Math.floor(getSecureRandomFloat() * resources.length), 1)[0];
-
                 villages[villageId] = {
                     id: villageId, x, y, islandId: island.id, name: villageNames[Math.floor(getSecureRandomFloat() * villageNames.length)],
                     level: 1, demandYield: { wood: 50, stone: 50, silver: 20 },
@@ -35991,121 +36147,130 @@ export const generateFarmingVillages = (islands, citySlots, worldWidth, worldHei
                 occupiedSlots.add(`${x},${y}`);
             });
         } else {
-            // Fallback procedural generation for inland villages
             const centerX = Math.round(island.x);
             const centerY = Math.round(island.y);
             const numVillages = Math.min(Math.floor(island.radius), 5);
             for (let i = 0; i < numVillages; i++) {
                 const angle = getSecureRandomFloat() * 2 * Math.PI;
-                const distance = getSecureRandomFloat() * (island.radius - 3); // Place away from the edge
+                const distance = getSecureRandomFloat() * (island.radius - 3);
                 const x = Math.round(centerX + distance * Math.cos(angle));
                 const y = Math.round(centerY + distance * Math.sin(angle));
-
                 if (!occupiedSlots.has(`${x},${y}`)) {
                     const villageId = `v${island.id}-${i}`;
-                    villages[villageId] = { id: villageId, x, y, islandId: island.id, name: "Inland Hamlet", level: 1, /* ... other properties */ };
+                    villages[villageId] = { id: villageId, x, y, islandId: island.id, name: "Inland Hamlet", level: 1 };
                     occupiedSlots.add(`${x},${y}`);
                 }
             }
         }
     });
-
     return villages;
 };
 
-// Generates ruins in water tiles
+// # Generates ruins in water tiles
 export const generateRuins = (islands, worldWidth, worldHeight) => {
     const ruins = {};
-    const ruinCount = Math.floor((worldWidth * worldHeight) / 500); // Adjust density as needed
-    const minDistanceFromLand = 3; // Minimum tiles away from any land tile
-
+    const ruinCount = Math.floor((worldWidth * worldHeight) / 500);
+    const minDistanceFromLand = 3;
     const isLand = (x, y) => {
         for (const island of islands) {
-            const distSq = Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2);
-            if (distSq <= Math.pow(island.radius + minDistanceFromLand, 2)) {
-                return true;
-            }
+            if (Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2) <= Math.pow(island.radius + minDistanceFromLand, 2)) return true;
         }
         return false;
     };
-
     for (let i = 0; i < ruinCount; i++) {
-        let x, y;
-        let attempts = 0;
+        let x, y, attempts = 0;
         do {
             x = Math.floor(getSecureRandomFloat() * worldWidth);
             y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
-
         if (attempts < 100) {
             const ruinId = `ruin-${x}-${y}`;
             ruins[ruinId] = {
-                id: ruinId,
-                x,
-                y,
-                name: "Forgotten Ruins",
-                type: 'ruin', // To distinguish from villages
-                troops: {
-                    hoplite: 100 + Math.floor(getSecureRandomFloat() * 50),
-                    cavalry: 50 + Math.floor(getSecureRandomFloat() * 25),
-                    trireme: 20 + Math.floor(getSecureRandomFloat() * 10) // Naval defense
-                },
-                researchReward: `qol_research_${i % 3}` // Example reward cycles through the 3 QoL researches
+                id: ruinId, x, y, name: "Forgotten Ruins", type: 'ruin',
+                troops: { hoplite: 100 + Math.floor(getSecureRandomFloat() * 50), cavalry: 50 + Math.floor(getSecureRandomFloat() * 25), trireme: 20 + Math.floor(getSecureRandomFloat() * 10) },
+                researchReward: `qol_research_${i % 3}`
             };
         }
     }
     return ruins;
 };
 
+// # Generates god towns in water tiles
 export const generateGodTowns = (islands, worldWidth, worldHeight, count = 1) => {
     const godTowns = {};
     const minDistanceFromLand = 5;
-    const transformationDuration = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
+    const transformationDuration = 24 * 60 * 60 * 1000;
     const isLand = (x, y) => {
         for (const island of islands) {
-            const distSq = Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2);
-            if (distSq <= Math.pow(island.radius + minDistanceFromLand, 2)) {
-                return true;
-            }
+            if (Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2) <= Math.pow(island.radius + minDistanceFromLand, 2)) return true;
         }
         return false;
     };
-
     for (let i = 0; i < count; i++) {
-        let x, y;
-        let attempts = 0;
+        let x, y, attempts = 0;
         do {
             x = Math.floor(getSecureRandomFloat() * worldWidth);
             y = Math.floor(getSecureRandomFloat() * worldHeight);
             attempts++;
         } while (isLand(x, y) && attempts < 100);
-
         if (attempts < 100) {
             const townId = `god-town-${Date.now()}-${i}`;
             const spawnTime = new Date();
             godTowns[townId] = {
-                id: townId,
-                x,
-                y,
-                name: "Strange Ruins",
-                stage: "ruins",
-                puzzleId: `puzzle_${(i % 3) + 1}`,
-                troops: { 
-                    'manticore': 500,
-                    'medusa': 500,
-                    'pegasus': 500,
-                    'sphinx': 500,
-                    'phoenix': 500,
-                    'serpopard': 500
-                },
-                spawnTime: spawnTime,
-                transformationTime: new Date(spawnTime.getTime() + transformationDuration),
+                id: townId, x, y, name: "Strange Ruins", stage: "ruins", puzzleId: `puzzle_${(i % 3) + 1}`,
+                troops: { 'manticore': 500, 'medusa': 500, 'pegasus': 500, 'sphinx': 500, 'phoenix': 500, 'serpopard': 500 },
+                spawnTime: spawnTime, transformationTime: new Date(spawnTime.getTime() + transformationDuration),
             };
         }
     }
     return godTowns;
+};
+
+// # Generates random wreckage/flotsam in the sea
+export const generateWreckage = (islands, worldWidth, worldHeight, count) => {
+    const wreckages = {};
+    const minDistanceFromLand = 2;
+    const maxDistanceFromLand = 10;
+
+    const isLand = (x, y) => {
+        for (const island of islands) {
+            if (Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2) <= Math.pow(island.radius, 2)) return true;
+        }
+        return false;
+    };
+
+    const isTooCloseOrFar = (x, y) => {
+        let minDistance = Infinity;
+        for (const island of islands) {
+            const dist = Math.sqrt(Math.pow(x - island.x, 2) + Math.pow(y - island.y, 2)) - island.radius;
+            if (dist < minDistance) minDistance = dist;
+        }
+        return minDistance < minDistanceFromLand || minDistance > maxDistanceFromLand;
+    };
+
+    for (let i = 0; i < count; i++) {
+        let x, y, attempts = 0;
+        do {
+            x = Math.floor(getSecureRandomFloat() * worldWidth);
+            y = Math.floor(getSecureRandomFloat() * worldHeight);
+            attempts++;
+        } while ((isLand(x, y) || isTooCloseOrFar(x, y)) && attempts < 200);
+
+        if (attempts < 200) {
+            const wreckageId = `wreckage-${Date.now()}-${i}`;
+            const resourceTypes = ['wood', 'stone', 'silver'];
+            const randomType = resourceTypes[Math.floor(getSecureRandomFloat() * resourceTypes.length)];
+            const randomAmount = 1000 + Math.floor(getSecureRandomFloat() * 4000);
+
+            wreckages[wreckageId] = {
+                id: wreckageId, x, y,
+                resources: { [randomType]: randomAmount },
+                spawnTime: new Date(),
+            };
+        }
+    }
+    return wreckages;
 };
 </file>
 

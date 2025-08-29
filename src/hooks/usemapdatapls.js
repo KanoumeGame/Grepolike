@@ -11,6 +11,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
     const [visibleSlots, setVisibleSlots] = useState({});
     const [visibleVillages, setVisibleVillages] = useState({});
     const [visibleRuins, setVisibleRuins] = useState({});
+    const [visibleWreckages, setVisibleWreckages] = useState({}); // Wreckages state
     const activeListenersRef = useRef({});
 
     const invalidateChunkCache = useCallback((x, y) => {
@@ -67,7 +68,8 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         requiredChunks.forEach(chunkKey => {
             if (!activeListenersRef.current[chunkKey]) {
                 const [chunkX, chunkY] = chunkKey.split(',').map(Number);
-                const collectionsToFetch = ['citySlots', 'villages', 'ruins'];
+                // # Add 'wreckages' to the list of collections to fetch
+                const collectionsToFetch = ['citySlots', 'villages', 'ruins', 'wreckages'];
                 const unsubscribers = [];
 
                 collectionsToFetch.forEach(colName => {
@@ -116,6 +118,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         const newVisibleSlots = {};
         const newVisibleVillages = {};
         const newVisibleRuins = {};
+        const newVisibleWreckages = {}; // # Logic to handle wreckages
 
         Object.values(cachedData).forEach(chunk => {
             Object.values(chunk.citySlots || {}).forEach(slot => {
@@ -136,10 +139,17 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
                     newVisibleRuins[ruin.id] = ruin;
                 }
             });
+            // # Populate visible wreckages
+            Object.values(chunk.wreckages || {}).forEach(wreckage => {
+                if (wreckage.x >= viewStartCol && wreckage.x <= viewEndCol && wreckage.y >= viewStartRow && wreckage.y <= viewEndRow) {
+                    newVisibleWreckages[wreckage.id] = wreckage;
+                }
+            });
         });
         setVisibleSlots(newVisibleSlots);
         setVisibleVillages(newVisibleVillages);
         setVisibleRuins(newVisibleRuins);
+        setVisibleWreckages(newVisibleWreckages); // # Set the state for visible wreckages
 
     }, [cachedData, pan, zoom, viewportSize]);
 
@@ -148,6 +158,7 @@ export const useMapData = (currentUser, worldId, worldState, pan, zoom, viewport
         visibleSlots,
         visibleVillages,
         visibleRuins,
+        visibleWreckages, // # Return visible wreckages
         invalidateChunkCache
     };
 };

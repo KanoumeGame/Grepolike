@@ -76,7 +76,7 @@ const MapView = ({
     const mapContainerRef = useRef(null);
     const { isPlacingDummyCity, setIsPlacingDummyCity } = useMapState();
     const { pan, zoom, viewportSize, borderOpacity, isPanning, handleMouseDown, goToCoordinates } = useMapInteraction(viewportRef, mapContainerRef, worldState, playerCity, centerOnCity);
-    const { visibleSlots, visibleVillages, visibleRuins, invalidateChunkCache } = useMapData(currentUser, worldId, worldState, pan, zoom, viewportSize);
+    const { visibleSlots, visibleVillages, visibleRuins, visibleWreckages, invalidateChunkCache } = useMapData(currentUser, worldId, worldState, pan, zoom, viewportSize);
     const [message, setMessage] = useState('');
     const { travelTimeInfo, setTravelTimeInfo, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity, handleActionClick } = useMapActions(openModal, closeModal, showCity, invalidateChunkCache, setMessage);
     const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, calculateTotalPoints, getProductionRates, getWarehouseCapacity } = useCityState(worldId);
@@ -226,7 +226,7 @@ const MapView = ({
         }
     }, [panToCoords, goToCoordinates, setPanToCoords]);
 
-    const { onCitySlotClick, onVillageClick, onRuinClick } = useMapClickHandler({
+    const { onCitySlotClick, onVillageClick, onRuinClick, onWreckageClick } = useMapClickHandler({
         playerCity,
         isPlacingDummyCity,
         handleCreateDummyCity,
@@ -527,6 +527,8 @@ const MapView = ({
         };
         mergeWithGrid(combinedSlots, 'city_slot');
         mergeWithGrid(visibleVillages, 'village');
+        // # Add wreckages to the grid
+        mergeWithGrid(visibleWreckages, 'wreckage');
         Object.values(visibleRuins).forEach(ruin => {
             const x = Math.round(ruin.x), y = Math.round(ruin.y);
             if (grid[y]?.[x]) grid[y][x] = { type: 'ruin', data: ruin };
@@ -548,7 +550,7 @@ const MapView = ({
             }
         });
         return grid;
-    }, [worldState, combinedSlots, visibleVillages, visibleRuins, godTowns, wonderSpots, allWonders]);
+    }, [worldState, combinedSlots, visibleVillages, visibleRuins, visibleWreckages, godTowns, wonderSpots, allWonders]);
     const combinedCityPoints = useMemo(() => {
         return { ...cityPoints, ...playerCityPoints };
     }, [cityPoints, playerCityPoints]);
@@ -653,6 +655,7 @@ const MapView = ({
                                         onGodTownClick={onGodTownClick}
                                         onWonderSpotClick={handleWonderSpotClick}
                                         onConstructingWonderClick={handleConstructingWonderClick}
+                                        onWreckageClick={onWreckageClick}
                                         isPlacingDummyCity={isPlacingDummyCity}
                                         movements={movements}
                                         combinedSlots={combinedSlots}
