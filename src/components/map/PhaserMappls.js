@@ -11,7 +11,7 @@ import ruinSpriteSheet from '../../images/ruins.png';
 import godTownImage from '../../images/god-town.png';
 import constructingWonderImage from '../../images/special_buildings/alliance_wonders.jpg';
 import wreckImage from '../../images/wreck.png';
-import waterImage from '../../images/water.png'; // Import water texture
+import waterImage from '../../images/water.png'; 
 
 const TILE_SIZE = 32;
 
