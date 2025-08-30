@@ -32,6 +32,7 @@ class MapScene extends Phaser.Scene {
             god_town: 0.5,
             constructing_wonder: 0.5,
             wreckage: 0.5,
+            alliance_wonders: 0.5
         };
     }
 
@@ -49,7 +50,7 @@ class MapScene extends Phaser.Scene {
         this.load.spritesheet('villageSprite', villageSpriteSheet, { frameWidth: 80, frameHeight: 60 });
         this.load.spritesheet('ruinSprite', ruinSpriteSheet, { frameWidth: 220, frameHeight: 190 });
         this.load.image('godTown', godTownImage);
-        this.load.image('constructingWonder', constructingWonderImage);
+        this.load.image('constructingWonder', constructingWonderImage, { frameWidth: 50, frameHeight: 40 });
         this.load.image('wreck', wreckImage);
         this.load.image('water', waterImage); // Load water texture
         this.load.image('arrow', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAMCAQAAAAAdtPUAAAADklEQVR42mNkgANGQgwAANLQIwU7/zf2AAAAAElFTkSuQmCC');
@@ -142,6 +143,28 @@ class MapScene extends Phaser.Scene {
         this.updateMovements();
     }
 
+    // # gets a color based on happiness
+    getHappinessColor(happiness) {
+        if (happiness === undefined || happiness === null) happiness = 100;
+        const h = Phaser.Math.Clamp(happiness, 0, 100) / 100;
+
+        // # Interpolate from red (h=0) to yellow (h=0.5) to green (h=1)
+        let red, green;
+        if (h < 0.5) {
+            // # from red to yellow
+            red = 255;
+            green = Math.floor(255 * (h * 2));
+        } else {
+            // # from yellow to green
+            red = Math.floor(255 * (2 * (1 - h)));
+            green = 255;
+        }
+        const blue = 0;
+
+        // # Combine into a single hex value for Phaser tint
+        return (red << 16) + (green << 8) + blue;
+    }
+
     // # Main function to draw everything on the map
     drawMap() {
         this.mapObjects.forEach(obj => obj.destroy());
@@ -217,11 +240,23 @@ class MapScene extends Phaser.Scene {
                     
                     tooltipText = `${data.cityName}\nOwner: ${data.ownerUsername || 'Unclaimed'}\nPoints: ${points.toLocaleString()}`;
                     
-                    if (data.ownerId === this.auth.currentUser.uid) gameObject.setTint(0xffff00);
-                    else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) gameObject.setTint(0x00aaff);
-                    else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) gameObject.setTint(0x00ff00);
-                    else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) gameObject.setTint(0xff0000);
-                    else gameObject.setTint(0xffa500);
+                    // # Determine city color based on diplomatic status
+                    if (data.ownerId === this.auth.currentUser.uid) {
+                        // # Yellow for player's own cities
+                        gameObject.setTint(0xffff00);
+                    } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
+                        // # Blue for members of the same alliance
+                        gameObject.setTint(0x00aaff);
+                    } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
+                        // # Green for allied alliances
+                        gameObject.setTint(0x00ff00);
+                    } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
+                        // # Red for enemy alliances
+                        gameObject.setTint(0xff0000);
+                    } else {
+                        // # Orange for neutral players (default)
+                        gameObject.setTint(0xffa500);
+                    }
                 } else {
                     gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
                     gameObject.fillStyle(0xcccccc, 0.6);
@@ -237,8 +272,11 @@ class MapScene extends Phaser.Scene {
                 gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', (data.level || 1) - 1).setInteractive().setScale(this.iconScales.village);
 
                 if (this.props.conqueredVillages && this.props.conqueredVillages[data.id]) {
-                    gameObject.setTint(0x90ee90);
-                    tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(this.props.conqueredVillages[data.id].happiness || 100)}%`;
+                    const villageInfo = this.props.conqueredVillages[data.id];
+                    const happiness = villageInfo.happiness !== undefined ? villageInfo.happiness : 100;
+                    const color = this.getHappinessColor(happiness);
+                    gameObject.setTint(color);
+                    tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(happiness)}%`;
                 } else {
                     tooltipText = `Village: ${data.name}\nLevel: ${data.level || 1}`;
                 }
@@ -470,3 +508,4 @@ const PhaserMap = (props) => {
 };
 
 export default React.memo(PhaserMap);
+

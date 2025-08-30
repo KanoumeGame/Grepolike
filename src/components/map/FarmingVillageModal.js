@@ -484,12 +484,20 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const maxTradeAmount = baseVillageData && gameState ? Math.min(gameState.resources[baseVillageData.demands] || 0, Math.floor((baseVillageData.resources?.[baseVillageData.supplies] || 0) * (baseVillageData.tradeRatio || 1)), marketCapacity || 0) : 0;
     const plunderCooldownEndTime = village.lastPlundered ? new Date(village.lastPlundered.toDate().getTime() + 20 * 60 * 1000) : null;
     
+    // # gets a text color based on happiness
+    const getHappinessTextColor = (happiness) => {
+        if (happiness === undefined || happiness === null) happiness = 100;
+        if (happiness > 70) return 'text-green-400';
+        if (happiness > 40) return 'text-yellow-400';
+        return 'text-red-400';
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" onClick={onClose}>
             <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-yellow-400">{`Farming Village: ${baseVillageData?.name || village.name} (Level ${village.level})`}</h2>
-                    <h3 className="text-xl font-semibold text-white">Happiness: <span className="text-green-400">{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                    <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
                 </div>
                 <div className="flex border-b border-gray-600 my-4">
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>

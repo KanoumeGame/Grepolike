@@ -1,10 +1,10 @@
 // src/components/MapView.js
-import React, { useMemo, useCallback, useEffect, useState, useRef } from 'react';
+import React, { useMemo,  useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
 import { db } from '../firebase/config';
-import { doc, onSnapshot, collection, query, where, getDocs, updateDoc, writeBatch, serverTimestamp, getDoc } from 'firebase/firestore';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import SidebarNav from './map/SidebarNav';
 import TopBar from './map/TopBar';
 import MapModals from './map/MapModals';
@@ -46,7 +46,7 @@ const MapView = ({
     onOpenNotes,
 }) => {
     const { currentUser, userProfile } = useAuth();
-    const { worldState, gameState, setGameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins, activeCityId, playerCityPoints } = useGame();
+    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
     const { playerAlliance } = useAlliance();
     const viewportRef = useRef(null);
     const [message, setMessage] = useState('');
@@ -185,6 +185,22 @@ const MapView = ({
         return getProductionRates(gameState.buildings);
     }, [gameState, getProductionRates]);
 
+    // # Logic to determine which alliance controls which island
+    useEffect(() => {
+        if (!worldState?.islands || !allCitySlots) return;
+        const islandControl = {};
+        worldState.islands.forEach(island => {
+            const citiesOnIsland = Object.values(allCitySlots).filter(slot => slot.islandId === island.id);
+            if (citiesOnIsland.length > 0 && citiesOnIsland.every(city => city.ownerId)) {
+                const firstCityAlliance = citiesOnIsland[0].alliance;
+                if (firstCityAlliance && citiesOnIsland.every(city => city.alliance === firstCityAlliance)) {
+                    islandControl[island.id] = firstCityAlliance;
+                }
+            }
+        });
+        setControlledIslands(islandControl);
+    }, [worldState, allCitySlots]);
+
     // # Logic to find wonder spots
     useEffect(() => {
         if (!worldState?.islands || !allCitySlots || !villages) return;
@@ -202,6 +218,11 @@ const MapView = ({
 
      // # Wonder click handlers
     const handleWonderSpotClick = (spotData) => {
+        const controllingAllianceTag = controlledIslands[spotData.islandId];
+        if (!playerAlliance || playerAlliance.tag !== controllingAllianceTag) {
+            setMessage("Your alliance must control all cities on this island to build a wonder.");
+            return;
+        }
         if (playerAlliance?.leader?.uid !== currentUser.uid) {
             setMessage("Only the alliance leader can begin construction of a wonder.");
             return;
@@ -299,6 +320,7 @@ const MapView = ({
                                 onWonderSpotClick={handleWonderSpotClick}
                                 onConstructingWonderClick={handleConstructingWonderClick}
                                 panToCoords={panToCoords}
+                                controlledIslands={controlledIslands}
                             />
                        )}
                     </div>
@@ -344,4 +366,3 @@ const MapView = ({
     );
 };
 export default MapView;
-
