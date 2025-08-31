@@ -7756,6 +7756,7 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
     const [activeTab, setActiveTab] = useState('heroes');
     const [selectedHeroId, setSelectedHeroId] = useState(Object.keys(heroesConfig)[0]);
     const [selectedAgentId, setSelectedAgentId] = useState(Object.keys(agentsConfig)[0]);
+    const [isAssigning, setIsAssigning] = useState(false);
     const { heroes = {}, agents = {}, activeSkills = {} } = cityGameState;
     const { activeCityId } = useGame();
     const altarRef = useRef(null);
@@ -7820,7 +7821,15 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
 
     const handleAssign = (e, heroId) => {
         e.stopPropagation();
-        onAssignHero(heroId);
+        if (isAssigning) return;
+        setIsAssigning(true);
+        onAssignHero(heroId)
+            .catch((err) => {
+                console.error("Assign hero failed:", err);
+            })
+            .finally(() => {
+                setIsAssigning(false);
+            });
     };
 
     const handleUnassign = (e, heroId) => {
@@ -7922,8 +7931,8 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
                                 </button>
                             )}
                             {heroes[selectedHeroId] && !isHeroInThisCity && !heroMovement && !isWounded && !isHeroCaptured && (
-                                <button className="recruit-btn" onClick={(e) => handleAssign(e, selectedHeroId)}>
-                                    Assign to this City
+                                <button className="recruit-btn" onClick={(e) => handleAssign(e, selectedHeroId)} disabled={isAssigning}>
+                                    {isAssigning ? 'Assigning...' : 'Assign to this City'}
                                 </button>
                             )}
                             {heroes[selectedHeroId] && isHeroInThisCity && !isWounded && (
@@ -29822,12 +29831,11 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
         }
     };
 
-    const onAssignHero = async (heroId) => {
+    const onAssignHero = (heroId) => {
         const cityDocRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'cities', activeCityId);
         const newMovementRef = doc(collection(db, 'worlds', worldId, 'movements'));
     
-        try {
-            // # Check for incoming hero assignments to prevent race conditions
+        return runTransaction(db, async (transaction) => {
             const movementsRef = collection(db, 'worlds', worldId, 'movements');
             const q = query(movementsRef, where('type', '==', 'assign_hero'), where('targetCityId', '==', activeCityId));
             const incomingHeroMovements = await getDocs(q);
@@ -29835,43 +29843,43 @@ export const useHeroActions = (cityGameState, saveGameState, setMessage) => {
                 throw new Error("A hero is already on their way to this city.");
             }
 
-            await runTransaction(db, async (transaction) => {
-                const cityDoc = await transaction.get(cityDocRef);
-                if (!cityDoc.exists()) throw new Error("City data not found.");
+            const cityDoc = await transaction.get(cityDocRef);
+            if (!cityDoc.exists()) throw new Error("City data not found.");
     
-                const cityData = cityDoc.data();
-                const heroes = cityData.heroes || {};
+            const cityData = cityDoc.data();
+            const heroes = cityData.heroes || {};
     
-                for (const hId in heroes) {
-                    if (heroes[hId].cityId === activeCityId) {
-                        throw new Error("Another hero is already stationed in this city.");
-                    }
+            for (const hId in heroes) {
+                if (heroes[hId].cityId === activeCityId) {
+                    throw new Error("Another hero is already stationed in this city.");
                 }
+            }
     
-                const distance = calculateDistance({ x: 0, y: 0 }, { x: cityData.x, y: cityData.y });
-                const travelSeconds = calculateTravelTime(distance, 10);
-                const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
+            const distance = calculateDistance({ x: 0, y: 0 }, { x: cityData.x, y: cityData.y });
+            const travelSeconds = calculateTravelTime(distance, 10);
+            const arrivalTime = new Date(Date.now() + travelSeconds * 1000);
     
-                const movementData = {
-                    type: 'assign_hero',
-                    status: 'moving',
-                    hero: heroId,
-                    originCityId: null,
-                    originCoords: { x: -1, y: -1 },
-                    targetCityId: activeCityId,
-                    targetCoords: { x: cityData.x, y: cityData.y },
-                    targetOwnerId: currentUser.uid,
-                    departureTime: serverTimestamp(),
-                    arrivalTime: arrivalTime,
-                    involvedParties: [currentUser.uid]
-                };
+            const movementData = {
+                type: 'assign_hero',
+                status: 'moving',
+                hero: heroId,
+                originCityId: null,
+                originCoords: { x: -1, y: -1 },
+                targetCityId: activeCityId,
+                targetCoords: { x: cityData.x, y: cityData.y },
+                targetOwnerId: currentUser.uid,
+                departureTime: serverTimestamp(),
+                arrivalTime: arrivalTime,
+                involvedParties: [currentUser.uid]
+            };
     
-                transaction.set(newMovementRef, movementData);
-            });
+            transaction.set(newMovementRef, movementData);
+        }).then(() => {
             setMessage(`${heroesConfig[heroId].name} is on their way to this city.`);
-        } catch (error) {
+        }).catch((error) => {
             setMessage(`Failed to assign hero: ${error.message}`);
-        }
+            throw error;
+        });
     };
 
     const onUnassignHero = async (heroId) => {
