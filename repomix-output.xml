@@ -17419,9 +17419,17 @@ class MapScene extends Phaser.Scene {
             case 'city':
                 if (data.ownerId) {
                     const points = this.props.cityPoints[data.slotId] || 0;
+                    // # Determine city frame based on points for a visual progression
                     let frame = 0;
-                    if (points >= 2000) frame = 1;
-                    if (points > 10000) frame = 2;
+                    if (points >= 10000) {
+                        frame = 4;
+                    } else if (points >= 7500) {
+                        frame = 3;
+                    } else if (points >= 3000) {
+                        frame = 2;
+                    } else if (points >= 1000) {
+                        frame = 1;
+                    }
                     gameObject = this.add.sprite(baseProps.x, baseProps.y, 'citySprite', frame).setInteractive().setScale(this.iconScales.city);
                     
                     tooltipText = `${data.cityName}\nOwner: ${data.ownerUsername || 'Unclaimed'}\nPoints: ${points.toLocaleString()}`;
@@ -17449,14 +17457,20 @@ class MapScene extends Phaser.Scene {
                 gameObject.on('pointerdown', (pointer) => this.props.onCitySlotClick(createFakeEvent(pointer), data));
                 break;
             case 'village':
-                gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', (data.level || 1) - 1).setInteractive().setScale(this.iconScales.village);
-                if (this.props.conqueredVillages && this.props.conqueredVillages[data.id]) {
-                    const villageInfo = this.props.conqueredVillages[data.id];
+                // # Correctly determine the village level, especially for conquered villages
+                const isConquered = this.props.conqueredVillages && this.props.conqueredVillages[data.id];
+                const villageInfo = isConquered ? this.props.conqueredVillages[data.id] : data;
+                const level = villageInfo.level || 1;
+                
+                // # Set the sprite frame based on the village level (frame index is level - 1)
+                gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', level - 1).setInteractive().setScale(this.iconScales.village);
+                
+                if (isConquered) {
                     const happiness = villageInfo.happiness !== undefined ? villageInfo.happiness : 100;
                     gameObject.setTint(this.getHappinessColor(happiness));
                     tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(happiness)}%`;
                 } else {
-                    tooltipText = `Village: ${data.name}\nLevel: ${data.level || 1}`;
+                    tooltipText = `Village: ${data.name}\nLevel: ${level}`;
                 }
                 gameObject.on('pointerdown', (pointer) => this.props.onVillageClick(createFakeEvent(pointer), data));
                 break;
