@@ -31,6 +31,7 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
     const [activeTab, setActiveTab] = useState('heroes');
     const [selectedHeroId, setSelectedHeroId] = useState(Object.keys(heroesConfig)[0]);
     const [selectedAgentId, setSelectedAgentId] = useState(Object.keys(agentsConfig)[0]);
+    const [isAssigning, setIsAssigning] = useState(false);
     const { heroes = {}, agents = {}, activeSkills = {} } = cityGameState;
     const { activeCityId } = useGame();
     const altarRef = useRef(null);
@@ -95,7 +96,15 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
 
     const handleAssign = (e, heroId) => {
         e.stopPropagation();
-        onAssignHero(heroId);
+        if (isAssigning) return;
+        setIsAssigning(true);
+        onAssignHero(heroId)
+            .catch((err) => {
+                console.error("Assign hero failed:", err);
+            })
+            .finally(() => {
+                setIsAssigning(false);
+            });
     };
 
     const handleUnassign = (e, heroId) => {
@@ -197,8 +206,8 @@ const HeroesAltar = ({ cityGameState, onRecruitHero, onActivateSkill, onClose, o
                                 </button>
                             )}
                             {heroes[selectedHeroId] && !isHeroInThisCity && !heroMovement && !isWounded && !isHeroCaptured && (
-                                <button className="recruit-btn" onClick={(e) => handleAssign(e, selectedHeroId)}>
-                                    Assign to this City
+                                <button className="recruit-btn" onClick={(e) => handleAssign(e, selectedHeroId)} disabled={isAssigning}>
+                                    {isAssigning ? 'Assigning...' : 'Assign to this City'}
                                 </button>
                             )}
                             {heroes[selectedHeroId] && isHeroInThisCity && !isWounded && (

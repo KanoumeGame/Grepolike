@@ -17395,7 +17395,7 @@ class MapScene extends Phaser.Scene {
     preload() {
         this.load.image('island1', island1);
         this.load.image('island2', island2);
-        this.load.spritesheet('citySprite', citySpriteSheet, { frameWidth: 220, frameHeight: 150 });
+        this.load.spritesheet('citySprite', citySpriteSheet, { frameWidth: 230, frameHeight: 160 });
         this.load.spritesheet('villageSprite', villageSpriteSheet, { frameWidth: 80, frameHeight: 60 });
         this.load.spritesheet('ruinSprite', ruinSpriteSheet, { frameWidth: 220, frameHeight: 190 });
         this.load.image('godTown', godTownImage);
