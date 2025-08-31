@@ -93,6 +93,7 @@ class MinimapScene extends Phaser.Scene {
         this.minimapCircle.fillCircle(minimapRadius, minimapRadius, minimapRadius);
         const mask = this.minimapCircle.createGeometryMask();
         this.minimap.setMask(mask);
+        this.minimapCircle.setVisible(false);
         
         // # UI elements like border, fixed on screen
         this.minimapUI = this.add.graphics().setDepth(101).setScrollFactor(0);
@@ -112,32 +113,8 @@ class MinimapScene extends Phaser.Scene {
         // # Center the minimap on the main camera's center and adjust zoom
         this.minimap.centerOn(mainCam.worldView.centerX, mainCam.worldView.centerY);
         this.minimap.setZoom(mainCam.zoom * 0.1); // Base zoom of 0.1, adjusted by main camera's zoom
-        
-        const minimapX = 10;
-        const minimapY = 70;
-        const minimapRadius = MINIMAP_SIZE / 2;
     
         this.minimapUI.clear();
-        
-        const centerX = minimapX + minimapRadius;
-        const centerY = minimapY + minimapRadius;
-
-        // # Draw a metallic-style border
-        // Outer shadow
-        this.minimapUI.lineStyle(2, 0x000000, 0.3);
-        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius + 1);
-
-        // Main silver part
-        this.minimapUI.lineStyle(4, 0xC0C0C0, 1); // Silver color
-        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius);
-
-        // Inner highlight
-        this.minimapUI.lineStyle(1.5, 0xFFFFFF, 0.8);
-        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius - 2);
-
-        // Inner shadow
-        this.minimapUI.lineStyle(1, 0x808080, 0.7);
-        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius - 3);
     }
     
     // # Draws all the static elements on the minimap
@@ -183,4 +160,3 @@ class MinimapScene extends Phaser.Scene {
 }
 
 export default MinimapScene;
-
