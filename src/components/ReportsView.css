@@ -20,7 +20,7 @@
     border: none;
     padding: 20px 35px 50px 35px; /* Added padding to fit content inside the background's border */
     position: fixed;
-    z-index: 50;
+    z-index: 1001;
 }
 .reports-header {
     display: flex;
