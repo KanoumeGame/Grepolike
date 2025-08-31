@@ -61,11 +61,12 @@ class MapScene extends Phaser.Scene {
 
     // # Create game objects and set up controls
     create() {
+        console.log('[MapScene] Create started.');
         // # Generate textures for movement arrows
         this.generateArrowTextures();
         this.setupCameraControls();
 
-        // Launch the minimap scene
+        console.log('[MapScene] Launching MinimapScene...');
         this.scene.launch('MinimapScene', { mainScene: this });
         
         // # Simple tooltip for hovering over map objects
@@ -77,13 +78,15 @@ class MapScene extends Phaser.Scene {
         
         // # Listen for prop updates from React
         this.game.events.on('updateProps', (newProps) => {
+            console.log('[MapScene] Received updateProps.');
             const isInitialUpdate = !this.props.worldState && newProps.worldState;
             this.props = newProps;
 
-            // Emit event for minimap to get props
+            console.log('[MapScene] Emitting updateMinimapProps.');
             this.events.emit('updateMinimapProps', newProps);
 
             if (isInitialUpdate) {
+                console.log('[MapScene] Initial prop update. Setting up world bounds and resize.');
                 // # This is the first time we're getting real props, so run the initial setup
                 const { worldState } = this.props;
                 this.add.tileSprite(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE, 'water')
@@ -98,6 +101,7 @@ class MapScene extends Phaser.Scene {
 
         // # Add a listener to redraw the map when zoom changes
         this.cameras.main.on('zoom', this.drawMap, this);
+        console.log('[MapScene] Create finished.');
     }
 
     // # Generate custom textures needed for the scene
@@ -530,3 +534,4 @@ const PhaserMap = (props) => {
 };
 
 export default React.memo(PhaserMap);
+
