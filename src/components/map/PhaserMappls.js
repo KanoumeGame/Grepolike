@@ -508,4 +508,3 @@ const PhaserMap = (props) => {
 };
 
 export default React.memo(PhaserMap);
-
