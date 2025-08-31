@@ -140,6 +140,7 @@ src/components/map/Countdown.js
 src/components/map/EmptyCityModal.js
 src/components/map/FarmingVillageModal.js
 src/components/map/GodTownModal.js
+src/components/map/MapImageViewer.js
 src/components/map/MapModals.js
 src/components/map/MovementItem.js
 src/components/map/MovementModal.css
@@ -11644,6 +11645,8 @@ const CityView = ({
     setCityModalState,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
+    isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -11713,6 +11716,8 @@ const CityView = ({
                 handleOpenEvents={handleOpenEvents}
                 onOpenHeroesAltar={() => openCityModal('isHeroesAltarOpen')}
                 onOpenManagementPanel={onOpenManagementPanel}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
             />
             <div className="h-full w-full flex flex-col">
                 <TopBar
@@ -11860,6 +11865,7 @@ import unitConfig from '../gameData/units.json';
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
+import MapImageViewer from './map/MapImageViewer';
 
 let worldDataCache = {
     villages: null,
@@ -11881,7 +11887,7 @@ const getWarehouseCapacity = (level) => {
 };
 
 const Game = ({ onBackToWorlds }) => {
-    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData } = useGame();
+    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData, worldState } = useGame();
     const { currentUser, userProfile } = useAuth();
     const { acceptAllianceInvitation, declineAllianceInvitation, sendAllianceInvitation } = useAlliance();
     const [view, setView] = useState('city');
@@ -11900,6 +11906,9 @@ const Game = ({ onBackToWorlds }) => {
     const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); //  State for ManagementPanel
     const [isNotesOpen, setIsNotesOpen] = useState(false); //  State for Notes
     const [message, setMessage] = useState('');
+    const [isGeneratingMap, setIsGeneratingMap] = useState(false);
+    const [mapImageData, setMapImageData] = useState({ url: null, name: '' });
+
 
     useMovementProcessor(worldId);
     const { modalState, openModal, closeModal } = useModalState();
@@ -12199,6 +12208,79 @@ const Game = ({ onBackToWorlds }) => {
         openModal('eventTrigger');
     };
 
+    const handleGenerateMap = async () => {
+        const world = worldState;
+        if (!world) {
+            setMessage("World data is not available.");
+            return;
+        }
+        if (isGeneratingMap) return;
+        setIsGeneratingMap(true);
+        setMessage(`Generating map for ${world.name}...`);
+        try {
+            const TILE_SCALE = 5;
+            const citySlotsRef = collection(db, 'worlds', world.id, 'citySlots');
+            const alliancesRef = collection(db, 'worlds', world.id, 'alliances');
+            
+            const [citySlotsSnap, alliancesSnap] = await Promise.all([getDocs(citySlotsRef), getDocs(alliancesRef)]);
+            
+            const citySlots = citySlotsSnap.docs.map(doc => doc.data());
+            const alliances = alliancesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const allianceColorMap = {};
+            const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFA1", "#FFFF33", "#FF9633"];
+            let colorIndex = 0;
+
+            alliances.forEach(ally => {
+                allianceColorMap[ally.tag] = colors[colorIndex % colors.length];
+                colorIndex++;
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = world.width * TILE_SCALE;
+            canvas.height = world.height * TILE_SCALE;
+            const ctx = canvas.getContext('2d');
+
+            // Draw background
+            ctx.fillStyle = '#1e3a8a'; // Deep blue for water
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw islands
+            ctx.fillStyle = '#228B22'; // Forest green for land
+            world.islands.forEach(island => {
+                ctx.beginPath();
+                ctx.arc(island.x * TILE_SCALE, island.y * TILE_SCALE, island.radius * TILE_SCALE, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw cities
+            citySlots.forEach(slot => {
+                if (slot.ownerId) {
+                    let color = '#A52A2A'; // Brown for no alliance
+                    if (slot.alliance && allianceColorMap[slot.alliance]) {
+                        color = allianceColorMap[slot.alliance];
+                    }
+                    ctx.beginPath();
+                    ctx.arc(slot.x * TILE_SCALE, slot.y * TILE_SCALE, TILE_SCALE * 0.4, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            });
+            
+            setMapImageData({ url: canvas.toDataURL(), name: `${world.id}-map.png` });
+            setMessage(`Map for ${world.name} generated!`);
+
+        } catch (error) {
+            console.error("Error generating map:", error);
+            setMessage("Failed to generate map.");
+        } finally {
+            setIsGeneratingMap(false);
+        }
+    };
+
     const handleAction = (type, data) => {
         closeModal('reports');
         if (viewingReportId) setViewingReportId(null);
@@ -12262,6 +12344,13 @@ const Game = ({ onBackToWorlds }) => {
     return (
         <div className="w-full h-screen bg-gray-900 text-white relative">
             <Modal message={message} onClose={() => setMessage('')} />
+            {mapImageData.url && (
+                <MapImageViewer
+                    imageUrl={mapImageData.url}
+                    worldName={mapImageData.name}
+                    onClose={() => setMapImageData({ url: null, name: '' })}
+                />
+            )}
             {view === 'city' && (
                 <CityView
                     showMap={showMap}
@@ -12288,6 +12377,8 @@ const Game = ({ onBackToWorlds }) => {
                     setCityModalState={setCityModalState}
                     onOpenManagementPanel={() => setIsManagementPanelOpen(true)}
                     onOpenNotes={() => setIsNotesOpen(true)}
+                    onGenerateMap={handleGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             )}
             {view === 'map' && (
@@ -12322,6 +12413,8 @@ const Game = ({ onBackToWorlds }) => {
                     setInitialMapAction={setInitialMapAction}
                     onOpenManagementPanel={() => setIsManagementPanelOpen(true)}
                     onOpenNotes={() => setIsNotesOpen(true)}
+                    onGenerateMap={handleGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             )}
             {/* Global Modals */}
@@ -15012,6 +15105,31 @@ const GodTownModal = ({ townId, onClose, onAttack }) => {
 export default GodTownModal;
 </file>
 
+<file path="src/components/map/MapImageViewer.js">
+import React from 'react';
+
+const MapImageViewer = ({ imageUrl, worldName, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-80" onClick={onClose}>
+            <div className="bg-gray-800 rounded-lg shadow-xl p-4 w-11/12 h-5/6 max-w-6xl border-2 border-gray-600 flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-title text-2xl text-white">{worldName.replace('-map.png', '')} Map</h3>
+                    <div>
+                        <a href={imageUrl} download={worldName} className="btn btn-confirm mr-4">Download</a>
+                        <button onClick={onClose} className="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
+                    </div>
+                </div>
+                <div className="flex-grow overflow-auto">
+                    <img src={imageUrl} alt="World Map" className="max-w-full h-auto mx-auto" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default MapImageViewer;
+</file>
+
 <file path="src/components/map/MapModals.js">
 // src/components/map/MapModals.js
 import React, { useMemo } from 'react';
@@ -17078,6 +17196,8 @@ class MapScene extends Phaser.Scene {
         this.movementObjects = new Map();
         this.tooltip = null;
         this.auth = {};
+        this.DOTS_ZOOM_THRESHOLD = 0.25; // # Zoom level to switch to dots view
+        this.initialResizeDone = false; // # Flag to handle initial camera setup
         // # Centralized settings for icon sizes. Adjust these values to resize map icons.
         this.iconScales = {
             city: 0.3,
@@ -17112,26 +17232,8 @@ class MapScene extends Phaser.Scene {
 
     // # Create game objects and set up controls
     create() {
-        const { worldState } = this.props;
-
-        if (worldState) {
-            // # Add a tiling sprite for the water background
-            this.add.tileSprite(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE, 'water')
-                .setOrigin(0, 0)
-                .setDepth(-1);
-
-            // # Set the boundaries of the camera to the world size
-            this.cameras.main.setBounds(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE);
-            this.cameras.main.setZoom(0.5); 
-            
-            // # Add resize handler to fix initial view and zoom constraints
-            this.scale.on('resize', this.resize, this);
-            this.resize(this.scale.gameSize);
-        }
-
         // # Generate textures for movement arrows
         this.generateArrowTextures();
-        this.drawMap();
         this.setupCameraControls();
 
         // # Simple tooltip for hovering over map objects
@@ -17152,12 +17254,14 @@ class MapScene extends Phaser.Scene {
                     .setOrigin(0, 0)
                     .setDepth(-1);
                 this.cameras.main.setBounds(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE);
-                this.cameras.main.setZoom(0.5);
                 this.scale.on('resize', this.resize, this);
                 this.resize(this.scale.gameSize);
             }
             this.drawMap();
         });
+
+        // # Add a listener to redraw the map when zoom changes
+        this.cameras.main.on('zoom', this.drawMap, this);
     }
 
     // # Generate custom textures needed for the scene
@@ -17179,14 +17283,22 @@ class MapScene extends Phaser.Scene {
     resize(gameSize) {
         this.cameras.main.width = gameSize.width;
         this.cameras.main.height = gameSize.height;
-
+    
         const { worldState } = this.props;
         if (worldState) {
             const worldWidth = worldState.width * TILE_SIZE;
             const worldHeight = worldState.height * TILE_SIZE;
+            // # Calculate the minimum zoom to ensure the map always fills the viewport
             const minZoom = Math.max(gameSize.width / worldWidth, gameSize.height / worldHeight);
             this.cameras.main.minZoom = minZoom;
-            if (this.cameras.main.zoom < minZoom) {
+    
+            // # On the very first resize/load, fit the map to the screen.
+            if (!this.initialResizeDone) {
+                this.cameras.main.setZoom(minZoom);
+                this.initialResizeDone = true;
+            }
+            // # If the window is resized and zoom is now too low, adjust it
+            else if (this.cameras.main.zoom < minZoom) {
                 this.cameras.main.setZoom(minZoom);
             }
         }
@@ -17219,7 +17331,7 @@ class MapScene extends Phaser.Scene {
         return (red << 16) + (green << 8) + blue;
     }
 
-    // # Main function to draw everything on the map
+    // # Main function to draw everything on the map, handles both detailed and dot views
     drawMap() {
         this.mapObjects.forEach(obj => obj.destroy());
         this.mapObjects.clear();
@@ -17228,7 +17340,7 @@ class MapScene extends Phaser.Scene {
 
         if (!worldState) return;
 
-        // # Draw islands
+        // # Always draw islands first so they are in the background
         worldState.islands.forEach(island => {
             const islandImageKey = island.imageName === 'island_2.png' ? 'island2' : 'island1';
             const islandSprite = this.add.image(island.x * TILE_SIZE, island.y * TILE_SIZE, islandImageKey)
@@ -17237,14 +17349,54 @@ class MapScene extends Phaser.Scene {
             this.mapObjects.set(`island-${island.id}`, islandSprite);
         });
 
-        // # Draw all map objects
-        Object.values(combinedSlots || {}).forEach(slot => this.drawMapObject(slot, 'city'));
-        Object.values(villages || {}).forEach(village => this.drawMapObject(village, 'village'));
-        Object.values(ruins || {}).forEach(ruin => this.drawMapObject(ruin, 'ruin'));
-        Object.values(godTowns || {}).forEach(town => this.drawMapObject(town, 'god_town'));
-        Object.values(wonderSpots || {}).forEach(spot => this.drawMapObject(spot, 'wonder_spot'));
-        Object.values(allWonders || {}).forEach(wonder => this.drawMapObject(wonder, 'constructing_wonder'));
-        Object.values(visibleWreckages || {}).forEach(wreckage => this.drawMapObject(wreckage, 'wreckage'));
+        const isDotsView = this.cameras.main.zoom < this.DOTS_ZOOM_THRESHOLD;
+
+        const createFakeEvent = (pointer) => ({
+            currentTarget: { getBoundingClientRect: () => ({ left: pointer.x, top: pointer.y, right: pointer.x, bottom: pointer.y, width: 0, height: 0 }) },
+            stopPropagation: () => {},
+        });
+
+        if (isDotsView) {
+            // # Draw circles for occupied cities only
+            Object.values(combinedSlots || {}).forEach(slot => {
+                if (slot.ownerId) {
+                    const key = `dot-${slot.id}`;
+                    const x = slot.x * TILE_SIZE + TILE_SIZE / 2;
+                    const y = slot.y * TILE_SIZE + TILE_SIZE / 2;
+                    const dot = this.add.graphics({ x: x, y: y });
+
+                    let color = 0xffa500; // # Neutral (Brown/Orange)
+                    if (slot.ownerId === this.auth.currentUser.uid) {
+                        color = 0xffff00; // # Own city (Yellow)
+                    } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
+                        color = 0x00ff00; // # Ally/Same Alliance (Green)
+                    } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
+                        color = 0xff0000; // # Enemy (Red)
+                    }
+                    
+                    dot.fillStyle(color, 0.9);
+                    dot.fillCircle(0, 0, TILE_SIZE * 0.4);
+                    dot.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE * 0.4), Phaser.Geom.Circle.Contains).setDepth(2);
+
+                    const tooltipText = `${slot.cityName}\nOwner: ${slot.ownerUsername || 'Unclaimed'}`;
+                    dot.on('pointerdown', (pointer) => this.props.onCitySlotClick(createFakeEvent(pointer), slot));
+                    dot.on('pointerover', (pointer) => {
+                        this.tooltip.setText(tooltipText).setPosition(pointer.worldX, pointer.worldY - 20).setVisible(true);
+                    });
+                    dot.on('pointerout', () => this.tooltip.setVisible(false));
+                    this.mapObjects.set(key, dot);
+                }
+            });
+        } else {
+            // # Draw detailed map objects
+            Object.values(combinedSlots || {}).forEach(slot => this.drawMapObject(slot, 'city'));
+            Object.values(villages || {}).forEach(village => this.drawMapObject(village, 'village'));
+            Object.values(ruins || {}).forEach(ruin => this.drawMapObject(ruin, 'ruin'));
+            Object.values(godTowns || {}).forEach(town => this.drawMapObject(town, 'god_town'));
+            Object.values(wonderSpots || {}).forEach(spot => this.drawMapObject(spot, 'wonder_spot'));
+            Object.values(allWonders || {}).forEach(wonder => this.drawMapObject(wonder, 'constructing_wonder'));
+            Object.values(visibleWreckages || {}).forEach(wreckage => this.drawMapObject(wreckage, 'wreckage'));
+        }
     }
 
     // # Helper to draw a single map object
@@ -17256,32 +17408,12 @@ class MapScene extends Phaser.Scene {
         let gameObject;
         let tooltipText = '';
 
-        const baseProps = {
-            key: key,
-            x: x,
-            y: y,
-            details: data,
-        };
+        const baseProps = { key, x, y, details: data };
 
-        const createFakeEvent = (pointer) => {
-            const rect = this.game.canvas.getBoundingClientRect();
-            const screenX = rect.left + pointer.x;
-            const screenY = rect.top + pointer.y;
-
-            return {
-                currentTarget: {
-                    getBoundingClientRect: () => ({
-                        left: screenX,
-                        top: screenY,
-                        right: screenX,
-                        bottom: screenY,
-                        width: 0,
-                        height: 0,
-                    }),
-                },
-                stopPropagation: () => {},
-            };
-        };
+        const createFakeEvent = (pointer) => ({
+            currentTarget: { getBoundingClientRect: () => ({ left: pointer.x, top: pointer.y, right: pointer.x, bottom: pointer.y, width: 0, height: 0 }) },
+            stopPropagation: () => {},
+        });
 
         switch (type) {
             case 'city':
@@ -17294,22 +17426,16 @@ class MapScene extends Phaser.Scene {
                     
                     tooltipText = `${data.cityName}\nOwner: ${data.ownerUsername || 'Unclaimed'}\nPoints: ${points.toLocaleString()}`;
                     
-                    // # Determine city color based on diplomatic status
                     if (data.ownerId === this.auth.currentUser.uid) {
-                        // # Yellow for player's own cities
                         gameObject.setTint(0xffff00);
                     } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
-                        // # Blue for members of the same alliance
-                        gameObject.setTint(0x00aaff);
+                        gameObject.setTint(0x00ff00); // # Changed to Green for same alliance
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
-                        // # Green for allied alliances
                         gameObject.setTint(0x00ff00);
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
-                        // # Red for enemy alliances
                         gameObject.setTint(0xff0000);
                     } else {
-                        // # Orange for neutral players (default)
-                        gameObject.setTint(0xffa500);
+                        gameObject.setTint(0xffa500); // # Neutral is Brown/Orange
                     }
                 } else {
                     gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
@@ -17324,50 +17450,44 @@ class MapScene extends Phaser.Scene {
                 break;
             case 'village':
                 gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', (data.level || 1) - 1).setInteractive().setScale(this.iconScales.village);
-
                 if (this.props.conqueredVillages && this.props.conqueredVillages[data.id]) {
                     const villageInfo = this.props.conqueredVillages[data.id];
                     const happiness = villageInfo.happiness !== undefined ? villageInfo.happiness : 100;
-                    const color = this.getHappinessColor(happiness);
-                    gameObject.setTint(color);
+                    gameObject.setTint(this.getHappinessColor(happiness));
                     tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(happiness)}%`;
                 } else {
                     tooltipText = `Village: ${data.name}\nLevel: ${data.level || 1}`;
                 }
                 gameObject.on('pointerdown', (pointer) => this.props.onVillageClick(createFakeEvent(pointer), data));
                 break;
-            case 'ruin':
-                const isOccupied = data.ownerId && data.ownerId !== 'ruins';
-                gameObject = this.add.sprite(baseProps.x, baseProps.y, 'ruinSprite', isOccupied ? 1 : 0).setInteractive().setScale(this.iconScales.ruin);
-
-                tooltipText = isOccupied ? `Conquered Ruin\nOwner: ${data.ownerUsername}` : `Ruin: ${data.name}`;
-                gameObject.on('pointerdown', (pointer) => this.props.onRuinClick(createFakeEvent(pointer), data));
-                break;
-            case 'god_town':
-                gameObject = this.add.image(baseProps.x, baseProps.y, 'godTown').setInteractive().setScale(this.iconScales.god_town);
-                tooltipText = data.stage === 'ruins' ? `Strange Ruins` : `God Town: ${data.name}`;
-                gameObject.on('pointerdown', () => this.props.onGodTownClick(data.id));
-                break;
-            case 'wonder_spot':
-                 gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
-                 gameObject.fillStyle(0xFFFF00, 0.5);
-                 gameObject.fillCircle(0, 0, TILE_SIZE / 2);
-                 gameObject.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE / 2), Phaser.Geom.Circle.Contains);
-                 tooltipText = "Build an Alliance Wonder";
-                 gameObject.on('pointerdown', () => this.props.onWonderSpotClick(data));
-                break;
-            case 'constructing_wonder':
-                gameObject = this.add.image(baseProps.x, baseProps.y, 'constructingWonder').setInteractive().setScale(this.iconScales.constructing_wonder);
-                tooltipText = `Constructing Wonder\nAlliance: ${data.allianceName}`;
-                gameObject.on('pointerdown', () => this.props.onConstructingWonderClick(data));
-                break;
-            case 'wreckage':
-                 gameObject = this.add.image(baseProps.x, baseProps.y, 'wreck').setInteractive().setScale(this.iconScales.wreckage);
-                 const resourceType = Object.keys(data.resources)[0];
-                 tooltipText = `Sea Resources\n${resourceType}: ${data.resources[resourceType].toLocaleString()}`;
-                 gameObject.on('pointerdown', (pointer) => this.props.onWreckageClick(createFakeEvent(pointer), data));
-                break;
             default:
+                 // # Logic for other types remains the same as original
+                if (type === 'ruin') {
+                    const isOccupied = data.ownerId && data.ownerId !== 'ruins';
+                    gameObject = this.add.sprite(baseProps.x, baseProps.y, 'ruinSprite', isOccupied ? 1 : 0).setInteractive().setScale(this.iconScales.ruin);
+                    tooltipText = isOccupied ? `Conquered Ruin\nOwner: ${data.ownerUsername}` : `Ruin: ${data.name}`;
+                    gameObject.on('pointerdown', (pointer) => this.props.onRuinClick(createFakeEvent(pointer), data));
+                } else if (type === 'god_town') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'godTown').setInteractive().setScale(this.iconScales.god_town);
+                    tooltipText = data.stage === 'ruins' ? `Strange Ruins` : `God Town: ${data.name}`;
+                    gameObject.on('pointerdown', () => this.props.onGodTownClick(data.id));
+                } else if (type === 'wonder_spot') {
+                    gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
+                    gameObject.fillStyle(0xFFFF00, 0.5);
+                    gameObject.fillCircle(0, 0, TILE_SIZE / 2);
+                    gameObject.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE / 2), Phaser.Geom.Circle.Contains);
+                    tooltipText = "Build an Alliance Wonder";
+                    gameObject.on('pointerdown', () => this.props.onWonderSpotClick(data));
+                } else if (type === 'constructing_wonder') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'constructingWonder').setInteractive().setScale(this.iconScales.constructing_wonder);
+                    tooltipText = `Constructing Wonder\nAlliance: ${data.allianceName}`;
+                    gameObject.on('pointerdown', () => this.props.onConstructingWonderClick(data));
+                } else if (type === 'wreckage') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'wreck').setInteractive().setScale(this.iconScales.wreckage);
+                    const resourceType = Object.keys(data.resources)[0];
+                    tooltipText = `Sea Resources\n${resourceType}: ${data.resources[resourceType].toLocaleString()}`;
+                    gameObject.on('pointerdown', (pointer) => this.props.onWreckageClick(createFakeEvent(pointer), data));
+                }
                 break;
         }
 
@@ -17378,9 +17498,7 @@ class MapScene extends Phaser.Scene {
                 this.tooltip.setPosition(pointer.worldX, pointer.worldY - 30);
                 this.tooltip.setVisible(true);
             });
-            gameObject.on('pointerout', () => {
-                this.tooltip.setVisible(false);
-            });
+            gameObject.on('pointerout', () => this.tooltip.setVisible(false));
             this.mapObjects.set(key, gameObject);
         }
     }
@@ -17802,7 +17920,7 @@ export default ScoutPanel;
 // src/components/map/SidebarNav.js
 import React from 'react';
 
-const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel }) => {
+const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel, onGenerateMap, isGeneratingMap }) => {
     
     const NavButton = ({ icon, text, onClick, notificationCount, glowing, disabled, title }) => (
         <button 
@@ -17838,6 +17956,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
             <NavButton icon="🏆" text="Leaderboard" onClick={onOpenLeaderboard} />
             <NavButton icon="👤" text="Profile" onClick={() => onOpenProfile()} />
             <NavButton icon="📊" text="Manager" onClick={onOpenManagementPanel} />
+            <NavButton icon="🌍" text="World Map" onClick={onGenerateMap} disabled={isGeneratingMap} title="Generate World Map Image" />
             <NavButton icon="⚙️" text="Settings" onClick={onOpenSettings} />
             {isAdmin && (
                 <>
@@ -18799,6 +18918,8 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
+    isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
@@ -19039,6 +19160,8 @@ const MapView = ({
                     isAllianceMember={!!playerAlliance}
                     handleOpenEvents={handleOpenEvents}
                     onOpenManagementPanel={onOpenManagementPanel}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
                 <div className="main-content flex-grow relative map-surface">
                     <TopBar
@@ -24238,9 +24361,9 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                 return;
             }
 
-            const worldWidth = 100;
-            const worldHeight = 100;
-            const islandCount = 4;
+            const worldWidth = 500;
+            const worldHeight = 500;
+            const islandCount = 25;
 
             // Generate all world data
             const islands = generateIslands(worldWidth, worldHeight, islandCount);
