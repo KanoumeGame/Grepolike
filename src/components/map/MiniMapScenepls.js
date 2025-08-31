@@ -76,8 +76,8 @@ class MinimapScene extends Phaser.Scene {
     createMinimap() {
         if (!this.mainScene.props.worldState) return;
     
-        const minimapX = 10;
-        const minimapY = 39;
+        const minimapX = 2;
+        const minimapY = 45;
         const minimapRadius = MINIMAP_SIZE / 2;
     
         // # New zoom logic for a "radar" style view

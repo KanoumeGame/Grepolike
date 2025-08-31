@@ -167,8 +167,8 @@
 /* Minimap Border Overlay */
 .minimap-border-overlay {
     position: absolute;
-    top: 39px;
-    left: 10px;
+    top: 45px;
+    left: 2px;
     width: 150px;
     height: 150px;
     border: 2px solid #C0C0C0; /* silver */
@@ -181,8 +181,8 @@
 /* New style for coordinate display */
 .minimap-coords-display {
     position: absolute;
-    top: 188px; /* 70px (minimap top) + 150px (minimap height) + 2px buffer */
-    left: 10px;
+    top: 194px; /* 70px (minimap top) + 150px (minimap height) + 2px buffer */
+    left: 2px;
     width: 150px;
     height: 39px;
     padding: 4px;
