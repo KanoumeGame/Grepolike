@@ -161,12 +161,15 @@ const MapView = ({
                     ...newSlots[pCity.slotId],
                     ...pCity,
                     ownerId: currentUser.uid,
-                    ownerUsername: userProfile.username
+                    ownerUsername: userProfile.username,
+                    // # FIX: Explicitly add the player's alliance tag to their own cities
+                    alliance: playerAlliance?.id, 
+                    allianceName: playerAlliance?.name
                 };
             }
         }
         return newSlots;
-    }, [allCitySlots, playerCities, currentUser.uid, userProfile.username]);
+    }, [allCitySlots, playerCities, currentUser.uid, userProfile.username, playerAlliance]);
 
     const handleOpenAlliance = () => openModal('alliance');
     
@@ -187,19 +190,27 @@ const MapView = ({
 
     // # Logic to determine which alliance controls which island
     useEffect(() => {
-        if (!worldState?.islands || !allCitySlots) return;
+        // # Use combinedSlots which includes up-to-date player city info
+        if (!worldState?.islands || !combinedSlots || Object.keys(combinedSlots).length === 0) return;
         const islandControl = {};
         worldState.islands.forEach(island => {
-            const citiesOnIsland = Object.values(allCitySlots).filter(slot => slot.islandId === island.id);
-            if (citiesOnIsland.length > 0 && citiesOnIsland.every(city => city.ownerId)) {
-                const firstCityAlliance = citiesOnIsland[0].alliance;
-                if (firstCityAlliance && citiesOnIsland.every(city => city.alliance === firstCityAlliance)) {
+            // # Use the fully merged combinedSlots data for the check
+            const allSlotsOnIsland = Object.values(combinedSlots).filter(slot => slot.islandId === island.id);
+            
+            // # An island can only be controlled if all plots are cities (no empty plots)
+            const hasEmptySlots = allSlotsOnIsland.some(slot => !slot.ownerId);
+
+            if (!hasEmptySlots && allSlotsOnIsland.length > 0) {
+                const firstCityAlliance = allSlotsOnIsland[0].alliance;
+                const allInSameAlliance = allSlotsOnIsland.every(city => city.alliance === firstCityAlliance);
+                // # and all cities belong to the same alliance
+                if (firstCityAlliance && allInSameAlliance) {
                     islandControl[island.id] = firstCityAlliance;
                 }
             }
         });
         setControlledIslands(islandControl);
-    }, [worldState, allCitySlots]);
+    }, [worldState, combinedSlots]); // # Dependency changed from allCitySlots to combinedSlots
 
     // # Logic to find wonder spots
     useEffect(() => {
@@ -219,6 +230,7 @@ const MapView = ({
      // # Wonder click handlers
     const handleWonderSpotClick = (spotData) => {
         const controllingAllianceTag = controlledIslands[spotData.islandId];
+        
         if (!playerAlliance || playerAlliance.tag !== controllingAllianceTag) {
             setMessage("Your alliance must control all cities on this island to build a wonder.");
             return;
@@ -366,3 +378,4 @@ const MapView = ({
     );
 };
 export default MapView;
+

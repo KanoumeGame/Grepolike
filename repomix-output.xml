@@ -14738,12 +14738,20 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const maxTradeAmount = baseVillageData && gameState ? Math.min(gameState.resources[baseVillageData.demands] || 0, Math.floor((baseVillageData.resources?.[baseVillageData.supplies] || 0) * (baseVillageData.tradeRatio || 1)), marketCapacity || 0) : 0;
     const plunderCooldownEndTime = village.lastPlundered ? new Date(village.lastPlundered.toDate().getTime() + 20 * 60 * 1000) : null;
     
+    // # gets a text color based on happiness
+    const getHappinessTextColor = (happiness) => {
+        if (happiness === undefined || happiness === null) happiness = 100;
+        if (happiness > 70) return 'text-green-400';
+        if (happiness > 40) return 'text-yellow-400';
+        return 'text-red-400';
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" onClick={onClose}>
             <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-yellow-400">{`Farming Village: ${baseVillageData?.name || village.name} (Level ${village.level})`}</h2>
-                    <h3 className="text-xl font-semibold text-white">Happiness: <span className="text-green-400">{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                    <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
                 </div>
                 <div className="flex border-b border-gray-600 my-4">
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>
@@ -17078,6 +17086,7 @@ class MapScene extends Phaser.Scene {
             god_town: 0.5,
             constructing_wonder: 0.5,
             wreckage: 0.5,
+            alliance_wonders: 0.5
         };
     }
 
@@ -17095,7 +17104,7 @@ class MapScene extends Phaser.Scene {
         this.load.spritesheet('villageSprite', villageSpriteSheet, { frameWidth: 80, frameHeight: 60 });
         this.load.spritesheet('ruinSprite', ruinSpriteSheet, { frameWidth: 220, frameHeight: 190 });
         this.load.image('godTown', godTownImage);
-        this.load.image('constructingWonder', constructingWonderImage);
+        this.load.image('constructingWonder', constructingWonderImage, { frameWidth: 50, frameHeight: 40 });
         this.load.image('wreck', wreckImage);
         this.load.image('water', waterImage); // Load water texture
         this.load.image('arrow', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAMCAQAAAAAdtPUAAAADklEQVR42mNkgANGQgwAANLQIwU7/zf2AAAAAElFTkSuQmCC');
@@ -17188,6 +17197,28 @@ class MapScene extends Phaser.Scene {
         this.updateMovements();
     }
 
+    // # gets a color based on happiness
+    getHappinessColor(happiness) {
+        if (happiness === undefined || happiness === null) happiness = 100;
+        const h = Phaser.Math.Clamp(happiness, 0, 100) / 100;
+
+        // # Interpolate from red (h=0) to yellow (h=0.5) to green (h=1)
+        let red, green;
+        if (h < 0.5) {
+            // # from red to yellow
+            red = 255;
+            green = Math.floor(255 * (h * 2));
+        } else {
+            // # from yellow to green
+            red = Math.floor(255 * (2 * (1 - h)));
+            green = 255;
+        }
+        const blue = 0;
+
+        // # Combine into a single hex value for Phaser tint
+        return (red << 16) + (green << 8) + blue;
+    }
+
     // # Main function to draw everything on the map
     drawMap() {
         this.mapObjects.forEach(obj => obj.destroy());
@@ -17263,11 +17294,23 @@ class MapScene extends Phaser.Scene {
                     
                     tooltipText = `${data.cityName}\nOwner: ${data.ownerUsername || 'Unclaimed'}\nPoints: ${points.toLocaleString()}`;
                     
-                    if (data.ownerId === this.auth.currentUser.uid) gameObject.setTint(0xffff00);
-                    else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) gameObject.setTint(0x00aaff);
-                    else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) gameObject.setTint(0x00ff00);
-                    else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) gameObject.setTint(0xff0000);
-                    else gameObject.setTint(0xffa500);
+                    // # Determine city color based on diplomatic status
+                    if (data.ownerId === this.auth.currentUser.uid) {
+                        // # Yellow for player's own cities
+                        gameObject.setTint(0xffff00);
+                    } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
+                        // # Blue for members of the same alliance
+                        gameObject.setTint(0x00aaff);
+                    } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
+                        // # Green for allied alliances
+                        gameObject.setTint(0x00ff00);
+                    } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
+                        // # Red for enemy alliances
+                        gameObject.setTint(0xff0000);
+                    } else {
+                        // # Orange for neutral players (default)
+                        gameObject.setTint(0xffa500);
+                    }
                 } else {
                     gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
                     gameObject.fillStyle(0xcccccc, 0.6);
@@ -17283,8 +17326,11 @@ class MapScene extends Phaser.Scene {
                 gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', (data.level || 1) - 1).setInteractive().setScale(this.iconScales.village);
 
                 if (this.props.conqueredVillages && this.props.conqueredVillages[data.id]) {
-                    gameObject.setTint(0x90ee90);
-                    tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(this.props.conqueredVillages[data.id].happiness || 100)}%`;
+                    const villageInfo = this.props.conqueredVillages[data.id];
+                    const happiness = villageInfo.happiness !== undefined ? villageInfo.happiness : 100;
+                    const color = this.getHappinessColor(happiness);
+                    gameObject.setTint(color);
+                    tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(happiness)}%`;
                 } else {
                     tooltipText = `Village: ${data.name}\nLevel: ${data.level || 1}`;
                 }
@@ -17777,7 +17823,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
     
     return (
         <div className="sidebar" onMouseDown={(e) => e.stopPropagation()}>
-            <NavButton icon="🗺️" text={view === 'map' ? 'City View' : 'Map View'} onClick={onToggleView} />
+           <NavButton icon="🗺️" text={view === 'map' ? 'City View' : 'Map View'} onClick={() => onToggleView()} />
             
             <NavButton icon="📜" text="Reports" onClick={onOpenReports} notificationCount={unreadReportsCount} glowing={unreadReportsCount > 0} />
             <NavButton icon="🏛️" text="Alliance" onClick={onOpenAlliance} />
@@ -18708,12 +18754,12 @@ export default WreckageModal;
 
 <file path="src/components/MapView.js">
 // src/components/MapView.js
-import React, { useMemo, useCallback, useEffect, useState, useRef } from 'react';
+import React, { useMemo,  useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
 import { db } from '../firebase/config';
-import { doc, onSnapshot, collection, query, where, getDocs, updateDoc, writeBatch, serverTimestamp, getDoc } from 'firebase/firestore';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import SidebarNav from './map/SidebarNav';
 import TopBar from './map/TopBar';
 import MapModals from './map/MapModals';
@@ -18755,7 +18801,7 @@ const MapView = ({
     onOpenNotes,
 }) => {
     const { currentUser, userProfile } = useAuth();
-    const { worldState, gameState, setGameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins, activeCityId, playerCityPoints } = useGame();
+    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
     const { playerAlliance } = useAlliance();
     const viewportRef = useRef(null);
     const [message, setMessage] = useState('');
@@ -18894,6 +18940,22 @@ const MapView = ({
         return getProductionRates(gameState.buildings);
     }, [gameState, getProductionRates]);
 
+    // # Logic to determine which alliance controls which island
+    useEffect(() => {
+        if (!worldState?.islands || !allCitySlots) return;
+        const islandControl = {};
+        worldState.islands.forEach(island => {
+            const citiesOnIsland = Object.values(allCitySlots).filter(slot => slot.islandId === island.id);
+            if (citiesOnIsland.length > 0 && citiesOnIsland.every(city => city.ownerId)) {
+                const firstCityAlliance = citiesOnIsland[0].alliance;
+                if (firstCityAlliance && citiesOnIsland.every(city => city.alliance === firstCityAlliance)) {
+                    islandControl[island.id] = firstCityAlliance;
+                }
+            }
+        });
+        setControlledIslands(islandControl);
+    }, [worldState, allCitySlots]);
+
     // # Logic to find wonder spots
     useEffect(() => {
         if (!worldState?.islands || !allCitySlots || !villages) return;
@@ -18911,6 +18973,11 @@ const MapView = ({
 
      // # Wonder click handlers
     const handleWonderSpotClick = (spotData) => {
+        const controllingAllianceTag = controlledIslands[spotData.islandId];
+        if (!playerAlliance || playerAlliance.tag !== controllingAllianceTag) {
+            setMessage("Your alliance must control all cities on this island to build a wonder.");
+            return;
+        }
         if (playerAlliance?.leader?.uid !== currentUser.uid) {
             setMessage("Only the alliance leader can begin construction of a wonder.");
             return;
@@ -19008,6 +19075,7 @@ const MapView = ({
                                 onWonderSpotClick={handleWonderSpotClick}
                                 onConstructingWonderClick={handleConstructingWonderClick}
                                 panToCoords={panToCoords}
+                                controlledIslands={controlledIslands}
                             />
                        )}
                     </div>
@@ -24322,13 +24390,16 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         {joinedWorlds.length > 0 ? (
                             joinedWorlds.map(world => (
                                 <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
-                                    <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
+                                    <div className="flex items-center cursor-pointer">
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
                                     </div>
                                     {userProfile?.is_admin && (
                                         <button
-                                            onClick={() => setWorldToDelete(world)}
+                                            onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setWorldToDelete(world);
+                                                    }}
                                             className="btn btn-danger px-3 py-1 text-xs rounded"
                                         >
                                             Delete
@@ -24352,7 +24423,10 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                                     </div>
                                     {userProfile?.is_admin && (
                                         <button
-                                            onClick={() => setWorldToDelete(world)}
+                                            onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setWorldToDelete(world);
+                                                    }}
                                             className="btn btn-danger px-3 py-1 text-xs rounded"
                                         >
                                             Delete
