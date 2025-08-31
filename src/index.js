@@ -4,6 +4,7 @@ import './index.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/effects.css';
+import './styles/map.css';
 import './styles/panels.css';
 import './styles/tooltips.css';
 import './components/ReportsView.css';
@@ -26,4 +27,3 @@ root.render(
     </AuthProvider>
   </React.StrictMode>
 );
-

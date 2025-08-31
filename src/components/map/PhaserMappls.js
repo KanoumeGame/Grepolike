@@ -1,4 +1,4 @@
-import React, { useEffect, useRef} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { useAuth } from '../../contexts/AuthContext';
 import MinimapScene from './MiniMapScenepls'; // Import the new scene
@@ -481,6 +481,7 @@ const PhaserMap = (props) => {
     const gameRef = useRef(null);
     const { currentUser } = useAuth();
     const { panToCoords } = props;
+    const [coords, setCoords] = useState({ x: 0, y: 0 }); // Add state for coords
     
     useEffect(() => {
         if (!window.Phaser || !currentUser) return;
@@ -502,9 +503,16 @@ const PhaserMap = (props) => {
         
         // # Pass empty props on init to satisfy dependency rules. The next effect will send the real props.
         game.scene.start('MapScene', { props: {}, auth: { currentUser } });
+        
+        // Add event listener here
+        game.events.on('updateCoords', (newCoords) => {
+            setCoords(newCoords);
+        });
+
 
         return () => { 
             if (gameRef.current) {
+                gameRef.current.events.off('updateCoords'); // Clean up listener
                 gameRef.current.destroy(true);
                 gameRef.current = null;
             }
@@ -527,7 +535,17 @@ const PhaserMap = (props) => {
     }, [panToCoords]);
 
 
-    return <div id="phaser-container" className="w-full h-full" />;
+    return (
+        <div className="relative w-full h-full">
+            <div id="phaser-container" className="w-full h-full" />
+            <div className="minimap-border-overlay"></div>
+             {/* Add the coordinate display here */}
+             <div className="minimap-coords-display">
+                <p>{coords.x}, {coords.y}</p>
+                <p>Sea {`${Math.floor(coords.y / 100)}${Math.floor(coords.x / 100)}`}</p>
+            </div>
+        </div>
+    );
 };
 
 export default React.memo(PhaserMap);

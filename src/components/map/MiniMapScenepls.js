@@ -8,7 +8,6 @@ class MinimapScene extends Phaser.Scene {
         super({ key: 'MinimapScene' });
         this.mainScene = null;
         this.minimap = null;
-        this.minimapUI = null; // For border and crosshair
         this.minimapIslands = null;
         this.minimapCities = null;
         this.minimapRuins = null;
@@ -16,6 +15,7 @@ class MinimapScene extends Phaser.Scene {
         this.isCreated = false;
         this.needsToIgnoreObjects = true;
         this.needsToIgnoreOnMain = true;
+        this.lastCoords = { x: -1, y: -1 };
     }
 
     init(data) {
@@ -43,6 +43,7 @@ class MinimapScene extends Phaser.Scene {
     update() {
         if (this.isCreated) {
              this.updateMinimapCamera();
+             this.updateCoordinateDisplay();
 
              // Defer ignoring main scene objects on the minimap camera until they exist
              if (this.needsToIgnoreObjects && this.mainScene.tooltip) {
@@ -65,7 +66,6 @@ class MinimapScene extends Phaser.Scene {
                     this.minimapRuins,
                     this.minimapCities,
                     this.minimapCircle,
-                    this.minimapUI
                 ]);
                 this.needsToIgnoreOnMain = false; // Ensure this only runs once
              }
@@ -77,7 +77,7 @@ class MinimapScene extends Phaser.Scene {
         if (!this.mainScene.props.worldState) return;
     
         const minimapX = 10;
-        const minimapY = 70;
+        const minimapY = 39;
         const minimapRadius = MINIMAP_SIZE / 2;
     
         // # New zoom logic for a "radar" style view
@@ -95,16 +95,13 @@ class MinimapScene extends Phaser.Scene {
         this.minimap.setMask(mask);
         this.minimapCircle.setVisible(false);
         
-        // # UI elements like border, fixed on screen
-        this.minimapUI = this.add.graphics().setDepth(101).setScrollFactor(0);
-        
         // # Map elements that will be scrolled by the minimap camera
         this.minimapIslands = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
         this.minimapRuins = this.add.graphics({ x: 0, y: 0 }).setDepth(1); 
         this.minimapCities = this.add.graphics({ x: 0, y: 0 }).setDepth(2); 
     }
     
-    // # Updates the minimap camera to follow the main camera and draws UI elements
+    // # Updates the minimap camera to follow the main camera
     updateMinimapCamera() {
         if (!this.minimap || !this.mainScene.cameras.main) return;
     
@@ -113,8 +110,19 @@ class MinimapScene extends Phaser.Scene {
         // # Center the minimap on the main camera's center and adjust zoom
         this.minimap.centerOn(mainCam.worldView.centerX, mainCam.worldView.centerY);
         this.minimap.setZoom(mainCam.zoom * 0.1); // Base zoom of 0.1, adjusted by main camera's zoom
-    
-        this.minimapUI.clear();
+    }
+
+    updateCoordinateDisplay() {
+        if (!this.mainScene.cameras.main) return;
+
+        const mainCam = this.mainScene.cameras.main;
+        const centerX = Math.floor(mainCam.worldView.centerX / TILE_SIZE);
+        const centerY = Math.floor(mainCam.worldView.centerY / TILE_SIZE);
+
+        if (centerX !== this.lastCoords.x || centerY !== this.lastCoords.y) {
+            this.lastCoords = { x: centerX, y: centerY };
+            this.game.events.emit('updateCoords', { x: centerX, y: centerY });
+        }
     }
     
     // # Draws all the static elements on the minimap
@@ -160,3 +168,4 @@ class MinimapScene extends Phaser.Scene {
 }
 
 export default MinimapScene;
+
