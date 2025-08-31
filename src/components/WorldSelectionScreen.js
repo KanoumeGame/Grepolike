@@ -271,13 +271,16 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                         {joinedWorlds.length > 0 ? (
                             joinedWorlds.map(world => (
                                 <div key={world.id} className="selection-card p-4 rounded-lg text-center mb-2 flex justify-between items-center" onClick={() => onWorldSelected(world.id)}>
-                                    <div className="flex items-center cursor-pointer" onClick={() => onWorldSelected(world.id)}>
+                                    <div className="flex items-center cursor-pointer">
                                         <img src={worldIcon} alt="World" className="w-8 h-8 mr-4" />
                                         <h3 className="text-xl font-bold flex-grow text-left">{world.name}</h3>
                                     </div>
                                     {userProfile?.is_admin && (
                                         <button
-                                            onClick={() => setWorldToDelete(world)}
+                                            onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setWorldToDelete(world);
+                                                    }}
                                             className="btn btn-danger px-3 py-1 text-xs rounded"
                                         >
                                             Delete
@@ -301,7 +304,10 @@ const WorldSelectionScreen = ({ onWorldSelected }) => {
                                     </div>
                                     {userProfile?.is_admin && (
                                         <button
-                                            onClick={() => setWorldToDelete(world)}
+                                            onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setWorldToDelete(world);
+                                                    }}
                                             className="btn btn-danger px-3 py-1 text-xs rounded"
                                         >
                                             Delete
