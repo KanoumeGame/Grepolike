@@ -49,27 +49,44 @@
 
 /* --- Layout Components --- */
 .sidebar {
-    @apply w-auto flex flex-col p-2 rounded-lg;
+    @apply w-auto flex flex-col p-2 rounded-r-lg;
     background-image: url('../images/bg/nav_bar_bg.png');
     background-size: 110% 115%;
     background-position: center;
     border: none;
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    
-    /* Centered positioning for both views */
-    @apply absolute top-[55%] -translate-y-1/2 z-30;
-    
-    /*  Transparency on hover effect */
-    @apply opacity-50 transition-opacity duration-300 ease-in-out;
+    @apply absolute top-1/4 -translate-y-1/4 left-0 z-30; /* Adjusted vertical position */
+    transition: transform 0.3s ease-in-out;
 }
 
-.sidebar:hover {
-    @apply opacity-100;
+.sidebar.closed {
+    transform: translateX(-100%);
 }
 
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-toggle-button {
+    @apply fixed top-1/4 -translate-y-1/4 z-40 w-8 h-16 rounded-r-lg flex items-center justify-center text-xl font-bold; /* Adjusted vertical position */
+    background-image: url('../images/bg/nav_bar_bg.png');
+    background-size: cover;
+    background-position: center;
+    color: #f0e68c;
+    border: 2px solid #8B4513;
+    border-left: none;
+    transition: left 0.3s ease-in-out;
+    top: 30rem;
+    left: 0m;
+}
+
+.sidebar.open + .sidebar-toggle-button {
+    left: 13rem; /* Width of sidebar (12rem) + padding */
+}
 
 .sidebar-button {
     @apply w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold my-1 text-sm gap-3;
+    width: 12rem; /* Fixed width for open state */
     color: #d4af37;
     border: 1px solid rounded;
     border-image-slice: 1;
@@ -199,3 +216,4 @@
 .keybinding-item span:first-child {
     @apply font-mono bg-gray-800 text-yellow-300 px-2 py-1 rounded-md;
 }
+

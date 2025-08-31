@@ -17,6 +17,7 @@ import dummyIcon from '../../images/ui/dummy.png';
 
 const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel, onGenerateMap, isGeneratingMap }) => {
     
+    const [isNavOpen, setIsNavOpen] = useState(true);
     const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
     const adminMenuRef = useRef(null);
 
@@ -27,7 +28,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
             disabled={disabled}
             title={title}
         >
-            <img src={imgSrc} alt={text} className="w-6 h-6 object-contain" />
+            <img src={imgSrc} alt={text} className="w-8 h-8 object-contain" />
             <span className="button-text">{text}</span>
             {notificationCount > 0 && (
                 <span className="notification-badge">
@@ -51,49 +52,58 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
     }, [adminMenuRef]);
     
     return (
-        <div className="sidebar" onMouseDown={(e) => e.stopPropagation()}>
-           <NavButton imgSrc={view === 'map' ? cityViewIcon : mapViewIcon} text={view === 'map' ? 'City View' : 'Map View'} onClick={() => onToggleView()} />
-            
-            <NavButton imgSrc={reportsIcon} text="Reports" onClick={onOpenReports} notificationCount={unreadReportsCount} glowing={unreadReportsCount > 0} />
-            <NavButton imgSrc={allianceIcon} text="Alliance" onClick={onOpenAlliance} />
-            <NavButton 
-                imgSrc={forumIcon} 
-                text="Forum" 
-                onClick={onOpenForum} 
-                disabled={!isAllianceMember}
-                title={!isAllianceMember ? "You must be in an alliance to access the forum" : "Forum"}
-            />
-            <NavButton imgSrc={messagesIcon} text="Messages" onClick={onOpenMessages} notificationCount={unreadMessagesCount} glowing={unreadMessagesCount > 0} />
-            <NavButton imgSrc={leaderboardIcon} text="Leaderboard" onClick={onOpenLeaderboard} />
-            <NavButton imgSrc={profileIcon} text="Profile" onClick={() => onOpenProfile()} />
-            <NavButton imgSrc={worldMapIcon} text="World Map" onClick={onGenerateMap} disabled={isGeneratingMap} title="Generate World Map Image" />
-            <NavButton imgSrc={settingsIcon} text="Settings" onClick={onOpenSettings} />
-            {isAdmin && (
-                <div ref={adminMenuRef} className="relative">
-                    <NavButton imgSrc={cheatsIcon} text="Admin" onClick={() => setIsAdminMenuOpen(prev => !prev)} />
-                    {isAdminMenuOpen && (
-                        <div className="absolute left-full top-0 ml-2 p-2 rounded-md bg-gray-800 border border-gray-600 w-48 shadow-lg flex flex-col gap-1">
-                            <button onClick={() => { onOpenManagementPanel(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                <img src={managerIcon} alt="Manager" className="w-6 h-6 object-contain" />
-                                <span className="button-text">Manager</span>
-                            </button>
-                            <button onClick={() => { handleOpenEvents(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                <img src={eventsIcon} alt="Events" className="w-6 h-6 object-contain" />
-                                <span className="button-text">Events</span>
-                            </button>
-                            <button onClick={() => { onOpenCheats(); setIsAdminMenuOpen(false); }} disabled={view !== 'city'} className="sidebar-button" title={view !== 'city' ? "Available in City View only" : "Open City Cheats"}>
-                                <img src={cheatsIcon} alt="City Cheats" className="w-6 h-6 object-contain" />
-                                <span className="button-text">City Cheats</span>
-                            </button>
-                            <button onClick={() => { onToggleDummyCityPlacement(); setIsAdminMenuOpen(false); }} disabled={view !== 'map'} className="sidebar-button" title={view !== 'map' ? "Available in Map View only" : "Place Dummy City"}>
-                                 <img src={dummyIcon} alt="Place Dummy" className="w-6 h-6 object-contain" />
-                                 <span className="button-text">Place Dummy</span>
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+        <>
+            <div className={`sidebar ${isNavOpen ? 'open' : 'closed'}`} onMouseDown={(e) => e.stopPropagation()}>
+               <NavButton imgSrc={view === 'map' ? cityViewIcon : mapViewIcon} text={view === 'map' ? 'City View' : 'Map View'} onClick={() => onToggleView()} />
+                
+                <NavButton imgSrc={reportsIcon} text="Reports" onClick={onOpenReports} notificationCount={unreadReportsCount} glowing={unreadReportsCount > 0} />
+                <NavButton imgSrc={allianceIcon} text="Alliance" onClick={onOpenAlliance} />
+                <NavButton 
+                    imgSrc={forumIcon} 
+                    text="Forum" 
+                    onClick={onOpenForum} 
+                    disabled={!isAllianceMember}
+                    title={!isAllianceMember ? "You must be in an alliance to access the forum" : "Forum"}
+                />
+                <NavButton imgSrc={messagesIcon} text="Messages" onClick={onOpenMessages} notificationCount={unreadMessagesCount} glowing={unreadMessagesCount > 0} />
+                <NavButton imgSrc={leaderboardIcon} text="Leaderboard" onClick={onOpenLeaderboard} />
+                <NavButton imgSrc={profileIcon} text="Profile" onClick={() => onOpenProfile()} />
+                <NavButton imgSrc={worldMapIcon} text="World Map" onClick={onGenerateMap} disabled={isGeneratingMap} title="Generate World Map Image" />
+                <NavButton imgSrc={settingsIcon} text="Settings" onClick={onOpenSettings} />
+                {isAdmin && (
+                    <div ref={adminMenuRef} className="relative">
+                        <NavButton imgSrc={cheatsIcon} text="Admin" onClick={() => setIsAdminMenuOpen(prev => !prev)} />
+                        {isAdminMenuOpen && (
+                            <div className="absolute left-full top-0 ml-2 p-2 rounded-md bg-gray-800 border border-gray-600 w-48 shadow-lg flex flex-col gap-1">
+                                <button onClick={() => { onOpenManagementPanel(); setIsAdminMenuOpen(false); }} className="sidebar-button">
+                                    <img src={managerIcon} alt="Manager" className="w-8 h-8 object-contain" />
+                                    <span className="button-text">Manager</span>
+                                </button>
+                                <button onClick={() => { handleOpenEvents(); setIsAdminMenuOpen(false); }} className="sidebar-button">
+                                    <img src={eventsIcon} alt="Events" className="w-8 h-8 object-contain" />
+                                    <span className="button-text">Events</span>
+                                </button>
+                                <button onClick={() => { onOpenCheats(); setIsAdminMenuOpen(false); }} disabled={view !== 'city'} className="sidebar-button" title={view !== 'city' ? "Available in City View only" : "Open City Cheats"}>
+                                    <img src={cheatsIcon} alt="City Cheats" className="w-8 h-8 object-contain" />
+                                    <span className="button-text">City Cheats</span>
+                                </button>
+                                <button onClick={() => { onToggleDummyCityPlacement(); setIsAdminMenuOpen(false); }} disabled={view !== 'map'} className="sidebar-button" title={view !== 'map' ? "Available in Map View only" : "Place Dummy City"}>
+                                     <img src={dummyIcon} alt="Place Dummy" className="w-8 h-8 object-contain" />
+                                     <span className="button-text">Place Dummy</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+            <button 
+                onClick={() => setIsNavOpen(!isNavOpen)} 
+                className="sidebar-toggle-button"
+                title={isNavOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+            >
+                {isNavOpen ? '«' : '»'}
+            </button>
+        </>
     );
 };
 
