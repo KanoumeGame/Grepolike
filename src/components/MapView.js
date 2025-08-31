@@ -44,6 +44,8 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
+    isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
@@ -284,6 +286,8 @@ const MapView = ({
                     isAllianceMember={!!playerAlliance}
                     handleOpenEvents={handleOpenEvents}
                     onOpenManagementPanel={onOpenManagementPanel}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
                 <div className="main-content flex-grow relative map-surface">
                     <TopBar
@@ -378,4 +382,3 @@ const MapView = ({
     );
 };
 export default MapView;
-

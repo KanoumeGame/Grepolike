@@ -24,6 +24,8 @@ class MapScene extends Phaser.Scene {
         this.movementObjects = new Map();
         this.tooltip = null;
         this.auth = {};
+        this.DOTS_ZOOM_THRESHOLD = 0.25; // # Zoom level to switch to dots view
+        this.initialResizeDone = false; // # Flag to handle initial camera setup
         // # Centralized settings for icon sizes. Adjust these values to resize map icons.
         this.iconScales = {
             city: 0.3,
@@ -58,26 +60,8 @@ class MapScene extends Phaser.Scene {
 
     // # Create game objects and set up controls
     create() {
-        const { worldState } = this.props;
-
-        if (worldState) {
-            // # Add a tiling sprite for the water background
-            this.add.tileSprite(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE, 'water')
-                .setOrigin(0, 0)
-                .setDepth(-1);
-
-            // # Set the boundaries of the camera to the world size
-            this.cameras.main.setBounds(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE);
-            this.cameras.main.setZoom(0.5); 
-            
-            // # Add resize handler to fix initial view and zoom constraints
-            this.scale.on('resize', this.resize, this);
-            this.resize(this.scale.gameSize);
-        }
-
         // # Generate textures for movement arrows
         this.generateArrowTextures();
-        this.drawMap();
         this.setupCameraControls();
 
         // # Simple tooltip for hovering over map objects
@@ -98,12 +82,14 @@ class MapScene extends Phaser.Scene {
                     .setOrigin(0, 0)
                     .setDepth(-1);
                 this.cameras.main.setBounds(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE);
-                this.cameras.main.setZoom(0.5);
                 this.scale.on('resize', this.resize, this);
                 this.resize(this.scale.gameSize);
             }
             this.drawMap();
         });
+
+        // # Add a listener to redraw the map when zoom changes
+        this.cameras.main.on('zoom', this.drawMap, this);
     }
 
     // # Generate custom textures needed for the scene
@@ -125,14 +111,22 @@ class MapScene extends Phaser.Scene {
     resize(gameSize) {
         this.cameras.main.width = gameSize.width;
         this.cameras.main.height = gameSize.height;
-
+    
         const { worldState } = this.props;
         if (worldState) {
             const worldWidth = worldState.width * TILE_SIZE;
             const worldHeight = worldState.height * TILE_SIZE;
+            // # Calculate the minimum zoom to ensure the map always fills the viewport
             const minZoom = Math.max(gameSize.width / worldWidth, gameSize.height / worldHeight);
             this.cameras.main.minZoom = minZoom;
-            if (this.cameras.main.zoom < minZoom) {
+    
+            // # On the very first resize/load, fit the map to the screen.
+            if (!this.initialResizeDone) {
+                this.cameras.main.setZoom(minZoom);
+                this.initialResizeDone = true;
+            }
+            // # If the window is resized and zoom is now too low, adjust it
+            else if (this.cameras.main.zoom < minZoom) {
                 this.cameras.main.setZoom(minZoom);
             }
         }
@@ -165,7 +159,7 @@ class MapScene extends Phaser.Scene {
         return (red << 16) + (green << 8) + blue;
     }
 
-    // # Main function to draw everything on the map
+    // # Main function to draw everything on the map, handles both detailed and dot views
     drawMap() {
         this.mapObjects.forEach(obj => obj.destroy());
         this.mapObjects.clear();
@@ -174,7 +168,7 @@ class MapScene extends Phaser.Scene {
 
         if (!worldState) return;
 
-        // # Draw islands
+        // # Always draw islands first so they are in the background
         worldState.islands.forEach(island => {
             const islandImageKey = island.imageName === 'island_2.png' ? 'island2' : 'island1';
             const islandSprite = this.add.image(island.x * TILE_SIZE, island.y * TILE_SIZE, islandImageKey)
@@ -183,14 +177,54 @@ class MapScene extends Phaser.Scene {
             this.mapObjects.set(`island-${island.id}`, islandSprite);
         });
 
-        // # Draw all map objects
-        Object.values(combinedSlots || {}).forEach(slot => this.drawMapObject(slot, 'city'));
-        Object.values(villages || {}).forEach(village => this.drawMapObject(village, 'village'));
-        Object.values(ruins || {}).forEach(ruin => this.drawMapObject(ruin, 'ruin'));
-        Object.values(godTowns || {}).forEach(town => this.drawMapObject(town, 'god_town'));
-        Object.values(wonderSpots || {}).forEach(spot => this.drawMapObject(spot, 'wonder_spot'));
-        Object.values(allWonders || {}).forEach(wonder => this.drawMapObject(wonder, 'constructing_wonder'));
-        Object.values(visibleWreckages || {}).forEach(wreckage => this.drawMapObject(wreckage, 'wreckage'));
+        const isDotsView = this.cameras.main.zoom < this.DOTS_ZOOM_THRESHOLD;
+
+        const createFakeEvent = (pointer) => ({
+            currentTarget: { getBoundingClientRect: () => ({ left: pointer.x, top: pointer.y, right: pointer.x, bottom: pointer.y, width: 0, height: 0 }) },
+            stopPropagation: () => {},
+        });
+
+        if (isDotsView) {
+            // # Draw circles for occupied cities only
+            Object.values(combinedSlots || {}).forEach(slot => {
+                if (slot.ownerId) {
+                    const key = `dot-${slot.id}`;
+                    const x = slot.x * TILE_SIZE + TILE_SIZE / 2;
+                    const y = slot.y * TILE_SIZE + TILE_SIZE / 2;
+                    const dot = this.add.graphics({ x: x, y: y });
+
+                    let color = 0xffa500; // # Neutral (Brown/Orange)
+                    if (slot.ownerId === this.auth.currentUser.uid) {
+                        color = 0xffff00; // # Own city (Yellow)
+                    } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
+                        color = 0x00ff00; // # Ally/Same Alliance (Green)
+                    } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
+                        color = 0xff0000; // # Enemy (Red)
+                    }
+                    
+                    dot.fillStyle(color, 0.9);
+                    dot.fillCircle(0, 0, TILE_SIZE * 0.4);
+                    dot.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE * 0.4), Phaser.Geom.Circle.Contains).setDepth(2);
+
+                    const tooltipText = `${slot.cityName}\nOwner: ${slot.ownerUsername || 'Unclaimed'}`;
+                    dot.on('pointerdown', (pointer) => this.props.onCitySlotClick(createFakeEvent(pointer), slot));
+                    dot.on('pointerover', (pointer) => {
+                        this.tooltip.setText(tooltipText).setPosition(pointer.worldX, pointer.worldY - 20).setVisible(true);
+                    });
+                    dot.on('pointerout', () => this.tooltip.setVisible(false));
+                    this.mapObjects.set(key, dot);
+                }
+            });
+        } else {
+            // # Draw detailed map objects
+            Object.values(combinedSlots || {}).forEach(slot => this.drawMapObject(slot, 'city'));
+            Object.values(villages || {}).forEach(village => this.drawMapObject(village, 'village'));
+            Object.values(ruins || {}).forEach(ruin => this.drawMapObject(ruin, 'ruin'));
+            Object.values(godTowns || {}).forEach(town => this.drawMapObject(town, 'god_town'));
+            Object.values(wonderSpots || {}).forEach(spot => this.drawMapObject(spot, 'wonder_spot'));
+            Object.values(allWonders || {}).forEach(wonder => this.drawMapObject(wonder, 'constructing_wonder'));
+            Object.values(visibleWreckages || {}).forEach(wreckage => this.drawMapObject(wreckage, 'wreckage'));
+        }
     }
 
     // # Helper to draw a single map object
@@ -202,32 +236,12 @@ class MapScene extends Phaser.Scene {
         let gameObject;
         let tooltipText = '';
 
-        const baseProps = {
-            key: key,
-            x: x,
-            y: y,
-            details: data,
-        };
+        const baseProps = { key, x, y, details: data };
 
-        const createFakeEvent = (pointer) => {
-            const rect = this.game.canvas.getBoundingClientRect();
-            const screenX = rect.left + pointer.x;
-            const screenY = rect.top + pointer.y;
-
-            return {
-                currentTarget: {
-                    getBoundingClientRect: () => ({
-                        left: screenX,
-                        top: screenY,
-                        right: screenX,
-                        bottom: screenY,
-                        width: 0,
-                        height: 0,
-                    }),
-                },
-                stopPropagation: () => {},
-            };
-        };
+        const createFakeEvent = (pointer) => ({
+            currentTarget: { getBoundingClientRect: () => ({ left: pointer.x, top: pointer.y, right: pointer.x, bottom: pointer.y, width: 0, height: 0 }) },
+            stopPropagation: () => {},
+        });
 
         switch (type) {
             case 'city':
@@ -240,22 +254,16 @@ class MapScene extends Phaser.Scene {
                     
                     tooltipText = `${data.cityName}\nOwner: ${data.ownerUsername || 'Unclaimed'}\nPoints: ${points.toLocaleString()}`;
                     
-                    // # Determine city color based on diplomatic status
                     if (data.ownerId === this.auth.currentUser.uid) {
-                        // # Yellow for player's own cities
                         gameObject.setTint(0xffff00);
                     } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
-                        // # Blue for members of the same alliance
-                        gameObject.setTint(0x00aaff);
+                        gameObject.setTint(0x00ff00); // # Changed to Green for same alliance
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
-                        // # Green for allied alliances
                         gameObject.setTint(0x00ff00);
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
-                        // # Red for enemy alliances
                         gameObject.setTint(0xff0000);
                     } else {
-                        // # Orange for neutral players (default)
-                        gameObject.setTint(0xffa500);
+                        gameObject.setTint(0xffa500); // # Neutral is Brown/Orange
                     }
                 } else {
                     gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
@@ -270,50 +278,44 @@ class MapScene extends Phaser.Scene {
                 break;
             case 'village':
                 gameObject = this.add.sprite(baseProps.x, baseProps.y, 'villageSprite', (data.level || 1) - 1).setInteractive().setScale(this.iconScales.village);
-
                 if (this.props.conqueredVillages && this.props.conqueredVillages[data.id]) {
                     const villageInfo = this.props.conqueredVillages[data.id];
                     const happiness = villageInfo.happiness !== undefined ? villageInfo.happiness : 100;
-                    const color = this.getHappinessColor(happiness);
-                    gameObject.setTint(color);
+                    gameObject.setTint(this.getHappinessColor(happiness));
                     tooltipText = `Your Village: ${data.name}\nHappiness: ${Math.floor(happiness)}%`;
                 } else {
                     tooltipText = `Village: ${data.name}\nLevel: ${data.level || 1}`;
                 }
                 gameObject.on('pointerdown', (pointer) => this.props.onVillageClick(createFakeEvent(pointer), data));
                 break;
-            case 'ruin':
-                const isOccupied = data.ownerId && data.ownerId !== 'ruins';
-                gameObject = this.add.sprite(baseProps.x, baseProps.y, 'ruinSprite', isOccupied ? 1 : 0).setInteractive().setScale(this.iconScales.ruin);
-
-                tooltipText = isOccupied ? `Conquered Ruin\nOwner: ${data.ownerUsername}` : `Ruin: ${data.name}`;
-                gameObject.on('pointerdown', (pointer) => this.props.onRuinClick(createFakeEvent(pointer), data));
-                break;
-            case 'god_town':
-                gameObject = this.add.image(baseProps.x, baseProps.y, 'godTown').setInteractive().setScale(this.iconScales.god_town);
-                tooltipText = data.stage === 'ruins' ? `Strange Ruins` : `God Town: ${data.name}`;
-                gameObject.on('pointerdown', () => this.props.onGodTownClick(data.id));
-                break;
-            case 'wonder_spot':
-                 gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
-                 gameObject.fillStyle(0xFFFF00, 0.5);
-                 gameObject.fillCircle(0, 0, TILE_SIZE / 2);
-                 gameObject.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE / 2), Phaser.Geom.Circle.Contains);
-                 tooltipText = "Build an Alliance Wonder";
-                 gameObject.on('pointerdown', () => this.props.onWonderSpotClick(data));
-                break;
-            case 'constructing_wonder':
-                gameObject = this.add.image(baseProps.x, baseProps.y, 'constructingWonder').setInteractive().setScale(this.iconScales.constructing_wonder);
-                tooltipText = `Constructing Wonder\nAlliance: ${data.allianceName}`;
-                gameObject.on('pointerdown', () => this.props.onConstructingWonderClick(data));
-                break;
-            case 'wreckage':
-                 gameObject = this.add.image(baseProps.x, baseProps.y, 'wreck').setInteractive().setScale(this.iconScales.wreckage);
-                 const resourceType = Object.keys(data.resources)[0];
-                 tooltipText = `Sea Resources\n${resourceType}: ${data.resources[resourceType].toLocaleString()}`;
-                 gameObject.on('pointerdown', (pointer) => this.props.onWreckageClick(createFakeEvent(pointer), data));
-                break;
             default:
+                 // # Logic for other types remains the same as original
+                if (type === 'ruin') {
+                    const isOccupied = data.ownerId && data.ownerId !== 'ruins';
+                    gameObject = this.add.sprite(baseProps.x, baseProps.y, 'ruinSprite', isOccupied ? 1 : 0).setInteractive().setScale(this.iconScales.ruin);
+                    tooltipText = isOccupied ? `Conquered Ruin\nOwner: ${data.ownerUsername}` : `Ruin: ${data.name}`;
+                    gameObject.on('pointerdown', (pointer) => this.props.onRuinClick(createFakeEvent(pointer), data));
+                } else if (type === 'god_town') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'godTown').setInteractive().setScale(this.iconScales.god_town);
+                    tooltipText = data.stage === 'ruins' ? `Strange Ruins` : `God Town: ${data.name}`;
+                    gameObject.on('pointerdown', () => this.props.onGodTownClick(data.id));
+                } else if (type === 'wonder_spot') {
+                    gameObject = this.add.graphics({ x: baseProps.x, y: baseProps.y });
+                    gameObject.fillStyle(0xFFFF00, 0.5);
+                    gameObject.fillCircle(0, 0, TILE_SIZE / 2);
+                    gameObject.setInteractive(new Phaser.Geom.Circle(0, 0, TILE_SIZE / 2), Phaser.Geom.Circle.Contains);
+                    tooltipText = "Build an Alliance Wonder";
+                    gameObject.on('pointerdown', () => this.props.onWonderSpotClick(data));
+                } else if (type === 'constructing_wonder') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'constructingWonder').setInteractive().setScale(this.iconScales.constructing_wonder);
+                    tooltipText = `Constructing Wonder\nAlliance: ${data.allianceName}`;
+                    gameObject.on('pointerdown', () => this.props.onConstructingWonderClick(data));
+                } else if (type === 'wreckage') {
+                    gameObject = this.add.image(baseProps.x, baseProps.y, 'wreck').setInteractive().setScale(this.iconScales.wreckage);
+                    const resourceType = Object.keys(data.resources)[0];
+                    tooltipText = `Sea Resources\n${resourceType}: ${data.resources[resourceType].toLocaleString()}`;
+                    gameObject.on('pointerdown', (pointer) => this.props.onWreckageClick(createFakeEvent(pointer), data));
+                }
                 break;
         }
 
@@ -324,9 +326,7 @@ class MapScene extends Phaser.Scene {
                 this.tooltip.setPosition(pointer.worldX, pointer.worldY - 30);
                 this.tooltip.setVisible(true);
             });
-            gameObject.on('pointerout', () => {
-                this.tooltip.setVisible(false);
-            });
+            gameObject.on('pointerout', () => this.tooltip.setVisible(false));
             this.mapObjects.set(key, gameObject);
         }
     }
@@ -508,3 +508,4 @@ const PhaserMap = (props) => {
 };
 
 export default React.memo(PhaserMap);
+

@@ -1,7 +1,7 @@
 // src/components/map/SidebarNav.js
 import React from 'react';
 
-const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel }) => {
+const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel, onGenerateMap, isGeneratingMap }) => {
     
     const NavButton = ({ icon, text, onClick, notificationCount, glowing, disabled, title }) => (
         <button 
@@ -37,6 +37,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
             <NavButton icon="🏆" text="Leaderboard" onClick={onOpenLeaderboard} />
             <NavButton icon="👤" text="Profile" onClick={() => onOpenProfile()} />
             <NavButton icon="📊" text="Manager" onClick={onOpenManagementPanel} />
+            <NavButton icon="🌍" text="World Map" onClick={onGenerateMap} disabled={isGeneratingMap} title="Generate World Map Image" />
             <NavButton icon="⚙️" text="Settings" onClick={onOpenSettings} />
             {isAdmin && (
                 <>

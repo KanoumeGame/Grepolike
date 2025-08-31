@@ -49,6 +49,8 @@ const CityView = ({
     setCityModalState,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
+    isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -118,6 +120,8 @@ const CityView = ({
                 handleOpenEvents={handleOpenEvents}
                 onOpenHeroesAltar={() => openCityModal('isHeroesAltarOpen')}
                 onOpenManagementPanel={onOpenManagementPanel}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
             />
             <div className="h-full w-full flex flex-col">
                 <TopBar

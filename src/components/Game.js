@@ -48,6 +48,7 @@ import unitConfig from '../gameData/units.json';
 import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
+import MapImageViewer from './map/MapImageViewer';
 
 let worldDataCache = {
     villages: null,
@@ -69,7 +70,7 @@ const getWarehouseCapacity = (level) => {
 };
 
 const Game = ({ onBackToWorlds }) => {
-    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData } = useGame();
+    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData, worldState } = useGame();
     const { currentUser, userProfile } = useAuth();
     const { acceptAllianceInvitation, declineAllianceInvitation, sendAllianceInvitation } = useAlliance();
     const [view, setView] = useState('city');
@@ -88,6 +89,9 @@ const Game = ({ onBackToWorlds }) => {
     const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); //  State for ManagementPanel
     const [isNotesOpen, setIsNotesOpen] = useState(false); //  State for Notes
     const [message, setMessage] = useState('');
+    const [isGeneratingMap, setIsGeneratingMap] = useState(false);
+    const [mapImageData, setMapImageData] = useState({ url: null, name: '' });
+
 
     useMovementProcessor(worldId);
     const { modalState, openModal, closeModal } = useModalState();
@@ -387,6 +391,79 @@ const Game = ({ onBackToWorlds }) => {
         openModal('eventTrigger');
     };
 
+    const handleGenerateMap = async () => {
+        const world = worldState;
+        if (!world) {
+            setMessage("World data is not available.");
+            return;
+        }
+        if (isGeneratingMap) return;
+        setIsGeneratingMap(true);
+        setMessage(`Generating map for ${world.name}...`);
+        try {
+            const TILE_SCALE = 5;
+            const citySlotsRef = collection(db, 'worlds', world.id, 'citySlots');
+            const alliancesRef = collection(db, 'worlds', world.id, 'alliances');
+            
+            const [citySlotsSnap, alliancesSnap] = await Promise.all([getDocs(citySlotsRef), getDocs(alliancesRef)]);
+            
+            const citySlots = citySlotsSnap.docs.map(doc => doc.data());
+            const alliances = alliancesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const allianceColorMap = {};
+            const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFA1", "#FFFF33", "#FF9633"];
+            let colorIndex = 0;
+
+            alliances.forEach(ally => {
+                allianceColorMap[ally.tag] = colors[colorIndex % colors.length];
+                colorIndex++;
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = world.width * TILE_SCALE;
+            canvas.height = world.height * TILE_SCALE;
+            const ctx = canvas.getContext('2d');
+
+            // Draw background
+            ctx.fillStyle = '#1e3a8a'; // Deep blue for water
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw islands
+            ctx.fillStyle = '#228B22'; // Forest green for land
+            world.islands.forEach(island => {
+                ctx.beginPath();
+                ctx.arc(island.x * TILE_SCALE, island.y * TILE_SCALE, island.radius * TILE_SCALE, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw cities
+            citySlots.forEach(slot => {
+                if (slot.ownerId) {
+                    let color = '#A52A2A'; // Brown for no alliance
+                    if (slot.alliance && allianceColorMap[slot.alliance]) {
+                        color = allianceColorMap[slot.alliance];
+                    }
+                    ctx.beginPath();
+                    ctx.arc(slot.x * TILE_SCALE, slot.y * TILE_SCALE, TILE_SCALE * 0.4, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            });
+            
+            setMapImageData({ url: canvas.toDataURL(), name: `${world.id}-map.png` });
+            setMessage(`Map for ${world.name} generated!`);
+
+        } catch (error) {
+            console.error("Error generating map:", error);
+            setMessage("Failed to generate map.");
+        } finally {
+            setIsGeneratingMap(false);
+        }
+    };
+
     const handleAction = (type, data) => {
         closeModal('reports');
         if (viewingReportId) setViewingReportId(null);
@@ -450,6 +527,13 @@ const Game = ({ onBackToWorlds }) => {
     return (
         <div className="w-full h-screen bg-gray-900 text-white relative">
             <Modal message={message} onClose={() => setMessage('')} />
+            {mapImageData.url && (
+                <MapImageViewer
+                    imageUrl={mapImageData.url}
+                    worldName={mapImageData.name}
+                    onClose={() => setMapImageData({ url: null, name: '' })}
+                />
+            )}
             {view === 'city' && (
                 <CityView
                     showMap={showMap}
@@ -476,6 +560,8 @@ const Game = ({ onBackToWorlds }) => {
                     setCityModalState={setCityModalState}
                     onOpenManagementPanel={() => setIsManagementPanelOpen(true)}
                     onOpenNotes={() => setIsNotesOpen(true)}
+                    onGenerateMap={handleGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             )}
             {view === 'map' && (
@@ -510,6 +596,8 @@ const Game = ({ onBackToWorlds }) => {
                     setInitialMapAction={setInitialMapAction}
                     onOpenManagementPanel={() => setIsManagementPanelOpen(true)}
                     onOpenNotes={() => setIsNotesOpen(true)}
+                    onGenerateMap={handleGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             )}
             {/* Global Modals */}
@@ -574,3 +662,4 @@ const Game = ({ onBackToWorlds }) => {
     );
 };
 export default Game;
+
