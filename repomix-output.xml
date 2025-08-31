@@ -15341,7 +15341,6 @@ class MinimapScene extends Phaser.Scene {
         super({ key: 'MinimapScene' });
         this.mainScene = null;
         this.minimap = null;
-        this.minimapUI = null; // For border and crosshair
         this.minimapIslands = null;
         this.minimapCities = null;
         this.minimapRuins = null;
@@ -15349,6 +15348,7 @@ class MinimapScene extends Phaser.Scene {
         this.isCreated = false;
         this.needsToIgnoreObjects = true;
         this.needsToIgnoreOnMain = true;
+        this.lastCoords = { x: -1, y: -1 };
     }
 
     init(data) {
@@ -15376,6 +15376,7 @@ class MinimapScene extends Phaser.Scene {
     update() {
         if (this.isCreated) {
              this.updateMinimapCamera();
+             this.updateCoordinateDisplay();
 
              // Defer ignoring main scene objects on the minimap camera until they exist
              if (this.needsToIgnoreObjects && this.mainScene.tooltip) {
@@ -15398,7 +15399,6 @@ class MinimapScene extends Phaser.Scene {
                     this.minimapRuins,
                     this.minimapCities,
                     this.minimapCircle,
-                    this.minimapUI
                 ]);
                 this.needsToIgnoreOnMain = false; // Ensure this only runs once
              }
@@ -15410,7 +15410,7 @@ class MinimapScene extends Phaser.Scene {
         if (!this.mainScene.props.worldState) return;
     
         const minimapX = 10;
-        const minimapY = 70;
+        const minimapY = 39;
         const minimapRadius = MINIMAP_SIZE / 2;
     
         // # New zoom logic for a "radar" style view
@@ -15428,16 +15428,13 @@ class MinimapScene extends Phaser.Scene {
         this.minimap.setMask(mask);
         this.minimapCircle.setVisible(false);
         
-        // # UI elements like border, fixed on screen
-        this.minimapUI = this.add.graphics().setDepth(101).setScrollFactor(0);
-        
         // # Map elements that will be scrolled by the minimap camera
         this.minimapIslands = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
         this.minimapRuins = this.add.graphics({ x: 0, y: 0 }).setDepth(1); 
         this.minimapCities = this.add.graphics({ x: 0, y: 0 }).setDepth(2); 
     }
     
-    // # Updates the minimap camera to follow the main camera and draws UI elements
+    // # Updates the minimap camera to follow the main camera
     updateMinimapCamera() {
         if (!this.minimap || !this.mainScene.cameras.main) return;
     
@@ -15446,8 +15443,19 @@ class MinimapScene extends Phaser.Scene {
         // # Center the minimap on the main camera's center and adjust zoom
         this.minimap.centerOn(mainCam.worldView.centerX, mainCam.worldView.centerY);
         this.minimap.setZoom(mainCam.zoom * 0.1); // Base zoom of 0.1, adjusted by main camera's zoom
-    
-        this.minimapUI.clear();
+    }
+
+    updateCoordinateDisplay() {
+        if (!this.mainScene.cameras.main) return;
+
+        const mainCam = this.mainScene.cameras.main;
+        const centerX = Math.floor(mainCam.worldView.centerX / TILE_SIZE);
+        const centerY = Math.floor(mainCam.worldView.centerY / TILE_SIZE);
+
+        if (centerX !== this.lastCoords.x || centerY !== this.lastCoords.y) {
+            this.lastCoords = { x: centerX, y: centerY };
+            this.game.events.emit('updateCoords', { x: centerX, y: centerY });
+        }
     }
     
     // # Draws all the static elements on the minimap
@@ -17336,7 +17344,7 @@ export default OwnInactiveCityModal;
 </file>
 
 <file path="src/components/map/PhaserMappls.js">
-import React, { useEffect, useRef} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { useAuth } from '../../contexts/AuthContext';
 import MinimapScene from './MiniMapScenepls'; // Import the new scene
@@ -17819,6 +17827,7 @@ const PhaserMap = (props) => {
     const gameRef = useRef(null);
     const { currentUser } = useAuth();
     const { panToCoords } = props;
+    const [coords, setCoords] = useState({ x: 0, y: 0 }); // Add state for coords
     
     useEffect(() => {
         if (!window.Phaser || !currentUser) return;
@@ -17840,9 +17849,16 @@ const PhaserMap = (props) => {
         
         // # Pass empty props on init to satisfy dependency rules. The next effect will send the real props.
         game.scene.start('MapScene', { props: {}, auth: { currentUser } });
+        
+        // Add event listener here
+        game.events.on('updateCoords', (newCoords) => {
+            setCoords(newCoords);
+        });
+
 
         return () => { 
             if (gameRef.current) {
+                gameRef.current.events.off('updateCoords'); // Clean up listener
                 gameRef.current.destroy(true);
                 gameRef.current = null;
             }
@@ -17865,7 +17881,17 @@ const PhaserMap = (props) => {
     }, [panToCoords]);
 
 
-    return <div id="phaser-container" className="w-full h-full" />;
+    return (
+        <div className="relative w-full h-full">
+            <div id="phaser-container" className="w-full h-full" />
+            <div className="minimap-border-overlay"></div>
+             {/* Add the coordinate display here */}
+             <div className="minimap-coords-display">
+                <p>{coords.x}, {coords.y}</p>
+                <p>Sea {`${Math.floor(coords.y / 100)}${Math.floor(coords.x / 100)}`}</p>
+            </div>
+        </div>
+    );
 };
 
 export default React.memo(PhaserMap);
@@ -34336,6 +34362,7 @@ import './index.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/effects.css';
+import './styles/map.css';
 import './styles/panels.css';
 import './styles/tooltips.css';
 import './components/ReportsView.css';
@@ -34857,6 +34884,38 @@ body {
     @apply visible opacity-100;
 }
 
+/* Minimap Border Overlay */
+.minimap-border-overlay {
+    position: absolute;
+    top: 39px;
+    left: 10px;
+    width: 150px;
+    height: 150px;
+    border: 2px solid #C0C0C0; /* silver */
+    border-radius: 50%;
+    pointer-events: none; /* Make it non-interactive so clicks go through to the map */
+    box-shadow: 0 0 5px rgba(192, 192, 192, 0.7); /* Optional silver glow */
+    z-index: 102; /* Ensure it's on top of the minimap */
+}
+
+/* New style for coordinate display */
+.minimap-coords-display {
+    position: absolute;
+    top: 188px; /* 70px (minimap top) + 150px (minimap height) + 2px buffer */
+    left: 10px;
+    width: 150px;
+    height: 39px;
+    padding: 4px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #f0e68c;
+    border: 1px solid #8B4513;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-family: 'IM Fell English SC', serif;
+    pointer-events: none;
+    z-index: 101;
+}
 
 /* Wonder Styles */
 .wonder-spot-tile {
