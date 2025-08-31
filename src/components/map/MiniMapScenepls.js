@@ -8,7 +8,7 @@ class MinimapScene extends Phaser.Scene {
         super({ key: 'MinimapScene' });
         this.mainScene = null;
         this.minimap = null;
-        this.minimapRect = null;
+        this.minimapUI = null; // For border and crosshair
         this.minimapIslands = null;
         this.minimapCities = null;
         this.minimapRuins = null;
@@ -42,7 +42,7 @@ class MinimapScene extends Phaser.Scene {
 
     update() {
         if (this.isCreated) {
-             this.updateMinimap();
+             this.updateMinimapCamera();
 
              // Defer ignoring main scene objects on the minimap camera until they exist
              if (this.needsToIgnoreObjects && this.mainScene.tooltip) {
@@ -65,30 +65,24 @@ class MinimapScene extends Phaser.Scene {
                     this.minimapRuins,
                     this.minimapCities,
                     this.minimapCircle,
-                    this.minimapRect
+                    this.minimapUI
                 ]);
                 this.needsToIgnoreOnMain = false; // Ensure this only runs once
              }
         }
     }
 
-    // # Creates the basic structure of the minimap
+    // # Creates the minimap camera, mask, and graphics objects
     createMinimap() {
         if (!this.mainScene.props.worldState) return;
     
-        const { worldState } = this.mainScene.props;
-        const worldWidth = worldState.width * TILE_SIZE;
-        const worldHeight = worldState.height * TILE_SIZE;
-        
         const minimapX = 10;
         const minimapY = 70;
         const minimapRadius = MINIMAP_SIZE / 2;
     
-        const zoomX = MINIMAP_SIZE / worldWidth;
-        const zoomY = MINIMAP_SIZE / worldHeight;
-        const minimapZoom = Math.min(zoomX, zoomY);
+        // # New zoom logic for a "radar" style view
+        const minimapZoom = 0.1; // # Zoom out to show a portion of the map
     
-        // The camera should not be scrolled; its zoom level will fit the entire map.
         this.minimap = this.cameras.add(minimapX, minimapY, MINIMAP_SIZE, MINIMAP_SIZE)
             .setZoom(minimapZoom)
             .setName('minimap')
@@ -100,40 +94,50 @@ class MinimapScene extends Phaser.Scene {
         const mask = this.minimapCircle.createGeometryMask();
         this.minimap.setMask(mask);
         
-        this.minimapRect = this.add.graphics().setDepth(101).setScrollFactor(0);
+        // # UI elements like border, fixed on screen
+        this.minimapUI = this.add.graphics().setDepth(101).setScrollFactor(0);
+        
+        // # Map elements that will be scrolled by the minimap camera
         this.minimapIslands = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
         this.minimapRuins = this.add.graphics({ x: 0, y: 0 }).setDepth(1); 
         this.minimapCities = this.add.graphics({ x: 0, y: 0 }).setDepth(2); 
     }
     
-    // # Updates the minimap, including the camera view rectangle
-    updateMinimap() {
+    // # Updates the minimap camera to follow the main camera and draws UI elements
+    updateMinimapCamera() {
         if (!this.minimap || !this.mainScene.cameras.main) return;
     
+        const mainCam = this.mainScene.cameras.main;
+
+        // # Center the minimap on the main camera's center and adjust zoom
+        this.minimap.centerOn(mainCam.worldView.centerX, mainCam.worldView.centerY);
+        this.minimap.setZoom(mainCam.zoom * 0.1); // Base zoom of 0.1, adjusted by main camera's zoom
+        
         const minimapX = 10;
         const minimapY = 70;
         const minimapRadius = MINIMAP_SIZE / 2;
     
-        this.minimapRect.clear();
+        this.minimapUI.clear();
         
-        // Draw the border
-        this.minimapRect.lineStyle(2, 0x000000, 0.5);
-        this.minimapRect.strokeCircle(minimapX + minimapRadius, minimapY + minimapRadius, minimapRadius);
-    
-        const mainCam = this.mainScene.cameras.main;
-        const minimapCam = this.minimap;
-    
-        // Calculate the position and size of the view rectangle
-        const rectX = minimapCam.x + mainCam.worldView.x * minimapCam.zoom;
-        const rectY = minimapCam.y + mainCam.worldView.y * minimapCam.zoom;
-        const rectWidth = mainCam.worldView.width * minimapCam.zoom;
-        const rectHeight = mainCam.worldView.height * minimapCam.zoom;
-        
-        // Draw the view rectangle
-        this.minimapRect.fillStyle(0xffffff, 0.25);
-        this.minimapRect.fillRect(rectX, rectY, rectWidth, rectHeight);
-        this.minimapRect.lineStyle(1, 0xffffff, 1);
-        this.minimapRect.strokeRect(rectX, rectY, rectWidth, rectHeight);
+        const centerX = minimapX + minimapRadius;
+        const centerY = minimapY + minimapRadius;
+
+        // # Draw a metallic-style border
+        // Outer shadow
+        this.minimapUI.lineStyle(2, 0x000000, 0.3);
+        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius + 1);
+
+        // Main silver part
+        this.minimapUI.lineStyle(4, 0xC0C0C0, 1); // Silver color
+        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius);
+
+        // Inner highlight
+        this.minimapUI.lineStyle(1.5, 0xFFFFFF, 0.8);
+        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius - 2);
+
+        // Inner shadow
+        this.minimapUI.lineStyle(1, 0x808080, 0.7);
+        this.minimapUI.strokeCircle(centerX, centerY, minimapRadius - 3);
     }
     
     // # Draws all the static elements on the minimap

@@ -78,11 +78,8 @@ class MapScene extends Phaser.Scene {
         
         // # Listen for prop updates from React
         this.game.events.on('updateProps', (newProps) => {
-            console.log('[MapScene] Received updateProps.');
             const isInitialUpdate = !this.props.worldState && newProps.worldState;
             this.props = newProps;
-
-            console.log('[MapScene] Emitting updateMinimapProps.');
             this.events.emit('updateMinimapProps', newProps);
 
             if (isInitialUpdate) {
