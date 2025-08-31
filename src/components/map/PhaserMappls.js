@@ -1,6 +1,7 @@
 import React, { useEffect, useRef} from 'react';
 import Phaser from 'phaser';
 import { useAuth } from '../../contexts/AuthContext';
+import MinimapScene from './MiniMapScenepls'; // Import the new scene
 
 // # Import images needed for the map
 import island1 from '../../images/islands/island_1.png';
@@ -14,8 +15,6 @@ import wreckImage from '../../images/wreck.png';
 import waterImage from '../../images/water.png'; 
 
 const TILE_SIZE = 32;
-const MINIMAP_WIDTH = 200;
-const MINIMAP_HEIGHT = 150;
 
 // # The main Phaser Scene for our map
 class MapScene extends Phaser.Scene {
@@ -28,9 +27,6 @@ class MapScene extends Phaser.Scene {
         this.auth = {};
         this.DOTS_ZOOM_THRESHOLD = 0.25; // # Zoom level to switch to dots view
         this.initialResizeDone = false; // # Flag to handle initial camera setup
-        this.minimapRect = null;
-        this.minimapIslands = null;
-        this.minimapCities = null;
         // # Centralized settings for icon sizes. Adjust these values to resize map icons.
         this.iconScales = {
             city: 0.3,
@@ -69,9 +65,8 @@ class MapScene extends Phaser.Scene {
         this.generateArrowTextures();
         this.setupCameraControls();
 
-        this.minimapRect = this.add.graphics().setDepth(101);
-        this.minimapIslands = this.add.graphics().setDepth(0);
-        this.minimapCities = this.add.graphics().setDepth(1);
+        // Launch the minimap scene
+        this.scene.launch('MinimapScene', { mainScene: this });
         
         // # Simple tooltip for hovering over map objects
         this.tooltip = this.add.text(0, 0, '', {
@@ -84,6 +79,10 @@ class MapScene extends Phaser.Scene {
         this.game.events.on('updateProps', (newProps) => {
             const isInitialUpdate = !this.props.worldState && newProps.worldState;
             this.props = newProps;
+
+            // Emit event for minimap to get props
+            this.events.emit('updateMinimapProps', newProps);
+
             if (isInitialUpdate) {
                 // # This is the first time we're getting real props, so run the initial setup
                 const { worldState } = this.props;
@@ -93,8 +92,6 @@ class MapScene extends Phaser.Scene {
                 this.cameras.main.setBounds(0, 0, worldState.width * TILE_SIZE, worldState.height * TILE_SIZE);
                 this.scale.on('resize', this.resize, this);
                 this.resize(this.scale.gameSize);
-                this.createMinimap();
-                this.drawMinimapIslands(); // Draw static islands once
             }
             this.drawMap();
         });
@@ -102,53 +99,6 @@ class MapScene extends Phaser.Scene {
         // # Add a listener to redraw the map when zoom changes
         this.cameras.main.on('zoom', this.drawMap, this);
     }
-
-    // # Creates the minimap camera and its viewport rectangle
-    createMinimap() {
-        const { worldState } = this.props;
-        if (!worldState) return;
-
-        const worldWidth = worldState.width * TILE_SIZE;
-        const worldHeight = worldState.height * TILE_SIZE;
-
-        // Calculate zoom to fit the entire world into the minimap dimensions
-        const zoomX = MINIMAP_WIDTH / worldWidth;
-        const zoomY = MINIMAP_HEIGHT / worldHeight;
-        const minimapZoom = Math.min(zoomX, zoomY);
-
-        this.minimap = this.cameras.add(10, 10, MINIMAP_WIDTH, MINIMAP_HEIGHT)
-            .setZoom(minimapZoom)
-            .setName('minimap')
-            .setBackgroundColor(0x002244)
-            .setScroll(
-                (worldWidth / 2) - (MINIMAP_WIDTH / minimapZoom / 2),
-                (worldHeight / 2) - (MINIMAP_HEIGHT / minimapZoom / 2)
-            );
-
-        this.cameras.main.ignore([this.minimapRect, this.minimapIslands, this.minimapCities]);
-        this.minimap.ignore([this.tooltip, this.minimapRect]);
-    }
-
-    // # Updates the minimap border and viewport rectangle
-    updateMinimap() {
-        if (!this.minimap || !this.cameras.main) return;
-
-        this.minimapRect.clear();
-        
-        // # Draw border for minimap
-        this.minimapRect.lineStyle(2, 0xffffff, 0.7);
-        this.minimapRect.strokeRect(this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
-
-        // # Draw main camera viewport on minimap
-        const mainCam = this.cameras.main;
-        const minimapZoom = this.minimap.zoom;
-        const rectX = this.minimap.x + (mainCam.worldView.x - this.minimap.worldView.x) * minimapZoom;
-        const rectY = this.minimap.y + (mainCam.worldView.y - this.minimap.worldView.y) * minimapZoom;
-        const rectWidth = mainCam.worldView.width * minimapZoom;
-        const rectHeight = mainCam.worldView.height * minimapZoom;
-        this.minimapRect.lineStyle(1, 0xffffff, 1).strokeRect(rectX, rectY, rectWidth, rectHeight);
-    }
-
 
     // # Generate custom textures needed for the scene
     generateArrowTextures() {
@@ -193,7 +143,6 @@ class MapScene extends Phaser.Scene {
     // # Game loop for continuous updates
     update() {
         this.updateMovements();
-        this.updateMinimap();
     }
 
     // # gets a color based on happiness
@@ -218,38 +167,6 @@ class MapScene extends Phaser.Scene {
         return (red << 16) + (green << 8) + blue;
     }
     
-    // # Draws static island shapes on the minimap
-    drawMinimapIslands() {
-        if (!this.minimapIslands || !this.props.worldState) return;
-        this.minimapIslands.clear();
-        this.minimapIslands.fillStyle(0x228B22, 1); // Forest Green
-        this.props.worldState.islands.forEach(island => {
-            this.minimapIslands.fillCircle(island.x * TILE_SIZE, island.y * TILE_SIZE, island.radius * TILE_SIZE);
-        });
-    }
-
-    // # Draws dynamic city dots on the minimap
-    drawMinimapCities() {
-        if (!this.minimapCities || !this.props.combinedSlots) return;
-        this.minimapCities.clear();
-
-        Object.values(this.props.combinedSlots).forEach(slot => {
-            if (slot.ownerId) {
-                let color = 0xffa500; // Neutral (Orange)
-                if (slot.ownerId === this.auth.currentUser.uid) {
-                    color = 0xffff00; // Own city (Yellow)
-                } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
-                    color = 0x00ff00; // Ally/Same Alliance (Green)
-                } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
-                    color = 0xff0000; // Enemy (Red)
-                }
-                this.minimapCities.fillStyle(color, 1);
-                this.minimapCities.fillCircle(slot.x * TILE_SIZE + TILE_SIZE / 2, slot.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE * 0.8);
-            }
-        });
-    }
-
-
     // # Main function to draw everything on the map, handles both detailed and dot views
     drawMap() {
         this.mapObjects.forEach(obj => obj.destroy());
@@ -259,9 +176,6 @@ class MapScene extends Phaser.Scene {
 
         if (!worldState) return;
 
-        // # Draw minimap cities
-        this.drawMinimapCities();
-
         // # Always draw islands first so they are in the background
         worldState.islands.forEach(island => {
             const islandImageKey = island.imageName === 'island_2.png' ? 'island2' : 'island1';
@@ -269,7 +183,6 @@ class MapScene extends Phaser.Scene {
                 .setDisplaySize(island.radius * 2 * TILE_SIZE, island.radius * 2 * TILE_SIZE)
                 .setOrigin(0.5).setDepth(0);
             this.mapObjects.set(`island-${island.id}`, islandSprite);
-            if (this.minimap) this.minimap.ignore(islandSprite);
         });
 
         const isDotsView = this.cameras.main.zoom < this.DOTS_ZOOM_THRESHOLD;
@@ -308,7 +221,6 @@ class MapScene extends Phaser.Scene {
                     });
                     dot.on('pointerout', () => this.tooltip.setVisible(false));
                     this.mapObjects.set(key, dot);
-                    if (this.minimap) this.minimap.ignore(dot);
                 }
             });
         } else {
@@ -438,7 +350,6 @@ class MapScene extends Phaser.Scene {
             });
             gameObject.on('pointerout', () => this.tooltip.setVisible(false));
             this.mapObjects.set(key, gameObject);
-            if (this.minimap) this.minimap.ignore(gameObject);
         }
     }
     
@@ -488,10 +399,6 @@ class MapScene extends Phaser.Scene {
 
                 movementObject = { swordIcon, arrowsGroup, path, color };
                 this.movementObjects.set(movement.id, movementObject);
-                if (this.minimap) {
-                    this.minimap.ignore(swordIcon);
-                    this.minimap.ignore(arrowsGroup);
-                }
             }
 
             const { swordIcon, arrowsGroup, path } = movementObject;
@@ -582,7 +489,7 @@ const PhaserMap = (props) => {
             width: '100%',
             height: '100%',
             parent: 'phaser-container',
-            scene: [MapScene],
+            scene: [MapScene, MinimapScene],
             audio: {
                 noAudio: true,
                 disableWebAudio: true
@@ -623,4 +530,3 @@ const PhaserMap = (props) => {
 };
 
 export default React.memo(PhaserMap);
-
