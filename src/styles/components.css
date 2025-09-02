@@ -85,7 +85,7 @@
 }
 
 .sidebar-button {
-    @apply w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold my-1 text-sm gap-3;
+    @apply w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold my-1 text-sm gap-2;
     width: 12rem; /* Fixed width for open state */
     color: #d4af37;
     border: 1px solid rounded;
@@ -93,15 +93,8 @@
     border-image-source: linear-gradient(to top, #d4af37, #b8860b);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.5), 0 2px 2px rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-button:hover:not(:disabled) {
-    background: linear-gradient(to bottom, #5a5a5a, #3a3a3a);
-}
-
-.sidebar-button:disabled {
-    @apply opacity-50 cursor-not-allowed;
-    background: #d2b48c;
+    left: 4px;
+    top: 5px;
 }
 
 .sidebar-button .icon-container {

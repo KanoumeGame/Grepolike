@@ -1,4 +1,3 @@
-// src/components/city/WorshipDisplay.js
 import React from 'react';
 import godsConfig from '../../gameData/gods.json';
 import spellsIcon from '../../images/spells.png';
@@ -27,14 +26,22 @@ const WorshipDisplay = ({ godName, playerReligion, worship, buildings, onOpenPow
     const favor = godName && worship ? (worship[godName] || 0) : 0;
     const templeLevel = buildings?.temple?.level || 0;
     const maxFavor = templeLevel > 0 ? 100 + (templeLevel * 20) : 0;
+    const favorPercentage = maxFavor > 0 ? (favor / maxFavor) * 100 : 0;
 
     return (
         <div className="worship-display-container">
             {godName && godDetails ? (
-                <div className="text-center">
-                    <img src={imageMap[godDetails.image]} alt={godDetails.name} className="w-24 h-24 mx-auto rounded-full border-4 border-yellow-500" />
+                <div className="text-center flex flex-col items-center">
+                    <div className="worship-frame-bg">
+                        <div className="favor-progress-ring" style={{ background: `conic-gradient(#4285F4 ${favorPercentage}%, transparent ${favorPercentage}%)` }}>
+                            <div className="favor-progress-fill"></div>
+                        </div>
+                        <img src={imageMap[godDetails.image]} alt={godDetails.name} className="god-avatar" />
+                        <div className="favor-plaque">
+                            <span className="font-bold">{Math.floor(favor)}</span>
+                        </div>
+                    </div>
                     <p className="text-lg font-bold mt-2">{godName}</p>
-                    <p className="text-sm text-blue-600 mt-2">Favor: {Math.floor(favor)} / {maxFavor}</p>
                     <button onClick={onOpenPowers} className="spells-button">
                         <img src={spellsIcon} alt="View Spells" className="w-10 h-10 object-contain"/>
                     </button>

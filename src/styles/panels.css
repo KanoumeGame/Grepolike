@@ -75,3 +75,43 @@
     background-color: #f87171;
     color: #000000;
 }
+.worship-frame-bg {
+    @apply w-[100px] h-[100px] relative mt-2;
+    background-image: url('../images/bg/god_bg.png');
+    background-size: cover;
+    background-position: center;
+}
+.favor-progress-ring {
+    @apply absolute w-[82px] h-[82px] rounded-full;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    background: conic-gradient(#4285F4 0deg, #4285F4 0deg, transparent 0deg, transparent 360deg);
+}
+.favor-progress-fill {
+    @apply absolute w-full h-full rounded-full;
+    top: 0;
+    left: 0;
+    background: conic-gradient(#4285F4 0deg, #4285F4 0deg, transparent 0deg, transparent 360deg);
+    z-index: 11;
+    transform-origin: center center;
+    transition: transform 0.5s linear;
+}
+.god-avatar {
+    @apply absolute w-[72px] h-[72px] rounded-full border-2 border-yellow-600;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 12;
+}
+.favor-plaque {
+    @apply absolute w-[50px] h-[25px] rounded-lg bg-gray-700 flex items-center justify-center;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    border: 1px solid #8B4513;
+    color: #f0e68c;
+}

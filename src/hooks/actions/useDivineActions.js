@@ -126,7 +126,6 @@ export const useDivineActions = ({
 
         try {
             await batch.commit();
-            setMessage(`${power.name} has been cast!`);
             closeModal('divinePowers');
             if (isSelfCast) setCityGameState((await getDoc(casterGameDocRef)).data());
             else setCityGameState({ ...cityGameState, worship: newWorship });
