@@ -85,7 +85,6 @@
     height: 64px;
     background-image: url('../images/items.png');
     background-size: 400% 400%;
-    border: 2px solid #8B4513;
     border-radius: 4px;
     cursor: pointer;
     position: relative;
@@ -138,4 +137,21 @@
 
 .use-item-btn:hover:not(:disabled) {
     background: linear-gradient(to bottom, #fff2b2, #d6914d);
+}
+
+/* Rarity Borders for Item Icons */
+.pouch-item-icon-rare {
+    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.pouch-item-icon-uncommon {
+    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.pouch-item-icon-common {
+    border: 2px solid #a1a1aa; /* stone-400 */
 }

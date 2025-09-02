@@ -28,80 +28,120 @@
     text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.shop-item-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    max-height: 24rem; /* 384px */
-    overflow-y: auto;
-    padding-right: 0.5rem;
+/* New info panel for tooltips */
+.shop-info-panel {
+    background-color: rgba(245, 222, 179, 0.9);
+    padding: 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #a17c48;
+    margin-bottom: 1rem;
+    min-height: 60px; /* To prevent layout shift */
+    text-align: center;
 }
 
-/* Custom scrollbar for webkit browsers */
-.shop-item-list::-webkit-scrollbar {
-    width: 6px;
+/* Changed from grid to horizontal flexbox */
+.shop-item-list {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto; /* Horizontal scroll */
+    padding: 0.5rem;
+    /* Add some scrollbar styling for better look */
+    scrollbar-width: thin;
+    scrollbar-color: #8B4513 #e6cba8;
 }
+
+.shop-item-list::-webkit-scrollbar {
+    height: 8px;
+}
+
 .shop-item-list::-webkit-scrollbar-track {
     background: #e6cba8;
     border-radius: 10px;
 }
+
 .shop-item-list::-webkit-scrollbar-thumb {
     background: #8B4513;
     border-radius: 10px;
 }
-.shop-item-list::-webkit-scrollbar-thumb:hover {
-    background: #A0522D;
-}
 
-
-.shop-item-card {
-    padding: 1rem;
+/* New list item styling */
+.shop-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(0,0,0,0.05);
     border-radius: 4px;
-    background-color: rgba(253, 230, 138, 0.2); /* amber-200 with opacity */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    min-width: 80px; /* Give items a minimum width */
 }
 
-.shop-item-card-rare {
-    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
-    border-image-slice: 1;
-    border-width: 2px;
-    border-style: solid;
-}
-.shop-item-card-uncommon {
-    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
-    border-image-slice: 1;
-    border-width: 2px;
-    border-style: solid;
-}
-.shop-item-card-common {
-    border: 2px solid #a1a1aa; /* stone-400 */
+.shop-item-icon {
+    width: 56px;
+    height: 56px;
+    background-image: url('../../images/items.png');
+    background-size: 400% 400%;
+    border-radius: 4px;
+    position: relative;
+    transition: transform 0.2s;
+    flex-shrink: 0;
 }
 
-.shop-item-card h4 {
+.shop-item-icon:hover {
+    transform: scale(1.1);
+}
+
+/* New price display */
+.shop-item-price {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
     font-weight: bold;
-    color: #4a2c2a;
-}
-.shop-item-card p {
-    font-size: 0.8rem;
-    color: #6b4a2b; /* Darker brown for description */
 }
 
-.shop-button {
-    background: linear-gradient(to bottom, #d2b48c, #a17c48); /* Tan gradient */
+/* Count for inventory items */
+.shop-item-count {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: white;
+    background-color: rgba(0,0,0,0.7);
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.shop-button.buy-button, .shop-button.sell-button {
+    background: linear-gradient(to bottom, #d2b48c, #a17c48);
     color: #4a2c2a;
     border: 1px solid #4a2c2a;
     font-weight: bold;
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
     box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    width: 100%;
 }
+
 .shop-button:hover:not(:disabled) {
     background: linear-gradient(to bottom, #e6cba8, #b8986d);
 }
 
-.inventory-item-card {
-    padding: 0.5rem;
-    border-radius: 4px;
-    background-color: rgba(0,0,0,0.1);
-    border: 1px solid #a17c48;
+/* Rarity Borders for Item Icons */
+.shop-item-icon-rare {
+    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-icon-uncommon {
+    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-icon-common {
+    border: 2px solid #a1a1aa; /* stone-400 */
 }
 

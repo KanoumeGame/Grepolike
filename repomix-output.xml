@@ -129,6 +129,7 @@ src/components/Game.js
 src/components/icons/EyeIcon.js
 src/components/icons/EyeOffIcon.js
 src/components/icons/PlatinumIcon.js
+src/components/icons/RunecoinIcon.js
 src/components/leaderboard/Leaderboard.css
 src/components/leaderboard/Leaderboard.js
 src/components/management/GameDataManager.js
@@ -167,6 +168,7 @@ src/components/map/TopBar.js
 src/components/map/TradePanel.js
 src/components/map/TradesToolTip.css
 src/components/map/TradesToolTip.js
+src/components/map/VillageShop.css
 src/components/map/WreckageModal.js
 src/components/MapView.js
 src/components/messaging/MessagesView.css
@@ -220,6 +222,7 @@ src/gameData/puzzles.json
 src/gameData/quests.json
 src/gameData/research.json
 src/gameData/ruinsResearch.json
+src/gameData/shopItems.js
 src/gameData/specialBuildings.json
 src/gameData/units.json
 src/gameData/vip.json
@@ -237,6 +240,7 @@ src/hooks/actions/useHeroActions.js
 src/hooks/actions/useItemActions.js
 src/hooks/actions/usePremiumActions.js
 src/hooks/actions/useResearchActions.js
+src/hooks/actions/useShopActions.js
 src/hooks/actions/useUnitActions.js
 src/hooks/actions/useWorkerActions.js
 src/hooks/movementProcessors/processAttackMovement.js
@@ -260,6 +264,7 @@ src/hooks/useMapState.js
 src/hooks/useModalState.js
 src/hooks/useMovementProcessor.js
 src/hooks/useQuestTracker.js
+src/hooks/useVillageState.js
 src/hooks/useWorldClock.js
 src/index.css
 src/index.js
@@ -5358,7 +5363,7 @@ import researchConfig from '../../gameData/research.json';
 import { useGame } from '../../contexts/GameContext';
 
 const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
-    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0});
+    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0 });
     const [troop, setTroop] = useState({ unit: 'swordsman', amount: 0 });
     const [warehouseLevels, setWarehouseLevels] = useState(0);
     const {isInstantBuild, setIsInstantBuild, isInstantResearch, setIsInstantResearch, isInstantUnits, setIsInstantUnits } = useGame();
@@ -12048,6 +12053,7 @@ import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
 import MapImageViewer from './map/MapImageViewer';
+import { useVillageState } from '../hooks/useVillageState';
 
 let worldDataCache = {
     villages: null,
@@ -12085,14 +12091,15 @@ const Game = ({ onBackToWorlds }) => {
     const [godTowns, setGodTowns] = useState({});
     const prevActiveCityIdRef = useRef();
     const prevViewRef = useRef();
-    const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); //  State for ManagementPanel
-    const [isNotesOpen, setIsNotesOpen] = useState(false); //  State for Notes
+    const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); 
+    const [isNotesOpen, setIsNotesOpen] = useState(false); 
     const [message, setMessage] = useState('');
     const [isGeneratingMap, setIsGeneratingMap] = useState(false);
     const [mapImageData, setMapImageData] = useState({ url: null, name: '' });
 
 
     useMovementProcessor(worldId);
+    useVillageState(worldId);
     const { modalState, openModal, closeModal } = useModalState();
     const { modalState: cityModalState, openModal: openCityModal, closeModal: closeCityModal, setModalState: setCityModalState } = useCityModalManager();
     const { unreadReportsCount, setUnreadReportsCount, unreadMessagesCount, setUnreadMessagesCount } = useMapState();
@@ -12119,7 +12126,6 @@ const Game = ({ onBackToWorlds }) => {
         setActiveCityId(cityId);
     }, [setActiveCityId]);
 
-    //  This effect pans the map to the active city only when the city ID or view actually changes.
     useEffect(() => {
         if (view === 'map') {
             const hasCityChanged = activeCityId !== prevActiveCityIdRef.current;
@@ -12132,7 +12138,6 @@ const Game = ({ onBackToWorlds }) => {
                 }
             }
         }
-        //  Update refs for the next render
         prevActiveCityIdRef.current = activeCityId;
         prevViewRef.current = view;
     }, [activeCityId, view, playerCities]);
@@ -12423,22 +12428,19 @@ const Game = ({ onBackToWorlds }) => {
             canvas.height = world.height * TILE_SCALE;
             const ctx = canvas.getContext('2d');
 
-            // Draw background
-            ctx.fillStyle = '#1e3a8a'; // Deep blue for water
+            ctx.fillStyle = '#1e3a8a'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw islands
-            ctx.fillStyle = '#228B22'; // Forest green for land
+            ctx.fillStyle = '#228B22'; 
             world.islands.forEach(island => {
                 ctx.beginPath();
                 ctx.arc(island.x * TILE_SCALE, island.y * TILE_SCALE, island.radius * TILE_SCALE, 0, 2 * Math.PI);
                 ctx.fill();
             });
 
-            // Draw cities
             citySlots.forEach(slot => {
                 if (slot.ownerId) {
-                    let color = '#A52A2A'; // Brown for no alliance
+                    let color = '#A52A2A'; 
                     if (slot.alliance && allianceColorMap[slot.alliance]) {
                         color = allianceColorMap[slot.alliance];
                     }
@@ -12603,7 +12605,6 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
-            {/* Global Modals */}
             {modalState.isReportsPanelOpen && <ReportsView onClose={() => closeModal('reports')} onActionClick={handleAction} />}
             {modalState.isMessagesPanelOpen && <MessagesView onClose={() => closeModal('messages')} onActionClick={handleAction} initialRecipientId={modalState.actionDetails?.city?.ownerId} initialRecipientUsername={modalState.actionDetails?.city?.ownerUsername} />}
             {modalState.isAllianceModalOpen && <AllianceModal onClose={() => closeModal('alliance')} onOpenAllianceProfile={handleOpenAllianceProfile} openModal={openModal} />}
@@ -12745,6 +12746,36 @@ const PlatinumIcon = (props) => (
 );
 
 export default PlatinumIcon;
+</file>
+
+<file path="src/components/icons/RunecoinIcon.js">
+// src/components/icons/RunecoinIcon.js
+import React from 'react';
+
+const RunecoinIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="w-6 h-6"
+    {...props}
+  >
+    <defs>
+      <linearGradient id="runecoinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: '#fde047', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#eab308', stopOpacity: 1 }} />
+      </linearGradient>
+    </defs>
+    <path
+      fillRule="evenodd"
+      d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM8.281 9.43a.75.75 0 01.918-.415l4.5 2.25a.75.75 0 010 1.37l-4.5 2.25a.75.75 0 01-1.137-.918L9.19 12l-1.128-2.652zM15 12a.75.75 0 01-.75.75h-3a.75.75 0 010-1.5h3a.75.75 0 01.75.75z"
+      clipRule="evenodd"
+      fill="url(#runecoinGradient)"
+    />
+  </svg>
+);
+
+export default RunecoinIcon;
 </file>
 
 <file path="src/components/leaderboard/Leaderboard.css">
@@ -14552,6 +14583,10 @@ import woodImage from '../../images/resources/wood.png';
 import stoneImage from '../../images/resources/stone.png';
 import silverImage from '../../images/resources/silver.png';
 import itemsConfig from '../../gameData/items.json';
+import RunecoinIcon from '../icons/RunecoinIcon';
+import shopItems from '../../gameData/shopItems';
+import { useShopActions } from '../../hooks/actions/useShopActions';
+import './VillageShop.css';
 
 const demandOptions = [
     { name: '5 minutes', duration: 300, multiplier: 0.125, happinessCost: 0 },
@@ -14560,9 +14595,266 @@ const demandOptions = [
     { name: '4 hours', duration: 14400, multiplier: 4, happinessCost: 10 },
 ];
 
+const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
+    const [currentItems, setCurrentItems] = useState([]);
+    const [nextRefresh, setNextRefresh] = useState(null);
+    const [autoRefreshTimeLeft, setAutoRefreshTimeLeft] = useState('');
+    const { purchaseItem, refreshShop, sellItem } = useShopActions();
+    const [message, setMessage] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [hoveredBuyItem, setHoveredBuyItem] = useState(null);
+    const [hoveredSellItem, setHoveredSellItem] = useState(null);
+
+    // Effect for manual daily refresh button state
+    useEffect(() => {
+        const lastManualRefresh = playerGameData?.lastManualShopRefresh?.toDate();
+        if (lastManualRefresh) {
+            const tomorrow = new Date(lastManualRefresh);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0); // Start of next day
+            setNextRefresh(tomorrow);
+        } else {
+            setNextRefresh(new Date()); // Can refresh now if never refreshed
+        }
+    }, [playerGameData]);
+    
+    // Effect for automatic 8-hour refresh timer display
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const now = new Date();
+            const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
+            const refreshInterval = 8 * 60 * 60 * 1000; // 8 hours
+            const nextAutoRefreshTime = lastRefreshTime + refreshInterval;
+
+            const remaining = Math.max(0, nextAutoRefreshTime - now.getTime());
+            const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((remaining / 1000 / 60) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            setAutoRefreshTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        calculateTimeLeft();
+        const interval = setInterval(calculateTimeLeft, 1000);
+        return () => clearInterval(interval);
+    }, [village.lastShopRefresh]);
+
+    // Effect to generate items based on the last refresh time
+    useEffect(() => {
+        const now = new Date();
+        const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
+        
+        console.log("Village Shop Debug:", {
+            rawTimestamp: village.lastShopRefresh,
+            isFirestoreTimestamp: !!village.lastShopRefresh?.toDate,
+            isNumber: typeof village.lastShopRefresh === 'number',
+            now: now.getTime(),
+            lastRefreshTime: lastRefreshTime,
+            villageId: village.id
+        });
+
+        const villageLevel = village.level || 1;
+        const seed = Math.floor(lastRefreshTime / 1000) + village.x + village.y;
+        const generatedItems = [];
+        const slots = 3 + Math.floor(villageLevel / 2);
+
+        for (let i = 0; i < slots; i++) {
+            const qualityRoll = Math.random() * 100;
+            let quality;
+            if (qualityRoll < 70) quality = 'common';
+            else if (qualityRoll < 95) quality = 'uncommon';
+            else quality = 'rare';
+
+            const availableForQuality = shopItems[quality];
+            if (availableForQuality.length > 0) {
+                const itemIndex = (seed + i) % availableForQuality.length;
+                generatedItems.push(availableForQuality[itemIndex]);
+            }
+        }
+        setCurrentItems(generatedItems);
+    }, [village.lastShopRefresh, village.level, village.x, village.y]);
+
+    const handlePurchase = async (item) => {
+        try {
+            await purchaseItem(item, village);
+            setMessage(`Successfully purchased ${itemsConfig[item.itemId].name}!`);
+        } catch (error) {
+            setMessage(`Purchase failed: ${error.message}`);
+        }
+    };
+
+    const handleSellItem = async (itemId) => {
+        try {
+            await sellItem(itemId, village);
+            setMessage(`Successfully sold item!`);
+        } catch (error) {
+            setMessage(`Sell failed: ${error.message}`);
+        }
+    };
+    
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        setMessage('');
+        try {
+            await refreshShop(village);
+            setMessage("Shop refreshed!");
+        } catch(error) {
+            setMessage(error.message);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+    
+    const canRefresh = nextRefresh && new Date() >= nextRefresh;
+
+    const getQualityClass = (quality) => {
+        switch(quality) {
+            case 'rare': return 'shop-item-card-rare';
+            case 'uncommon': return 'shop-item-card-uncommon';
+            default: return 'shop-item-card-common';
+        }
+    };
+
+    const getItemIconStyle = (item) => {
+        if (!item || !item.sprite) return {};
+        const xPos = item.sprite.x * (100 / 3);
+        const yPos = item.sprite.y * (100 / 3);
+        return {
+            backgroundPosition: `${xPos}% ${yPos}%`,
+        };
+    };
+
+    return (
+        <div className="village-shop-container">
+            <div className="flex justify-between items-center mb-4">
+                <h4 className="font-bold text-lg text-center">Village Shop</h4>
+                <div className="flex items-center">
+                    <RunecoinIcon className="w-6 h-6 mr-2" />
+                    <span className="font-bold text-lg">{runecoinBalance}</span>
+                </div>
+            </div>
+             <div className="flex justify-between items-center mb-4">
+                <p className="text-sm text-gray-700">Items auto-refresh in: {autoRefreshTimeLeft}</p>
+                 <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-700">
+                        {canRefresh ? "Daily refresh available!" : `Next daily refresh: ${nextRefresh?.toLocaleDateString()}`}
+                    </p>
+                    <button 
+                        onClick={handleRefresh} 
+                        disabled={!canRefresh || isRefreshing}
+                        className="btn btn-primary text-sm py-1 px-3 shop-button"
+                    >
+                        {isRefreshing ? '...' : 'Refresh'}
+                    </button>
+                 </div>
+            </div>
+            {message && <p className="text-center text-yellow-600 mb-4">{message}</p>}
+
+            <div className="grid grid-cols-2 gap-4">
+                {/* Left Column: Buy Items */}
+                <div className="shop-column">
+                    <h5 className="shop-column-header">Items for Sale</h5>
+                    <div className="shop-item-grid">
+                        {currentItems.map((item, index) => {
+                            const itemDetails = itemsConfig[item.itemId];
+                            const canAfford = runecoinBalance >= item.cost;
+                            return (
+                                <div
+                                    key={index}
+                                    className="shop-item-wrapper"
+                                    onMouseEnter={() => setHoveredBuyItem({ ...item, itemDetails })}
+                                    onMouseLeave={() => setHoveredBuyItem(null)}
+                                >
+                                    <div className={`shop-item-icon ${getQualityClass(item.quality)}`} style={getItemIconStyle(itemDetails)}></div>
+                                    {hoveredBuyItem?.itemId === item.itemId && (
+                                        <div className="shop-item-tooltip">
+                                            <h4 className="font-bold">{itemDetails.name}</h4>
+                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
+                                            <div className="flex items-center justify-between mt-4">
+                                                <div className="flex items-center">
+                                                    <RunecoinIcon className="w-5 h-5 mr-1" />
+                                                    <span>{item.cost}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => handlePurchase(item)}
+                                                    disabled={!canAfford}
+                                                    className={`btn text-sm py-1 px-3 shop-button ${!canAfford && 'btn-disabled'}`}
+                                                >
+                                                    Buy
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Right Column: Sell Items */}
+                <div className="shop-column">
+                    <h5 className="shop-column-header">Your Inventory</h5>
+                    <div className="flex justify-center items-center mb-2 text-sm">
+                        <span className="mr-2">Village Funds:</span>
+                        <RunecoinIcon className="w-5 h-5 mr-1" />
+                        <span className="font-bold">{village.runecoinBalance || 0}</span>
+                    </div>
+                    <div className="shop-item-grid">
+                        {Object.entries(playerGameData.items || {}).length > 0 ? Object.entries(playerGameData.items || {}).map(([itemId, count]) => {
+                            if (count === 0) return null;
+                            const itemDetails = itemsConfig[itemId];
+                            const sellInfo = Object.values(shopItems).flat().find(i => i.itemId === itemId);
+                            const sellPrice = sellInfo?.sellPrice;
+                            return (
+                                <div
+                                    key={itemId}
+                                    className="shop-item-wrapper"
+                                    onMouseEnter={() => setHoveredSellItem({ itemId, count, itemDetails, sellPrice })}
+                                    onMouseLeave={() => setHoveredSellItem(null)}
+                                >
+                                    <div className="shop-item-icon border-gray-500" style={getItemIconStyle(itemDetails)}>
+                                        <span className="absolute bottom-1 right-1 text-white bg-black/70 px-1 text-sm rounded">{count}</span>
+                                    </div>
+                                    {hoveredSellItem?.itemId === itemId && (
+                                        <div className="shop-item-tooltip">
+                                            <h4 className="font-bold">{itemDetails.name} (x{count})</h4>
+                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                {sellPrice ? (
+                                                    <div className="flex items-center text-sm">
+                                                        <span className="mr-1">Sell for:</span>
+                                                        <RunecoinIcon className="w-4 h-4 mr-1" />
+                                                        <span>{sellPrice}</span>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500">Cannot be sold</p>
+                                                )}
+                                                {sellPrice && (
+                                                    <button
+                                                        onClick={() => handleSellItem(itemId)}
+                                                        disabled={!((village.runecoinBalance || 0) >= sellPrice)}
+                                                        className={`btn text-xs py-1 px-2 shop-button ${!((village.runecoinBalance || 0) >= sellPrice) && 'btn-disabled'}`}
+                                                    >
+                                                        Sell
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }) : (
+                            <p className="text-center text-gray-500 italic mt-8">Your inventory is empty.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, marketCapacity }) => {
     const { currentUser, userProfile } = useAuth();
-    const { gameState, setGameState, countCitiesOnIsland, activeCityId, addNotification } = useGame();
+    const { gameState, setGameState, countCitiesOnIsland, activeCityId, addNotification, playerGameData } = useGame();
     const { playerAlliance } = useAlliance();
     const [village, setVillage] = useState(initialVillage);
     const [baseVillageData, setBaseVillageData] = useState(initialVillage);
@@ -14571,7 +14863,9 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const [timeSinceCollection, setTimeSinceCollection] = useState(Infinity);
     const [activeTab, setActiveTab] = useState('demand');
     const [tradeAmount, setTradeAmount] = useState(0);
-    const [plunderTimeLeft, setPlunderTimeLeft] = useState(0); // State for plunder cooldown
+    const [plunderTimeLeft, setPlunderTimeLeft] = useState(0);
+
+    const runecoinBalance = playerGameData?.runecoins || 0;
 
     const resourceImages = {
         wood: woodImage,
@@ -14639,7 +14933,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         return () => clearInterval(interval);
     }, [worldId, village.id, baseVillageData]);
 
-    // This useEffect now handles happiness regeneration periodically.
     useEffect(() => {
         const happinessRegenInterval = setInterval(async () => {
             if (!worldId || !village?.id || !currentUser) return;
@@ -14658,7 +14951,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     const now = new Date();
                     const elapsedMinutes = (now.getTime() - lastUpdated.getTime()) / (1000 * 60);
                     
-                    const happinessToRegen = elapsedMinutes * (2 / 60); // 2 happiness per hour
+                    const happinessToRegen = elapsedMinutes * (2 / 60); 
     
                     if (happinessToRegen > 0) {
                         const newHappiness = Math.min(100, (villageData.happiness || 0) + happinessToRegen);
@@ -14673,7 +14966,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
             } catch (error) {
                 console.error("Error regenerating village happiness:", error);
             }
-        }, 60000); // Run every minute
+        }, 60000); 
     
         return () => clearInterval(happinessRegenInterval);
     }, [worldId, village?.id, currentUser]);
@@ -14693,12 +14986,11 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         }
     }, [village]);
 
-    //  New useEffect for plunder cooldown
     useEffect(() => {
         if (village && village.lastPlundered) {
             const updateTimer = () => {
                 const lastPlunderedTime = village.lastPlundered.toDate().getTime();
-                const cooldownEndTime = lastPlunderedTime + 20 * 60 * 1000; // 20 minutes
+                const cooldownEndTime = lastPlunderedTime + 20 * 60 * 1000; 
                 const remaining = Math.max(0, cooldownEndTime - Date.now());
                 setPlunderTimeLeft(remaining / 1000);
             };
@@ -14716,7 +15008,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         silver: Math.floor(100 * Math.pow(1.8, level - 1)),
     });
 
-    //  Calculate the demand yields with a memoized hook to ensure the UI updates when the bonus changes.
     const demandYields = useMemo(() => {
         const citiesOnIsland = countCitiesOnIsland(village.islandId);
         const bonusMultiplier = citiesOnIsland > 1 ? 1.20 : 1.0;
@@ -14744,7 +15035,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     
         const playerVillageRef = doc(db, 'users', currentUser.uid, 'games', worldId, 'conqueredVillages', village.id);
         const cityDocRef = doc(db, 'users', currentUser.uid, 'games', worldId, 'cities', activeCityId);
-        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId); //  Reference to top-level game doc for items
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId); 
         
         const citiesOnIsland = countCitiesOnIsland(village.islandId);
         const hasBonus = citiesOnIsland > 1;
@@ -14754,7 +15045,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
             const updatedCityState = await runTransaction(db, async (transaction) => {
                 const playerVillageDoc = await transaction.get(playerVillageRef);
                 const cityDoc = await transaction.get(cityDocRef);
-                const gameDoc = await transaction.get(gameDocRef); //  Get game doc in transaction
+                const gameDoc = await transaction.get(gameDocRef); 
                 if (!playerVillageDoc.exists() || !cityDoc.exists() || !gameDoc.exists()) throw new Error("Your village, active city, or game state not found.");
     
                 const villageData = playerVillageDoc.data();
@@ -14787,8 +15078,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     happinessLastUpdated: serverTimestamp()
                 });
 
-                //  Item Find Logic
-                const itemFindChance = 0.02; // 2% chance
+                const itemFindChance = 0.02; 
                 if (Math.random() < itemFindChance) {
                     const commonItems = ["resource_boost_wood_25", "construction_speed_10", "research_speed_10"];
                     const foundItemId = commonItems[Math.floor(Math.random() * commonItems.length)];
@@ -14796,7 +15086,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     newItems[foundItemId] = (newItems[foundItemId] || 0) + 1;
                     transaction.update(gameDocRef, { items: newItems });
                     
-                    //  We'll use the addNotification function from GameContext to show a popup
                     setTimeout(() => addNotification(`You found a ${itemsConfig[foundItemId].name}!`, 'item', foundItemId), 500);
                 }
 
@@ -14843,7 +15132,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                 const baseData = baseVillageDoc.data();
                 const currentHappiness = villageData.happiness !== undefined ? villageData.happiness : 100;
                 
-                // Plunder always yields resources, regardless of revolt outcome
                 const plunderAmount = { wood: Math.floor((baseData.resources.wood || 0) * 0.5), stone: Math.floor((baseData.resources.stone || 0) * 0.5), silver: Math.floor((baseData.resources.silver || 0) * 0.5) };
                 const newPlayerResources = { ...cityData.resources };
                 const newVillageResources = { ...baseData.resources };
@@ -14857,7 +15145,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                 transaction.update(cityDocRef, { resources: newPlayerResources });
                 transaction.update(baseVillageRef, { resources: newVillageResources });
 
-                // Check for revolt: guaranteed if happiness is low
                 if (currentHappiness <= 40) {
                     const retaliationLosses = resolveVillageRetaliation(cityData.units);
                     const newUnits = { ...cityData.units };
@@ -14891,12 +15178,11 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     transaction.set(doc(reportsRef), report);
                     return { ...cityData, units: newUnits, resources: newPlayerResources };
                 } else {
-                    // Successful plunder, no revolt
                     const newHappiness = Math.max(0, currentHappiness - 40);
                     transaction.update(playerVillageRef, { 
                         happiness: newHappiness, 
                         happinessLastUpdated: serverTimestamp(),
-                        lastPlundered: serverTimestamp() // Set plunder cooldown
+                        lastPlundered: serverTimestamp() 
                     });
                     
                     const report = { 
@@ -15024,7 +15310,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const maxTradeAmount = baseVillageData && gameState ? Math.min(gameState.resources[baseVillageData.demands] || 0, Math.floor((baseVillageData.resources?.[baseVillageData.supplies] || 0) * (baseVillageData.tradeRatio || 1)), marketCapacity || 0) : 0;
     const plunderCooldownEndTime = village.lastPlundered ? new Date(village.lastPlundered.toDate().getTime() + 20 * 60 * 1000) : null;
     
-    // # gets a text color based on happiness
     const getHappinessTextColor = (happiness) => {
         if (happiness === undefined || happiness === null) happiness = 100;
         if (happiness > 70) return 'text-green-400';
@@ -15034,18 +15319,25 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" onClick={onClose}>
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center">
+            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl h-[700px] flex flex-col text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center flex-shrink-0">
                     <h2 className="text-2xl font-bold text-yellow-400">{`Farming Village: ${baseVillageData?.name || village.name} (Level ${village.level})`}</h2>
-                    <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                     <div className="flex items-center gap-4">
+                        <div className="flex items-center">
+                            <RunecoinIcon className="w-6 h-6 mr-2" />
+                            <span className="font-bold text-lg text-yellow-300">{runecoinBalance}</span>
+                        </div>
+                        <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                    </div>
                 </div>
-                <div className="flex border-b border-gray-600 my-4">
+                <div className="flex border-b border-gray-600 my-4 flex-shrink-0">
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>
                     <button onClick={() => setActiveTab('plunder')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'plunder' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Plunder</button>
                     <button onClick={() => setActiveTab('trade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'trade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Trade</button>
                     <button onClick={() => setActiveTab('upgrade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'upgrade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Upgrade</button>
+                    <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                 </div>
-                <div className="p-4 text-white">
+                <div className="p-4 text-white flex-grow overflow-y-auto">
                     {activeTab === 'demand' && (
                         <div>
                             <h4 className="font-bold text-lg text-center mb-2">Demand Resources</h4>
@@ -15139,9 +15431,10 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                             <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
                         </div>
                     )}
+                    {activeTab === 'shop' && <VillageShop village={village} runecoinBalance={runecoinBalance} playerGameData={playerGameData} />}
                     {message && <p className="text-green-400 mt-4 text-center">{message}</p>}
                 </div>
-                 <button onClick={onClose} className="btn btn-primary px-6 py-2 mt-4">Close</button>
+                 <button onClick={onClose} className="btn btn-primary px-6 py-2 mt-auto flex-shrink-0">Close</button>
             </div>
         </div>
     );
@@ -19236,6 +19529,115 @@ const TradesTooltip = ({ movements, combinedSlots, onCancel, isLocked, countdown
 export default TradesTooltip;
 </file>
 
+<file path="src/components/map/VillageShop.css">
+/* src/components/map/VillageShop.css */
+
+.village-shop-container {
+    background-color: #d2b48c; /* Tan color */
+    background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+    padding: 1rem;
+    border: 4px solid #8B4513; /* Saddlebrown */
+    border-image-slice: 1;
+    border-image-source: linear-gradient(to right, #6b4f2c, #a17c48);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.shop-column {
+    background-color: rgba(245, 222, 179, 0.7); /* Wheat, semi-transparent */
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #a17c48; /* Peru */
+}
+
+.shop-column-header {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.25rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    color: #4a2c2a;
+    border-bottom: 2px solid #8B4513;
+    padding-bottom: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.shop-item-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-height: 24rem; /* 384px */
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom scrollbar for webkit browsers */
+.shop-item-list::-webkit-scrollbar {
+    width: 6px;
+}
+.shop-item-list::-webkit-scrollbar-track {
+    background: #e6cba8;
+    border-radius: 10px;
+}
+.shop-item-list::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border-radius: 10px;
+}
+.shop-item-list::-webkit-scrollbar-thumb:hover {
+    background: #A0522D;
+}
+
+
+.shop-item-card {
+    padding: 1rem;
+    border-radius: 4px;
+    background-color: rgba(253, 230, 138, 0.2); /* amber-200 with opacity */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.shop-item-card-rare {
+    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-card-uncommon {
+    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-card-common {
+    border: 2px solid #a1a1aa; /* stone-400 */
+}
+
+.shop-item-card h4 {
+    font-weight: bold;
+    color: #4a2c2a;
+}
+.shop-item-card p {
+    font-size: 0.8rem;
+    color: #6b4a2b; /* Darker brown for description */
+}
+
+.shop-button {
+    background: linear-gradient(to bottom, #d2b48c, #a17c48); /* Tan gradient */
+    color: #4a2c2a;
+    border: 1px solid #4a2c2a;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.shop-button:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #e6cba8, #b8986d);
+}
+
+.inventory-item-card {
+    padding: 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(0,0,0,0.1);
+    border: 1px solid #a17c48;
+}
+</file>
+
 <file path="src/components/map/WreckageModal.js">
 import React from 'react';
 import woodImage from '../../images/resources/wood.png';
@@ -20219,14 +20621,6 @@ export default MessagesView;
 </file>
 
 <file path="src/components/Pouch.css">
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 /* src/components/Pouch.css */
 .pouch-toggle-button-container {
     position: absolute;
@@ -20294,30 +20688,61 @@ export default MessagesView;
     flex-grow: 1;
     overflow-y: auto;
     padding: 1rem;
-    display: flex;
-    flex-direction: column;
+}
+
+.pouch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
     gap: 1rem;
 }
 
-.item-card {
-    background-color: rgba(139, 69, 19, 0.1);
-    border: 1px solid #d2b48c;
-    border-radius: 4px;
-    padding: 1rem;
+.pouch-item-wrapper {
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
-.item-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #8B4513;
+.pouch-item-icon {
+    width: 64px;
+    height: 64px;
+    background-image: url('../images/items.png');
+    background-size: 400% 400%;
+    border: 2px solid #8B4513;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s;
 }
 
-.item-description {
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
+.pouch-item-icon:hover {
+    transform: scale(1.1);
+}
+
+.pouch-item-count {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: white;
+    background-color: rgba(0,0,0,0.7);
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.pouch-item-tooltip {
+    position: absolute;
+    left: 105%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 250px;
+    z-index: 10;
+    padding: 1rem;
+    border-radius: 4px;
+    background-color: #fdf6e7;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #a17c48;
 }
 
 .use-item-btn {
@@ -20330,6 +20755,8 @@ export default MessagesView;
     transition: all 0.2s;
     cursor: pointer;
     flex-shrink: 0;
+    width: 100%;
+    margin-top: 0.75rem;
 }
 
 .use-item-btn:hover:not(:disabled) {
@@ -20338,14 +20765,6 @@ export default MessagesView;
 </file>
 
 <file path="src/components/Pouch.js">
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 // src/components/Pouch.js
 import React, { useState } from 'react';
 import itemsConfig from '../gameData/items.json';
@@ -20355,18 +20774,27 @@ import './Pouch.css';
 const Pouch = ({ items, onClose }) => {
     const { activateItem } = useItemActions();
     const [isUsingItemId, setIsUsingItemId] = useState(null);
+    const [hoveredItemId, setHoveredItemId] = useState(null);
 
     const handleUseItem = async (itemId) => {
-        if (isUsingItemId) return; // Prevent multiple clicks
+        if (isUsingItemId) return;
         setIsUsingItemId(itemId);
         try {
             await activateItem(itemId);
         } catch (error) {
             console.error("Failed to use item:", error);
-            // Optionally show an error message to the user
         } finally {
             setIsUsingItemId(null);
         }
+    };
+
+    const getItemIconStyle = (item) => {
+        if (!item || !item.sprite) return {};
+        const xPos = item.sprite.x * (100 / 3);
+        const yPos = item.sprite.y * (100 / 3);
+        return {
+            backgroundPosition: `${xPos}% ${yPos}%`,
+        };
     };
 
     return (
@@ -20378,26 +20806,39 @@ const Pouch = ({ items, onClose }) => {
                 </div>
                 <div className="pouch-content">
                     {Object.entries(items).length > 0 ? (
-                        Object.entries(items).map(([itemId, count]) => {
-                            const item = itemsConfig[itemId];
-                            if (!item) return null;
-                            const isUsingThisItem = isUsingItemId === itemId;
-                            return (
-                                <div key={itemId} className="item-card">
-                                    <div className="item-info">
-                                        <h4 className="item-name">{item.name} (x{count})</h4>
-                                        <p className="item-description">{item.description}</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => handleUseItem(itemId)} 
-                                        className="use-item-btn"
-                                        disabled={isUsingThisItem}
+                        <div className="pouch-grid">
+                            {Object.entries(items).map(([itemId, count]) => {
+                                if (count === 0) return null;
+                                const itemDetails = itemsConfig[itemId];
+                                if (!itemDetails) return null;
+                                const isUsingThisItem = isUsingItemId === itemId;
+                                return (
+                                    <div
+                                        key={itemId}
+                                        className="pouch-item-wrapper"
+                                        onMouseEnter={() => setHoveredItemId(itemId)}
+                                        onMouseLeave={() => setHoveredItemId(null)}
                                     >
-                                        {isUsingThisItem ? 'Using...' : 'Use'}
-                                    </button>
-                                </div>
-                            );
-                        })
+                                        <div className="pouch-item-icon" style={getItemIconStyle(itemDetails)}>
+                                            <span className="pouch-item-count">{count}</span>
+                                        </div>
+                                        {hoveredItemId === itemId && (
+                                            <div className="pouch-item-tooltip">
+                                                <h4 className="item-name">{itemDetails.name}</h4>
+                                                <p className="item-description">{itemDetails.description}</p>
+                                                <button
+                                                    onClick={() => handleUseItem(itemId)}
+                                                    className="use-item-btn"
+                                                    disabled={isUsingThisItem}
+                                                >
+                                                    {isUsingThisItem ? 'Using...' : 'Use'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
                         <p className="text-center p-4">Your pouch is empty.</p>
                     )}
@@ -26557,176 +26998,176 @@ export default app;
   "resource_boost_wood_25": {
     "name": "Lumberjack's Blessing",
     "description": "Increases wood production by 25% for 1 hour.",
-    "image": "resource_boost.png",
     "type": "boost",
     "effect": {
       "type": "production_boost",
       "resource": "wood",
       "value": 0.25,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 3, "y": 3 }
   },
   "resource_boost_stone_25": {
     "name": "Mason's Focus",
     "description": "Increases stone production by 25% for 1 hour.",
-    "image": "resource_boost.png",
     "type": "boost",
     "effect": {
       "type": "production_boost",
       "resource": "stone",
       "value": 0.25,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 2, "y": 3 }
   },
   "resource_boost_silver_25": {
     "name": "Midas' Touch",
     "description": "Increases silver production by 25% for 1 hour.",
-    "image": "resource_boost.png",
     "type": "boost",
     "effect": {
       "type": "production_boost",
       "resource": "silver",
       "value": 0.25,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 1, "y": 3 }
   },
   "construction_speed_10": {
     "name": "Architect's Draft",
     "description": "Reduces construction time by 10% for all buildings for 1 hour.",
-    "image": "construction_speed.png",
     "type": "boost",
     "effect": {
       "type": "construction_speed",
       "value": 0.10,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 1, "y": 0 }
   },
   "research_speed_10": {
     "name": "Scholar's Insight",
     "description": "Reduces research time by 10% for 1 hour.",
-    "image": "research_speed.png",
     "type": "boost",
     "effect": {
       "type": "research_speed",
       "value": 0.10,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 1, "y": 2 }
   },
   "training_speed_10": {
     "name": "Trainer's Whip",
     "description": "Reduces unit training time by 10% for 1 hour.",
-    "image": "training_speed.png",
     "type": "boost",
     "effect": {
       "type": "training_speed",
       "value": 0.10,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 0, "y": 3 }
   },
   "attack_boost_5": {
     "name": "Potion of Attack",
     "description": "Increases the attack of all units by 5% for 1 hour.",
-    "image": "attack_boost.png",
     "type": "boost",
     "effect": {
       "type": "attack_boost",
       "value": 0.05,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 0, "y": 0 }
   },
   "defense_boost_5": {
     "name": "Potion of Defense",
     "description": "Increases the defense of all units by 5% for 1 hour.",
-    "image": "defense_boost.png",
     "type": "boost",
     "effect": {
       "type": "defense_boost",
       "value": 0.05,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 2, "y": 0 }
   },
   "movement_speed_10": {
     "name": "Winds of Haste",
     "description": "Increases the speed of all troops by 10% for 1 hour.",
-    "image": "movement_speed.png",
     "type": "boost",
     "effect": {
       "type": "movement_speed",
       "value": 0.10,
       "duration": 3600
-    }
+    },
+    "sprite": { "x": 3, "y": 1 }
   },
   "instant_wood_500": {
     "name": "Bundle of Logs",
     "description": "Instantly adds 500 wood to your warehouse.",
-    "image": "instant_resource.png",
     "type": "instant",
     "effect": {
       "type": "add_resource",
       "resource": "wood",
       "value": 500
-    }
+    },
+    "sprite": { "x": 2, "y": 1 }
   },
   "instant_stone_500": {
     "name": "Pile of Rocks",
     "description": "Instantly adds 500 stone to your warehouse.",
-    "image": "instant_resource.png",
     "type": "instant",
     "effect": {
       "type": "add_resource",
       "resource": "stone",
       "value": 500
-    }
+    },
+    "sprite": { "x": 1, "y": 1 }
   },
   "instant_silver_250": {
     "name": "Sack of Coins",
     "description": "Instantly adds 250 silver to your warehouse.",
-    "image": "instant_resource.png",
     "type": "instant",
     "effect": {
       "type": "add_resource",
       "resource": "silver",
       "value": 250
-    }
+    },
+    "sprite": { "x": 0, "y": 1 }
   },
   "soulstone": {
     "name": "Soulstone",
     "description": "A mystical gem that can instantly revive one of your executed heroes from the dead.",
-    "image": "soulstone.png",
     "type": "special",
     "effect": {
       "type": "revive_hero"
-    }
+    },
+    "sprite": { "x": 3, "y": 2 }
   },
   "favor_boost_10": {
     "name": "Offering to the Gods",
     "description": "Increases favor production by 10% for 2 hours.",
-    "image": "favor_boost.png",
     "type": "boost",
     "effect": {
       "type": "favor_production",
       "value": 0.10,
       "duration": 7200
-    }
+    },
+    "sprite": { "x": 3, "y": 0 }
   },
   "population_boost_200": {
     "name": "Call to the People",
     "description": "Instantly adds 200 population to your city, temporarily exceeding your farm's capacity if needed.",
-    "image": "population_boost.png",
     "type": "instant",
     "effect": {
       "type": "add_population",
       "value": 200
-    }
+    },
+    "sprite": { "x": 0, "y": 2 }
   },
   "scout_reveal": {
     "name": "Oracle's Vision",
     "description": "Reveals the size and composition of one incoming attack against your city.",
-    "image": "scout_reveal.png",
     "type": "special",
     "effect": {
       "type": "reveal_attack"
-    }
+    },
+    "sprite": { "x": 2, "y": 2 }
   }
 }
 </file>
@@ -27374,6 +27815,35 @@ export default app;
     "effect": { "type": "favor_production_boost", "value": 0.05 }
   }
 }
+</file>
+
+<file path="src/gameData/shopItems.js">
+const shopItems = {
+    "common": [
+        { "itemId": "resource_boost_wood_25", "cost": 10, "sellPrice": 3 },
+        { "itemId": "resource_boost_stone_25", "cost": 10, "sellPrice": 3 },
+        { "itemId": "resource_boost_silver_25", "cost": 10, "sellPrice": 3 },
+        { "itemId": "construction_speed_10", "cost": 25, "sellPrice": 6 },
+        { "itemId": "research_speed_10", "cost": 25, "sellPrice": 6 },
+        { "itemId": "training_speed_10", "cost": 30, "sellPrice": 7 },
+        { "itemId": "instant_wood_500", "cost": 15, "sellPrice": 4 },
+        { "itemId": "instant_stone_500", "cost": 15, "sellPrice": 4 },
+        { "itemId": "instant_silver_250", "cost": 20, "sellPrice": 5 },
+        { "itemId": "population_boost_200", "cost": 20, "sellPrice": 5 }
+    ],
+    "uncommon": [
+        { "itemId": "attack_boost_5", "cost": 50, "sellPrice": 12 },
+        { "itemId": "defense_boost_5", "cost": 50, "sellPrice": 12 },
+        { "itemId": "movement_speed_10", "cost": 40, "sellPrice": 10 },
+        { "itemId": "favor_boost_10", "cost": 60, "sellPrice": 15 }
+    ],
+    "rare": [
+        { "itemId": "scout_reveal", "cost": 150, "sellPrice": 35 },
+        { "itemId": "soulstone", "cost": 250, "sellPrice": 60 }
+    ]
+};
+
+export default shopItems;
 </file>
 
 <file path="src/gameData/specialBuildings.json">
@@ -30708,6 +31178,128 @@ export const useResearchActions = ({
     };
 
     return { handleStartResearch, handleCancelResearch };
+};
+</file>
+
+<file path="src/hooks/actions/useShopActions.js">
+import { useAuth } from '../../contexts/AuthContext';
+import { useGame } from '../../contexts/GameContext';
+import { db } from '../../firebase/config';
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
+import itemsConfig from '../../gameData/items.json';
+import shopItems from '../../gameData/shopItems';
+
+export const useShopActions = () => {
+    const { currentUser } = useAuth();
+    const { worldId, addNotification } = useGame();
+
+    const purchaseItem = async (item, village) => {
+        if (!currentUser || !worldId || !village.id) {
+            throw new Error("User, world, or village not identified.");
+        }
+
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+
+        await runTransaction(db, async (transaction) => {
+            const gameDoc = await transaction.get(gameDocRef);
+            if (!gameDoc.exists()) throw new Error("Game data not found.");
+
+            const gameData = gameDoc.data();
+            const currentRunecoins = gameData.runecoins || 0;
+
+            if (currentRunecoins < item.cost) {
+                throw new Error("Not enough Runecoins.");
+            }
+
+            const newRunecoins = currentRunecoins - item.cost;
+            const newItems = { ...(gameData.items || {}) };
+            newItems[item.itemId] = (newItems[item.itemId] || 0) + 1;
+
+            transaction.update(gameDocRef, {
+                runecoins: newRunecoins,
+                items: newItems
+            });
+        });
+
+        addNotification(`Purchased ${itemsConfig[item.itemId].name}!`, 'item', item.itemId);
+    };
+    
+    const sellItem = async (itemId, village) => {
+        if (!currentUser || !worldId || !village.id) {
+            throw new Error("User, world, or village not identified.");
+        }
+        
+        const itemInfo = Object.values(shopItems).flat().find(i => i.itemId === itemId);
+        if (!itemInfo || !itemInfo.sellPrice) {
+            throw new Error("This item cannot be sold or has no sell price.");
+        }
+        const sellPrice = itemInfo.sellPrice;
+
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+        const villageDocRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'conqueredVillages', village.id);
+
+        await runTransaction(db, async (transaction) => {
+            const gameDoc = await transaction.get(gameDocRef);
+            const villageDoc = await transaction.get(villageDocRef);
+            if (!gameDoc.exists() || !villageDoc.exists()) throw new Error("Game or village data not found.");
+
+            const gameData = gameDoc.data();
+            const villageData = villageDoc.data();
+
+            const currentItems = gameData.items || {};
+            if ((currentItems[itemId] || 0) < 1) {
+                throw new Error("You don't have this item to sell.");
+            }
+            
+            const villageRunecoins = villageData.runecoinBalance || 0;
+            if (villageRunecoins < sellPrice) {
+                throw new Error("The village cannot afford this item.");
+            }
+
+            // Perform updates
+            const newRunecoins = (gameData.runecoins || 0) + sellPrice;
+            const newItems = { ...currentItems };
+            newItems[itemId] -= 1;
+            if (newItems[itemId] === 0) {
+                delete newItems[itemId];
+            }
+            const newVillageRunecoins = villageRunecoins - sellPrice;
+
+            transaction.update(gameDocRef, { runecoins: newRunecoins, items: newItems });
+            transaction.update(villageDocRef, { runecoinBalance: newVillageRunecoins });
+        });
+
+        addNotification(`Sold ${itemsConfig[itemId].name} for ${sellPrice} Runecoins!`, 'item', itemId);
+    };
+
+    const refreshShop = async (village) => {
+        if (!currentUser || !worldId || !village.id) {
+            throw new Error("User, world, or village not identified.");
+        }
+        
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+        const villageDocRef = doc(db, `users/${currentUser.uid}/games`, worldId, 'conqueredVillages', village.id);
+
+        await runTransaction(db, async (transaction) => {
+            const gameDoc = await transaction.get(gameDocRef);
+            if (!gameDoc.exists()) throw new Error("Game data not found.");
+            
+            const gameData = gameDoc.data();
+            const lastRefresh = gameData.lastManualShopRefresh?.toDate();
+            const now = new Date();
+            
+            if (lastRefresh && lastRefresh.toDateString() === now.toDateString()) {
+                throw new Error("You can only refresh the shop once per day.");
+            }
+            
+            transaction.update(gameDocRef, { lastManualShopRefresh: serverTimestamp() });
+            transaction.update(villageDocRef, { lastShopRefresh: now.getTime() });
+        });
+        
+        addNotification('Shop items have been refreshed!', 'vip', 1);
+    };
+
+    return { purchaseItem, refreshShop, sellItem };
 };
 </file>
 
@@ -34582,6 +35174,112 @@ export const useQuestTracker = (cityState) => {
 };
 </file>
 
+<file path="src/hooks/useVillageState.js">
+// src/hooks/useVillageState.js
+import { useEffect } from 'react';
+import { db } from '../firebase/config';
+import { doc, runTransaction, serverTimestamp, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
+
+export const useVillageState = (worldId) => {
+    const { currentUser } = useAuth();
+
+    // Effect for Runecoin generation (needs transaction)
+    useEffect(() => {
+        if (!currentUser || !worldId) return;
+
+        const processRunecoinGeneration = async () => {
+            const conqueredVillagesRef = collection(db, `users/${currentUser.uid}/games`, worldId, 'conqueredVillages');
+            const snapshot = await getDocs(conqueredVillagesRef);
+            
+            snapshot.forEach(async (villageDoc) => {
+                const villageData = villageDoc.data();
+                const now = Date.now();
+                const lastUpdate = villageData.lastRunecoinUpdate?.toDate().getTime() || now;
+                const hoursPassed = (now - lastUpdate) / (1000 * 60 * 60);
+
+                if (hoursPassed >= 1) {
+                    const runecoinsToAdd = Math.floor(hoursPassed);
+                    const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+
+                    await runTransaction(db, async (transaction) => {
+                        const gameDoc = await transaction.get(gameDocRef);
+                        if (!gameDoc.exists()) return;
+                        const currentRunecoins = gameDoc.data().runecoins || 0;
+                        transaction.update(gameDocRef, { runecoins: currentRunecoins + runecoinsToAdd });
+                        transaction.update(villageDoc.ref, { lastRunecoinUpdate: serverTimestamp() });
+                    });
+                }
+            });
+        };
+
+        const interval = setInterval(processRunecoinGeneration, 60 * 60 * 1000); // Check every hour
+        return () => clearInterval(interval);
+
+    }, [currentUser, worldId]);
+
+    // Effect for Shop Refresh and Village Runecoin balance
+    useEffect(() => {
+        if (!currentUser || !worldId) return;
+
+        const processVillageUpdates = async () => {
+            const villagesRef = collection(db, `users/${currentUser.uid}/games`, worldId, 'conqueredVillages');
+            const snapshot = await getDocs(villagesRef);
+            const now = Date.now();
+            const batch = writeBatch(db);
+            let updatesMade = false;
+            const eightHoursInMillis = 8 * 60 * 60 * 1000;
+
+            snapshot.forEach((villageDoc) => {
+                const villageData = villageDoc.data();
+                const lastRefreshTime = villageData.lastShopRefresh?.toDate 
+                    ? villageData.lastShopRefresh.toDate().getTime() 
+                    : villageData.lastShopRefresh;
+
+                if (!lastRefreshTime) {
+                    batch.update(villageDoc.ref, { lastShopRefresh: now });
+                    updatesMade = true;
+                } else if (now - lastRefreshTime > eightHoursInMillis) {
+                    batch.update(villageDoc.ref, { lastShopRefresh: now });
+                    updatesMade = true;
+                }
+
+                // Village Runecoin balance regeneration
+                const lastReset = villageData.lastRunecoinReset?.toDate().getTime();
+                if (!lastReset) {
+                    const resetInterval = (5 + Math.random() * 2) * 24 * 60 * 60 * 1000; // 5-7 days
+                    const baseBalance = 200 + (villageData.level || 1) * 50;
+                    batch.update(villageDoc.ref, { 
+                        runecoinBalance: baseBalance, 
+                        lastRunecoinReset: serverTimestamp(),
+                        runecoinResetInterval: resetInterval 
+                    });
+                    updatesMade = true;
+                } else {
+                    const resetInterval = villageData.runecoinResetInterval || (6 * 24 * 60 * 60 * 1000); // Default to 6 if not set
+                    if (now - lastReset > resetInterval) {
+                        const baseBalance = 200 + (villageData.level || 1) * 50;
+                        batch.update(villageDoc.ref, { 
+                            runecoinBalance: baseBalance, 
+                            lastRunecoinReset: serverTimestamp() 
+                        });
+                        updatesMade = true;
+                    }
+                }
+            });
+            
+            if (updatesMade) {
+                await batch.commit();
+            }
+        };
+
+        const interval = setInterval(processVillageUpdates, 60 * 1000); // Check every minute
+        processVillageUpdates(); // Also run once on load
+        return () => clearInterval(interval);
+    }, [currentUser, worldId]);
+};
+</file>
+
 <file path="src/hooks/useWorldClock.js">
 // src/hooks/useWorldClock.js
 import { useEffect } from 'react';
@@ -34786,6 +35484,7 @@ import './components/city/ResearchQueue.css';
 import './components/shared/Notification.css';
 import './components/map/Notes.css';
 import './components/VipDisplay.css';
+import './components/map/VillageShop.css';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 

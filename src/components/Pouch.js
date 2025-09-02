@@ -30,6 +30,14 @@ const Pouch = ({ items, onClose }) => {
         };
     };
 
+    const getQualityClass = (quality) => {
+        switch(quality) {
+            case 'rare': return 'pouch-item-icon-rare';
+            case 'uncommon': return 'pouch-item-icon-uncommon';
+            default: return 'pouch-item-icon-common';
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
             <div className="pouch-container" onClick={e => e.stopPropagation()}>
@@ -52,7 +60,7 @@ const Pouch = ({ items, onClose }) => {
                                         onMouseEnter={() => setHoveredItemId(itemId)}
                                         onMouseLeave={() => setHoveredItemId(null)}
                                     >
-                                        <div className="pouch-item-icon" style={getItemIconStyle(itemDetails)}>
+                                        <div className={`pouch-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}>
                                             <span className="pouch-item-count">{count}</span>
                                         </div>
                                         {hoveredItemId === itemId && (

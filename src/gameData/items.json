@@ -3,6 +3,7 @@
     "name": "Lumberjack's Blessing",
     "description": "Increases wood production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "wood",
@@ -15,6 +16,7 @@
     "name": "Mason's Focus",
     "description": "Increases stone production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "stone",
@@ -27,6 +29,7 @@
     "name": "Midas' Touch",
     "description": "Increases silver production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "silver",
@@ -39,6 +42,7 @@
     "name": "Architect's Draft",
     "description": "Reduces construction time by 10% for all buildings for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "construction_speed",
       "value": 0.10,
@@ -50,6 +54,7 @@
     "name": "Scholar's Insight",
     "description": "Reduces research time by 10% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "research_speed",
       "value": 0.10,
@@ -61,6 +66,7 @@
     "name": "Trainer's Whip",
     "description": "Reduces unit training time by 10% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "training_speed",
       "value": 0.10,
@@ -72,6 +78,7 @@
     "name": "Potion of Attack",
     "description": "Increases the attack of all units by 5% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "attack_boost",
       "value": 0.05,
@@ -83,6 +90,7 @@
     "name": "Potion of Defense",
     "description": "Increases the defense of all units by 5% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "defense_boost",
       "value": 0.05,
@@ -94,6 +102,7 @@
     "name": "Winds of Haste",
     "description": "Increases the speed of all troops by 10% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "movement_speed",
       "value": 0.10,
@@ -105,6 +114,7 @@
     "name": "Bundle of Logs",
     "description": "Instantly adds 500 wood to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "wood",
@@ -116,6 +126,7 @@
     "name": "Pile of Rocks",
     "description": "Instantly adds 500 stone to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "stone",
@@ -127,6 +138,7 @@
     "name": "Sack of Coins",
     "description": "Instantly adds 250 silver to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "silver",
@@ -138,6 +150,7 @@
     "name": "Soulstone",
     "description": "A mystical gem that can instantly revive one of your executed heroes from the dead.",
     "type": "special",
+    "quality": "rare",
     "effect": {
       "type": "revive_hero"
     },
@@ -147,6 +160,7 @@
     "name": "Offering to the Gods",
     "description": "Increases favor production by 10% for 2 hours.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "favor_production",
       "value": 0.10,
@@ -158,6 +172,7 @@
     "name": "Call to the People",
     "description": "Instantly adds 200 population to your city, temporarily exceeding your farm's capacity if needed.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_population",
       "value": 200
@@ -168,6 +183,7 @@
     "name": "Oracle's Vision",
     "description": "Reveals the size and composition of one incoming attack against your city.",
     "type": "special",
+    "quality": "rare",
     "effect": {
       "type": "reveal_attack"
     },

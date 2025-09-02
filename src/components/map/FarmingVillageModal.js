@@ -31,8 +31,7 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     const { purchaseItem, refreshShop, sellItem } = useShopActions();
     const [message, setMessage] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [hoveredBuyItem, setHoveredBuyItem] = useState(null);
-    const [hoveredSellItem, setHoveredSellItem] = useState(null);
+    const [hoveredItemDetails, setHoveredItemDetails] = useState(null);
 
     // Effect for manual daily refresh button state
     useEffect(() => {
@@ -137,9 +136,9 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
 
     const getQualityClass = (quality) => {
         switch(quality) {
-            case 'rare': return 'shop-item-card-rare';
-            case 'uncommon': return 'shop-item-card-uncommon';
-            default: return 'shop-item-card-common';
+            case 'rare': return 'shop-item-icon-rare';
+            case 'uncommon': return 'shop-item-icon-uncommon';
+            default: return 'shop-item-icon-common';
         }
     };
 
@@ -178,41 +177,44 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
             </div>
             {message && <p className="text-center text-yellow-600 mb-4">{message}</p>}
 
+            <div className="shop-info-panel">
+                {hoveredItemDetails ? (
+                    <>
+                        <h4 className="font-bold">{hoveredItemDetails.name}</h4>
+                        <p className="text-xs text-gray-700">{hoveredItemDetails.description}</p>
+                    </>
+                ) : (
+                    <p className="text-center text-gray-500 italic">Hover over an item to see details.</p>
+                )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                 {/* Left Column: Buy Items */}
                 <div className="shop-column">
                     <h5 className="shop-column-header">Items for Sale</h5>
-                    <div className="shop-item-grid">
+                    <div className="shop-item-list">
                         {currentItems.map((item, index) => {
                             const itemDetails = itemsConfig[item.itemId];
                             const canAfford = runecoinBalance >= item.cost;
                             return (
                                 <div
                                     key={index}
-                                    className="shop-item-wrapper"
-                                    onMouseEnter={() => setHoveredBuyItem({ ...item, itemDetails })}
-                                    onMouseLeave={() => setHoveredBuyItem(null)}
+                                    className="shop-list-item"
+                                    onMouseEnter={() => setHoveredItemDetails(itemDetails)}
+                                    onMouseLeave={() => setHoveredItemDetails(null)}
                                 >
-                                    <div className={`shop-item-icon ${getQualityClass(item.quality)}`} style={getItemIconStyle(itemDetails)}></div>
-                                    {hoveredBuyItem?.itemId === item.itemId && (
-                                        <div className="shop-item-tooltip">
-                                            <h4 className="font-bold">{itemDetails.name}</h4>
-                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
-                                            <div className="flex items-center justify-between mt-4">
-                                                <div className="flex items-center">
-                                                    <RunecoinIcon className="w-5 h-5 mr-1" />
-                                                    <span>{item.cost}</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handlePurchase(item)}
-                                                    disabled={!canAfford}
-                                                    className={`btn text-sm py-1 px-3 shop-button ${!canAfford && 'btn-disabled'}`}
-                                                >
-                                                    Buy
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className={`shop-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}></div>
+                                    <div className="shop-item-price">
+                                        <RunecoinIcon className="w-4 h-4 mr-1" />
+                                        <span>{item.cost}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handlePurchase(item)}
+                                        disabled={!canAfford}
+                                        className={`shop-button buy-button ${!canAfford && 'btn-disabled'}`}
+                                    >
+                                        Buy
+                                    </button>
                                 </div>
                             );
                         })}
@@ -227,7 +229,7 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                         <RunecoinIcon className="w-5 h-5 mr-1" />
                         <span className="font-bold">{village.runecoinBalance || 0}</span>
                     </div>
-                    <div className="shop-item-grid">
+                    <div className="shop-item-list">
                         {Object.entries(playerGameData.items || {}).length > 0 ? Object.entries(playerGameData.items || {}).map(([itemId, count]) => {
                             if (count === 0) return null;
                             const itemDetails = itemsConfig[itemId];
@@ -236,39 +238,31 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                             return (
                                 <div
                                     key={itemId}
-                                    className="shop-item-wrapper"
-                                    onMouseEnter={() => setHoveredSellItem({ itemId, count, itemDetails, sellPrice })}
-                                    onMouseLeave={() => setHoveredSellItem(null)}
+                                    className="shop-list-item"
+                                    onMouseEnter={() => setHoveredItemDetails(itemDetails)}
+                                    onMouseLeave={() => setHoveredItemDetails(null)}
                                 >
-                                    <div className="shop-item-icon border-gray-500" style={getItemIconStyle(itemDetails)}>
-                                        <span className="absolute bottom-1 right-1 text-white bg-black/70 px-1 text-sm rounded">{count}</span>
+                                    <div className={`shop-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}>
+                                        <span className="shop-item-count">{count}</span>
                                     </div>
-                                    {hoveredSellItem?.itemId === itemId && (
-                                        <div className="shop-item-tooltip">
-                                            <h4 className="font-bold">{itemDetails.name} (x{count})</h4>
-                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
-                                            <div className="flex items-center justify-between mt-2">
-                                                {sellPrice ? (
-                                                    <div className="flex items-center text-sm">
-                                                        <span className="mr-1">Sell for:</span>
-                                                        <RunecoinIcon className="w-4 h-4 mr-1" />
-                                                        <span>{sellPrice}</span>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs text-gray-500">Cannot be sold</p>
-                                                )}
-                                                {sellPrice && (
-                                                    <button
-                                                        onClick={() => handleSellItem(itemId)}
-                                                        disabled={!((village.runecoinBalance || 0) >= sellPrice)}
-                                                        className={`btn text-xs py-1 px-2 shop-button ${!((village.runecoinBalance || 0) >= sellPrice) && 'btn-disabled'}`}
-                                                    >
-                                                        Sell
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className="shop-item-price">
+                                         {sellPrice ? (
+                                            <>
+                                                <span className="mr-1 text-xs">Sell:</span>
+                                                <RunecoinIcon className="w-4 h-4 mr-1" />
+                                                <span>{sellPrice}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-xs">Unsellable</span>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => handleSellItem(itemId)}
+                                        disabled={!sellPrice || !((village.runecoinBalance || 0) >= sellPrice)}
+                                        className={`shop-button sell-button ${(!sellPrice || !((village.runecoinBalance || 0) >= sellPrice)) && 'btn-disabled'}`}
+                                    >
+                                        Sell
+                                    </button>
                                 </div>
                             );
                         }) : (
