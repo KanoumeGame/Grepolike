@@ -14,6 +14,7 @@ import './components/city/ResearchQueue.css';
 import './components/shared/Notification.css';
 import './components/map/Notes.css';
 import './components/VipDisplay.css';
+import './components/map/VillageShop.css';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 

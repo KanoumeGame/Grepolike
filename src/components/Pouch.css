@@ -1,11 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 /* src/components/Pouch.css */
 .pouch-toggle-button-container {
     position: absolute;
@@ -73,30 +65,61 @@
     flex-grow: 1;
     overflow-y: auto;
     padding: 1rem;
-    display: flex;
-    flex-direction: column;
+}
+
+.pouch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
     gap: 1rem;
 }
 
-.item-card {
-    background-color: rgba(139, 69, 19, 0.1);
-    border: 1px solid #d2b48c;
-    border-radius: 4px;
-    padding: 1rem;
+.pouch-item-wrapper {
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
-.item-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #8B4513;
+.pouch-item-icon {
+    width: 64px;
+    height: 64px;
+    background-image: url('../images/items.png');
+    background-size: 400% 400%;
+    border: 2px solid #8B4513;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s;
 }
 
-.item-description {
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
+.pouch-item-icon:hover {
+    transform: scale(1.1);
+}
+
+.pouch-item-count {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: white;
+    background-color: rgba(0,0,0,0.7);
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.pouch-item-tooltip {
+    position: absolute;
+    left: 105%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 250px;
+    z-index: 10;
+    padding: 1rem;
+    border-radius: 4px;
+    background-color: #fdf6e7;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #a17c48;
 }
 
 .use-item-btn {
@@ -109,6 +132,8 @@
     transition: all 0.2s;
     cursor: pointer;
     flex-shrink: 0;
+    width: 100%;
+    margin-top: 0.75rem;
 }
 
 .use-item-btn:hover:not(:disabled) {

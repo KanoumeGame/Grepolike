@@ -15,6 +15,7 @@ import itemsConfig from '../../gameData/items.json';
 import RunecoinIcon from '../icons/RunecoinIcon';
 import shopItems from '../../gameData/shopItems';
 import { useShopActions } from '../../hooks/actions/useShopActions';
+import './VillageShop.css';
 
 const demandOptions = [
     { name: '5 minutes', duration: 300, multiplier: 0.125, happinessCost: 0 },
@@ -30,6 +31,8 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     const { purchaseItem, refreshShop, sellItem } = useShopActions();
     const [message, setMessage] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [hoveredBuyItem, setHoveredBuyItem] = useState(null);
+    const [hoveredSellItem, setHoveredSellItem] = useState(null);
 
     // Effect for manual daily refresh button state
     useEffect(() => {
@@ -132,8 +135,25 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     
     const canRefresh = nextRefresh && new Date() >= nextRefresh;
 
+    const getQualityClass = (quality) => {
+        switch(quality) {
+            case 'rare': return 'shop-item-card-rare';
+            case 'uncommon': return 'shop-item-card-uncommon';
+            default: return 'shop-item-card-common';
+        }
+    };
+
+    const getItemIconStyle = (item) => {
+        if (!item || !item.sprite) return {};
+        const xPos = item.sprite.x * (100 / 3);
+        const yPos = item.sprite.y * (100 / 3);
+        return {
+            backgroundPosition: `${xPos}% ${yPos}%`,
+        };
+    };
+
     return (
-        <div>
+        <div className="village-shop-container">
             <div className="flex justify-between items-center mb-4">
                 <h4 className="font-bold text-lg text-center">Village Shop</h4>
                 <div className="flex items-center">
@@ -142,47 +162,57 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                 </div>
             </div>
              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-400">Items auto-refresh in: {autoRefreshTimeLeft}</p>
+                <p className="text-sm text-gray-700">Items auto-refresh in: {autoRefreshTimeLeft}</p>
                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-700">
                         {canRefresh ? "Daily refresh available!" : `Next daily refresh: ${nextRefresh?.toLocaleDateString()}`}
                     </p>
                     <button 
                         onClick={handleRefresh} 
                         disabled={!canRefresh || isRefreshing}
-                        className="btn btn-primary text-sm py-1 px-3"
+                        className="btn btn-primary text-sm py-1 px-3 shop-button"
                     >
                         {isRefreshing ? '...' : 'Refresh'}
                     </button>
                  </div>
             </div>
-            {message && <p className="text-center text-yellow-400 mb-4">{message}</p>}
+            {message && <p className="text-center text-yellow-600 mb-4">{message}</p>}
 
             <div className="grid grid-cols-2 gap-4">
                 {/* Left Column: Buy Items */}
-                <div>
-                    <h5 className="font-bold text-center mb-2">Items for Sale</h5>
-                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-2">
+                <div className="shop-column">
+                    <h5 className="shop-column-header">Items for Sale</h5>
+                    <div className="shop-item-grid">
                         {currentItems.map((item, index) => {
                             const itemDetails = itemsConfig[item.itemId];
                             const canAfford = runecoinBalance >= item.cost;
                             return (
-                                <div key={index} className={`p-4 rounded-lg border-2 ${item.quality === 'rare' ? 'border-purple-500' : item.quality === 'uncommon' ? 'border-blue-500' : 'border-gray-500'}`}>
-                                    <h4 className="font-bold">{itemDetails.name}</h4>
-                                    <p className="text-xs text-gray-400">{itemDetails.description}</p>
-                                    <div className="flex items-center justify-between mt-4">
-                                        <div className="flex items-center">
-                                            <RunecoinIcon className="w-5 h-5 mr-1" />
-                                            <span>{item.cost}</span>
+                                <div
+                                    key={index}
+                                    className="shop-item-wrapper"
+                                    onMouseEnter={() => setHoveredBuyItem({ ...item, itemDetails })}
+                                    onMouseLeave={() => setHoveredBuyItem(null)}
+                                >
+                                    <div className={`shop-item-icon ${getQualityClass(item.quality)}`} style={getItemIconStyle(itemDetails)}></div>
+                                    {hoveredBuyItem?.itemId === item.itemId && (
+                                        <div className="shop-item-tooltip">
+                                            <h4 className="font-bold">{itemDetails.name}</h4>
+                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
+                                            <div className="flex items-center justify-between mt-4">
+                                                <div className="flex items-center">
+                                                    <RunecoinIcon className="w-5 h-5 mr-1" />
+                                                    <span>{item.cost}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => handlePurchase(item)}
+                                                    disabled={!canAfford}
+                                                    className={`btn text-sm py-1 px-3 shop-button ${!canAfford && 'btn-disabled'}`}
+                                                >
+                                                    Buy
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => handlePurchase(item)}
-                                            disabled={!canAfford}
-                                            className={`btn text-sm py-1 px-3 ${canAfford ? 'btn-confirm' : 'btn-disabled'}`}
-                                        >
-                                            Buy
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -190,45 +220,55 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                 </div>
 
                 {/* Right Column: Sell Items */}
-                <div>
-                    <h5 className="font-bold text-center mb-2">Your Inventory</h5>
+                <div className="shop-column">
+                    <h5 className="shop-column-header">Your Inventory</h5>
                     <div className="flex justify-center items-center mb-2 text-sm">
                         <span className="mr-2">Village Funds:</span>
                         <RunecoinIcon className="w-5 h-5 mr-1" />
                         <span className="font-bold">{village.runecoinBalance || 0}</span>
                     </div>
-                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-2">
+                    <div className="shop-item-grid">
                         {Object.entries(playerGameData.items || {}).length > 0 ? Object.entries(playerGameData.items || {}).map(([itemId, count]) => {
                             if (count === 0) return null;
                             const itemDetails = itemsConfig[itemId];
                             const sellInfo = Object.values(shopItems).flat().find(i => i.itemId === itemId);
                             const sellPrice = sellInfo?.sellPrice;
-                            const canSell = sellPrice && (village.runecoinBalance || 0) >= sellPrice;
-                            
                             return (
-                                <div key={itemId} className="p-2 rounded-lg border border-gray-600 bg-gray-900/50">
-                                    <h4 className="font-bold text-sm">{itemDetails.name} (x{count})</h4>
-                                    <p className="text-xs text-gray-400">{itemDetails.description}</p>
-                                    <div className="flex items-center justify-between mt-2">
-                                        {sellPrice ? (
-                                            <div className="flex items-center text-sm">
-                                                <span className="mr-1">Sell for:</span>
-                                                <RunecoinIcon className="w-4 h-4 mr-1" />
-                                                <span>{sellPrice}</span>
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500">Cannot be sold</p>
-                                        )}
-                                        {sellPrice && (
-                                            <button
-                                                onClick={() => handleSellItem(itemId)}
-                                                disabled={!canSell}
-                                                className={`btn text-xs py-1 px-2 ${canSell ? 'btn-primary' : 'btn-disabled'}`}
-                                            >
-                                                Sell
-                                            </button>
-                                        )}
+                                <div
+                                    key={itemId}
+                                    className="shop-item-wrapper"
+                                    onMouseEnter={() => setHoveredSellItem({ itemId, count, itemDetails, sellPrice })}
+                                    onMouseLeave={() => setHoveredSellItem(null)}
+                                >
+                                    <div className="shop-item-icon border-gray-500" style={getItemIconStyle(itemDetails)}>
+                                        <span className="absolute bottom-1 right-1 text-white bg-black/70 px-1 text-sm rounded">{count}</span>
                                     </div>
+                                    {hoveredSellItem?.itemId === itemId && (
+                                        <div className="shop-item-tooltip">
+                                            <h4 className="font-bold">{itemDetails.name} (x{count})</h4>
+                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                {sellPrice ? (
+                                                    <div className="flex items-center text-sm">
+                                                        <span className="mr-1">Sell for:</span>
+                                                        <RunecoinIcon className="w-4 h-4 mr-1" />
+                                                        <span>{sellPrice}</span>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500">Cannot be sold</p>
+                                                )}
+                                                {sellPrice && (
+                                                    <button
+                                                        onClick={() => handleSellItem(itemId)}
+                                                        disabled={!((village.runecoinBalance || 0) >= sellPrice)}
+                                                        className={`btn text-xs py-1 px-2 shop-button ${!((village.runecoinBalance || 0) >= sellPrice) && 'btn-disabled'}`}
+                                                    >
+                                                        Sell
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         }) : (

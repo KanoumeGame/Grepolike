@@ -1,11 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 // src/components/Pouch.js
 import React, { useState } from 'react';
 import itemsConfig from '../gameData/items.json';
@@ -15,18 +7,27 @@ import './Pouch.css';
 const Pouch = ({ items, onClose }) => {
     const { activateItem } = useItemActions();
     const [isUsingItemId, setIsUsingItemId] = useState(null);
+    const [hoveredItemId, setHoveredItemId] = useState(null);
 
     const handleUseItem = async (itemId) => {
-        if (isUsingItemId) return; // Prevent multiple clicks
+        if (isUsingItemId) return;
         setIsUsingItemId(itemId);
         try {
             await activateItem(itemId);
         } catch (error) {
             console.error("Failed to use item:", error);
-            // Optionally show an error message to the user
         } finally {
             setIsUsingItemId(null);
         }
+    };
+
+    const getItemIconStyle = (item) => {
+        if (!item || !item.sprite) return {};
+        const xPos = item.sprite.x * (100 / 3);
+        const yPos = item.sprite.y * (100 / 3);
+        return {
+            backgroundPosition: `${xPos}% ${yPos}%`,
+        };
     };
 
     return (
@@ -38,26 +39,39 @@ const Pouch = ({ items, onClose }) => {
                 </div>
                 <div className="pouch-content">
                     {Object.entries(items).length > 0 ? (
-                        Object.entries(items).map(([itemId, count]) => {
-                            const item = itemsConfig[itemId];
-                            if (!item) return null;
-                            const isUsingThisItem = isUsingItemId === itemId;
-                            return (
-                                <div key={itemId} className="item-card">
-                                    <div className="item-info">
-                                        <h4 className="item-name">{item.name} (x{count})</h4>
-                                        <p className="item-description">{item.description}</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => handleUseItem(itemId)} 
-                                        className="use-item-btn"
-                                        disabled={isUsingThisItem}
+                        <div className="pouch-grid">
+                            {Object.entries(items).map(([itemId, count]) => {
+                                if (count === 0) return null;
+                                const itemDetails = itemsConfig[itemId];
+                                if (!itemDetails) return null;
+                                const isUsingThisItem = isUsingItemId === itemId;
+                                return (
+                                    <div
+                                        key={itemId}
+                                        className="pouch-item-wrapper"
+                                        onMouseEnter={() => setHoveredItemId(itemId)}
+                                        onMouseLeave={() => setHoveredItemId(null)}
                                     >
-                                        {isUsingThisItem ? 'Using...' : 'Use'}
-                                    </button>
-                                </div>
-                            );
-                        })
+                                        <div className="pouch-item-icon" style={getItemIconStyle(itemDetails)}>
+                                            <span className="pouch-item-count">{count}</span>
+                                        </div>
+                                        {hoveredItemId === itemId && (
+                                            <div className="pouch-item-tooltip">
+                                                <h4 className="item-name">{itemDetails.name}</h4>
+                                                <p className="item-description">{itemDetails.description}</p>
+                                                <button
+                                                    onClick={() => handleUseItem(itemId)}
+                                                    className="use-item-btn"
+                                                    disabled={isUsingThisItem}
+                                                >
+                                                    {isUsingThisItem ? 'Using...' : 'Use'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
                         <p className="text-center p-4">Your pouch is empty.</p>
                     )}
