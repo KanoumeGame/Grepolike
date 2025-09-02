@@ -225,6 +225,21 @@ export const useAdminActions = ({
                 console.error(error);
             }
         }
+        
+        if (amounts.runecoins && amounts.runecoins > 0) {
+            const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const gameDoc = await transaction.get(gameDocRef);
+                    if (!gameDoc.exists()) throw new Error("Game data not found.");
+                    const currentRunecoins = gameDoc.data().runecoins || 0;
+                    transaction.update(gameDocRef, { runecoins: currentRunecoins + amounts.runecoins });
+                });
+            } catch (error) {
+                setMessage(`Failed to add runecoins: ${error.message}`);
+                console.error(error);
+            }
+        }
 
         if (farmLevels > 0) {
             newGameState.buildings.farm.level = farmLevels;
@@ -256,11 +271,10 @@ export const useAdminActions = ({
             await saveGameState(newGameState);
         }
         
-        if (otherCheatsApplied || (amounts.platinum && amounts.platinum > 0)) {
+        if (otherCheatsApplied || (amounts.platinum && amounts.platinum > 0) || (amounts.runecoins && amounts.runecoins > 0)) {
              setMessage("Admin cheat applied!");
         }
     };
 
     return { handleSpawnGodTown, handleCheat };
 };
-

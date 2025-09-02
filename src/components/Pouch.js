@@ -1,5 +1,5 @@
 // src/components/Pouch.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import itemsConfig from '../gameData/items.json';
 import { useItemActions } from '../hooks/actions/useItemActions';
 import './Pouch.css';
@@ -8,6 +8,8 @@ const Pouch = ({ items, onClose }) => {
     const { activateItem } = useItemActions();
     const [isUsingItemId, setIsUsingItemId] = useState(null);
     const [hoveredItemId, setHoveredItemId] = useState(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const pouchContainerRef = useRef(null);
 
     const handleUseItem = async (itemId) => {
         if (isUsingItemId) return;
@@ -38,9 +40,29 @@ const Pouch = ({ items, onClose }) => {
         }
     };
 
+    const handleMouseEnter = (e, itemId) => {
+        const itemDetails = itemsConfig[itemId];
+        if (!itemDetails) return;
+    
+        setHoveredItemId(itemId);
+        if (e.currentTarget && pouchContainerRef.current) {
+            const itemRect = e.currentTarget.getBoundingClientRect();
+            const containerRect = pouchContainerRef.current.getBoundingClientRect();
+            
+            setTooltipPosition({
+                top: itemRect.top - containerRect.top + (itemRect.height / 2),
+                left: itemRect.left - containerRect.left + itemRect.width + 10,
+            });
+        }
+    };
+    
+    const handleMouseLeave = () => {
+        setHoveredItemId(null);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
-            <div className="pouch-container" onClick={e => e.stopPropagation()}>
+            <div ref={pouchContainerRef} className="pouch-container" onClick={e => e.stopPropagation()}>
                 <div className="pouch-header">
                     <h2>Pouch</h2>
                     <button onClick={onClose} className="close-btn">&times;</button>
@@ -52,30 +74,16 @@ const Pouch = ({ items, onClose }) => {
                                 if (count === 0) return null;
                                 const itemDetails = itemsConfig[itemId];
                                 if (!itemDetails) return null;
-                                const isUsingThisItem = isUsingItemId === itemId;
                                 return (
                                     <div
                                         key={itemId}
                                         className="pouch-item-wrapper"
-                                        onMouseEnter={() => setHoveredItemId(itemId)}
-                                        onMouseLeave={() => setHoveredItemId(null)}
+                                        onMouseEnter={(e) => handleMouseEnter(e, itemId)}
+                                        onMouseLeave={handleMouseLeave}
                                     >
                                         <div className={`pouch-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}>
                                             <span className="pouch-item-count">{count}</span>
                                         </div>
-                                        {hoveredItemId === itemId && (
-                                            <div className="pouch-item-tooltip">
-                                                <h4 className="item-name">{itemDetails.name}</h4>
-                                                <p className="item-description">{itemDetails.description}</p>
-                                                <button
-                                                    onClick={() => handleUseItem(itemId)}
-                                                    className="use-item-btn"
-                                                    disabled={isUsingThisItem}
-                                                >
-                                                    {isUsingThisItem ? 'Using...' : 'Use'}
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -84,9 +92,30 @@ const Pouch = ({ items, onClose }) => {
                         <p className="text-center p-4">Your pouch is empty.</p>
                     )}
                 </div>
+                 {hoveredItemId && itemsConfig[hoveredItemId] && (
+                    <div 
+                        className="pouch-item-tooltip" 
+                        style={{ 
+                            top: `${tooltipPosition.top}px`, 
+                            left: `${tooltipPosition.left}px`,
+                            transform: 'translateY(-50%)' 
+                        }}
+                    >
+                        <h4 className="item-name">{itemsConfig[hoveredItemId].name}</h4>
+                        <p className="item-description">{itemsConfig[hoveredItemId].description}</p>
+                        <button
+                            onClick={() => handleUseItem(hoveredItemId)}
+                            className="use-item-btn"
+                            disabled={isUsingItemId === hoveredItemId}
+                        >
+                            {isUsingItemId === hoveredItemId ? 'Using...' : 'Use'}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 export default Pouch;
+

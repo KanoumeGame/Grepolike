@@ -38,6 +38,7 @@
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    position: relative; /* Added for tooltip positioning context */
 }
 
 .pouch-header {
@@ -109,9 +110,6 @@
 
 .pouch-item-tooltip {
     position: absolute;
-    left: 105%;
-    top: 50%;
-    transform: translateY(-50%);
     width: 250px;
     z-index: 10;
     padding: 1rem;
@@ -119,6 +117,7 @@
     background-color: #fdf6e7;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     border: 2px solid #a17c48;
+    pointer-events: none; /* Prevents flickering on hover */
 }
 
 .use-item-btn {
@@ -133,6 +132,7 @@
     flex-shrink: 0;
     width: 100%;
     margin-top: 0.75rem;
+    pointer-events: auto; /* Re-enable pointer events for the button */
 }
 
 .use-item-btn:hover:not(:disabled) {
@@ -155,3 +155,4 @@
 .pouch-item-icon-common {
     border: 2px solid #a1a1aa; /* stone-400 */
 }
+

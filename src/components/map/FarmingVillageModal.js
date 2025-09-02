@@ -70,16 +70,6 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     useEffect(() => {
         const now = new Date();
         const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
-        
-        console.log("Village Shop Debug:", {
-            rawTimestamp: village.lastShopRefresh,
-            isFirestoreTimestamp: !!village.lastShopRefresh?.toDate,
-            isNumber: typeof village.lastShopRefresh === 'number',
-            now: now.getTime(),
-            lastRefreshTime: lastRefreshTime,
-            villageId: village.id
-        });
-
         const villageLevel = village.level || 1;
         const seed = Math.floor(lastRefreshTime / 1000) + village.x + village.y;
         const generatedItems = [];
@@ -757,8 +747,8 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>
                     <button onClick={() => setActiveTab('plunder')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'plunder' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Plunder</button>
                     <button onClick={() => setActiveTab('trade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'trade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Trade</button>
+                     <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                     <button onClick={() => setActiveTab('upgrade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'upgrade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Upgrade</button>
-                    <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                 </div>
                 <div className="p-4 text-white flex-grow overflow-y-auto">
                     {activeTab === 'demand' && (
