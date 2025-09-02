@@ -6787,7 +6787,7 @@ contexts.forEach(context => {
 const CITYSCAPE_WIDTH = 2000;
 const CITYSCAPE_HEIGHT = 1200;
 
-const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements }) => {
+const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap }) => {
     // Panning Logic (moved from CityView.js)
     const viewportRef = useRef(null);
     const cityContainerRef = useRef(null);
@@ -6862,6 +6862,10 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                     className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20" 
                     onOpenPowers={onOpenPowers}
                     movements={movements}
+                    onOpenSettings={onOpenSettings}
+                    onOpenCheats={onOpenCheats}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             </main>
         );
@@ -6883,6 +6887,10 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                 className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4" 
                 onOpenPowers={onOpenPowers}
                 movements={movements}
+                onOpenSettings={onOpenSettings}
+                onOpenCheats={onOpenCheats}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
             />
         </main>
     );
@@ -11664,6 +11672,8 @@ const CityView = ({
     onOpenNotes,
     onGenerateMap,
     isGeneratingMap,
+    onOpenSettings,
+    onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -11720,21 +11730,15 @@ const CityView = ({
                 onOpenAlliance={handleOpenAlliance}
                 onOpenForum={() => openModal('allianceForum')}
                 onOpenMessages={() => openModal('messages')}
-                onOpenSettings={() => openModal('settings')}
                 onOpenProfile={() => handleOpenProfile()}
                 onOpenLeaderboard={() => openModal('leaderboard')}
-                onOpenQuests={() => openModal('quests')}
                 unreadReportsCount={unreadReportsCount}
                 unreadMessagesCount={unreadMessagesCount}
                 isAdmin={userProfile?.is_admin}
                 onToggleDummyCityPlacement={() => {}}
-                onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 isAllianceMember={!!playerAlliance}
                 handleOpenEvents={handleOpenEvents}
-                onOpenHeroesAltar={() => openCityModal('isHeroesAltarOpen')}
                 onOpenManagementPanel={onOpenManagementPanel}
-                onGenerateMap={onGenerateMap}
-                isGeneratingMap={isGeneratingMap}
             />
             <div className="h-full w-full flex flex-col">
                 <TopBar
@@ -11764,6 +11768,10 @@ const CityView = ({
                     gameSettings={gameSettings}
                     onOpenSpecialBuildingMenu={() => openCityModal('isSpecialBuildingMenuOpen')}
                     movements={movements}
+                    onOpenSettings={onOpenSettings}
+                    onOpenCheats={onOpenCheats}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             </div>
             <CityModals
@@ -12396,6 +12404,8 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenNotes={() => setIsNotesOpen(true)}
                     onGenerateMap={handleGenerateMap}
                     isGeneratingMap={isGeneratingMap}
+                    onOpenSettings={() => openModal('settings')}
+                    onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
             {view === 'map' && (
@@ -18159,13 +18169,11 @@ import messagesIcon from '../../images/ui/messages.png';
 import leaderboardIcon from '../../images/ui/leaderboard.png';
 import profileIcon from '../../images/ui/profile.png';
 import managerIcon from '../../images/ui/manager.png';
-import worldMapIcon from '../../images/ui/world_map.png';
-import settingsIcon from '../../images/ui/settings.png';
 import cheatsIcon from '../../images/ui/cheats.png';
 import eventsIcon from '../../images/ui/events.png';
 import dummyIcon from '../../images/ui/dummy.png';
 
-const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenSettings, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, onOpenQuests, onOpenCheats, isAllianceMember, handleOpenEvents, onOpenHeroesAltar, onOpenManagementPanel, onGenerateMap, isGeneratingMap }) => {
+const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, isAllianceMember, handleOpenEvents, onOpenManagementPanel }) => {
     
     const [isNavOpen, setIsNavOpen] = useState(true);
     const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
@@ -18218,8 +18226,6 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
                 <NavButton imgSrc={messagesIcon} text="Messages" onClick={onOpenMessages} notificationCount={unreadMessagesCount} glowing={unreadMessagesCount > 0} />
                 <NavButton imgSrc={leaderboardIcon} text="Leaderboard" onClick={onOpenLeaderboard} />
                 <NavButton imgSrc={profileIcon} text="Profile" onClick={() => onOpenProfile()} />
-                <NavButton imgSrc={worldMapIcon} text="World Map" onClick={onGenerateMap} disabled={isGeneratingMap} title="Generate World Map Image" />
-                <NavButton imgSrc={settingsIcon} text="Settings" onClick={onOpenSettings} />
                 {isAdmin && (
                     <div ref={adminMenuRef} className="relative">
                         <NavButton imgSrc={cheatsIcon} text="Admin" onClick={() => setIsAdminMenuOpen(prev => !prev)} />
@@ -18232,10 +18238,6 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
                                 <button onClick={() => { handleOpenEvents(); setIsAdminMenuOpen(false); }} className="sidebar-button">
                                     <img src={eventsIcon} alt="Events" className="w-8 h-8 object-contain" />
                                     <span className="button-text">Events</span>
-                                </button>
-                                <button onClick={() => { onOpenCheats(); setIsAdminMenuOpen(false); }} disabled={view !== 'city'} className="sidebar-button" title={view !== 'city' ? "Available in City View only" : "Open City Cheats"}>
-                                    <img src={cheatsIcon} alt="City Cheats" className="w-8 h-8 object-contain" />
-                                    <span className="button-text">City Cheats</span>
                                 </button>
                                 <button onClick={() => { onToggleDummyCityPlacement(); setIsAdminMenuOpen(false); }} disabled={view !== 'map'} className="sidebar-button" title={view !== 'map' ? "Available in Map View only" : "Place Dummy City"}>
                                      <img src={dummyIcon} alt="Place Dummy" className="w-8 h-8 object-contain" />
@@ -19201,7 +19203,6 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
-    onGenerateMap,
     isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
@@ -19432,10 +19433,8 @@ const MapView = ({
                     onOpenAlliance={handleOpenAlliance}
                     onOpenForum={() => openModal('allianceForum')}
                     onOpenMessages={() => openModal('messages')}
-                    onOpenSettings={() => openModal('settings')}
                     onOpenProfile={() => openModal('profile')}
                     onOpenLeaderboard={() => openModal('leaderboard')}
-                    onOpenQuests={() => openModal('quests')}
                     unreadReportsCount={unreadReportsCount}
                     unreadMessagesCount={unreadMessagesCount}
                     isAdmin={userProfile?.is_admin}
@@ -19443,8 +19442,6 @@ const MapView = ({
                     isAllianceMember={!!playerAlliance}
                     handleOpenEvents={handleOpenEvents}
                     onOpenManagementPanel={onOpenManagementPanel}
-                    onGenerateMap={onGenerateMap}
-                    isGeneratingMap={isGeneratingMap}
                 />
                 <div className="main-content flex-grow relative map-surface">
                     <TopBar
@@ -23809,27 +23806,82 @@ export default SharedReportView;
 </file>
 
 <file path="src/components/SideInfoPanel.js">
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
 import React from 'react';
 import WorshipDisplay from './city/WorshipDisplay';
 import TroopDisplay from './TroopDisplay';
 import HeroDisplay from './city/HeroDisplay';
 import { useGame } from '../contexts/GameContext';
+import { useAuth } from '../contexts/AuthContext';
 
-const SideInfoPanel = ({ gameState, className, onOpenPowers, movements }) => {
+import settingsIcon from '../images/ui/settings.png';
+import cheatsIcon from '../images/ui/cheats.png';
+import worldMapIcon from '../images/ui/world_map.png';
+
+const ActionButtons = ({ onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap }) => {
+    const { userProfile } = useAuth();
+    const isAdmin = userProfile?.is_admin;
+
+    const buttonStyle = {
+        color: '#d4af37',
+        border: '1px solid',
+        borderImageSource: 'linear-gradient(to top, #d4af37, #b8860b)',
+        borderImageSlice: 1,
+        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+        boxShadow: 'inset 0 2px 3px rgba(0, 0, 0, 0.5), 0 2px 2px rgba(255, 255, 255, 0.2)',
+    };
+
+    return (
+        <div className="w-40 p-1.5 flex flex-col gap-1.5" style={{
+            backgroundImage: `url(${require('../images/bg/right_background.png')})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            color: '#4a2c2a'
+        }}>
+            <h3 className="hero-display-header">Actions</h3>
+            <div className="flex flex-col gap-1">
+                <button onClick={onOpenSettings} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2" style={buttonStyle} title="Settings">
+                    <img src={settingsIcon} alt="Settings" className="w-8 h-8 object-contain" />
+                    <span>Settings</span>
+                </button>
+                <button onClick={onGenerateMap} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2 disabled:opacity-50" style={buttonStyle} disabled={isGeneratingMap} title="Generate World Map Image">
+                    <img src={worldMapIcon} alt="World Map" className="w-8 h-8 object-contain" />
+                    <span>World Map</span>
+                </button>
+                {isAdmin && (
+                    <button onClick={onOpenCheats} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2" style={buttonStyle} title="Open City Cheats">
+                        <img src={cheatsIcon} alt="Cheats" className="w-8 h-8 object-contain" />
+                        <span>Cheats</span>
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+const SideInfoPanel = ({
+    gameState,
+    className,
+    onOpenPowers,
+    movements,
+    onOpenSettings,
+    onOpenCheats,
+    onGenerateMap,
+    isGeneratingMap
+}) => {
     const { activeCityId } = useGame();
     if (!gameState || !gameState.playerInfo) { //  Added a check for playerInfo
         return null;
     }
     return (
         <div className={className}>
+            <ActionButtons
+                onOpenSettings={onOpenSettings}
+                onOpenCheats={onOpenCheats}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
+            />
             <WorshipDisplay
                 godName={gameState.god}
                 playerReligion={gameState.playerInfo.religion}
@@ -23837,11 +23889,11 @@ const SideInfoPanel = ({ gameState, className, onOpenPowers, movements }) => {
                 buildings={gameState.buildings}
                 onOpenPowers={onOpenPowers}
             />
-            <HeroDisplay 
-                heroes={gameState.heroes} 
-                agents={gameState.agents} 
-                movements={movements} 
-                activeCityId={activeCityId} 
+            <HeroDisplay
+                heroes={gameState.heroes}
+                agents={gameState.agents}
+                movements={movements}
+                activeCityId={activeCityId}
             />
             <TroopDisplay units={gameState.units || {}} />
         </div>

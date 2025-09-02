@@ -151,6 +151,8 @@ const CityView = ({
                     onOpenCheats={onOpenCheats}
                     onGenerateMap={onGenerateMap}
                     isGeneratingMap={isGeneratingMap}
+                    onOpenManagementPanel={onOpenManagementPanel}
+                    handleOpenEvents={handleOpenEvents}
                 />
             </div>
             <CityModals

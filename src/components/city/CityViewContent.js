@@ -1,8 +1,11 @@
 // src/components/city/CityViewContent.js
 import React, { useRef, useEffect, useCallback, useLayoutEffect, useState } from 'react';
 import Cityscape from './Cityscape';
-import SideInfoPanel from '../SideInfoPanel';
 import buildingConfig from '../../gameData/buildings.json';
+import WorshipDisplay from './WorshipDisplay';
+import TroopDisplay from '../TroopDisplay';
+import HeroDisplay from './HeroDisplay';
+import { useGame } from '../../contexts/GameContext';
 
 //  Dynamically import all building and special building images
 const buildingImages = {};
@@ -21,7 +24,7 @@ contexts.forEach(context => {
 const CITYSCAPE_WIDTH = 2000;
 const CITYSCAPE_HEIGHT = 1200;
 
-const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap }) => {
+const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents }) => {
     // Panning Logic (moved from CityView.js)
     const viewportRef = useRef(null);
     const cityContainerRef = useRef(null);
@@ -74,6 +77,12 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
         };
     }, [isPanning, startPos, clampPan]);
 
+    const { activeCityId } = useGame();
+
+    if (!cityGameState || !cityGameState.playerInfo) {
+        return null;
+    }
+    
     if (!gameSettings.showVisuals) {
         return (
             <main className="flex-grow w-full h-full relative overflow-y-auto p-4">
@@ -91,16 +100,28 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                         return null;
                     })}
                 </div>
-                 <SideInfoPanel 
-                    gameState={cityGameState} 
-                    className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20" 
-                    onOpenPowers={onOpenPowers}
-                    movements={movements}
-                    onOpenSettings={onOpenSettings}
-                    onOpenCheats={onOpenCheats}
-                    onGenerateMap={onGenerateMap}
-                    isGeneratingMap={isGeneratingMap}
-                />
+                 <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4">
+                    <WorshipDisplay
+                        godName={cityGameState.god}
+                        playerReligion={cityGameState.playerInfo.religion}
+                        worship={cityGameState.worship}
+                        buildings={cityGameState.buildings}
+                        onOpenPowers={onOpenPowers}
+                        onOpenSettings={onOpenSettings}
+                        onOpenCheats={onOpenCheats}
+                        onGenerateMap={onGenerateMap}
+                        isGeneratingMap={isGeneratingMap}
+                        onOpenManagementPanel={onOpenManagementPanel}
+                        handleOpenEvents={handleOpenEvents}
+                    />
+                    <HeroDisplay
+                        heroes={cityGameState.heroes}
+                        agents={cityGameState.agents}
+                        movements={movements}
+                        activeCityId={activeCityId}
+                    />
+                    <TroopDisplay units={cityGameState.units || {}} />
+                </div>
             </main>
         );
     }
@@ -116,16 +137,28 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                     onOpenSpecialBuildingMenu={onOpenSpecialBuildingMenu} 
                 />
             </div>
-            <SideInfoPanel 
-                gameState={cityGameState} 
-                className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4" 
-                onOpenPowers={onOpenPowers}
-                movements={movements}
-                onOpenSettings={onOpenSettings}
-                onOpenCheats={onOpenCheats}
-                onGenerateMap={onGenerateMap}
-                isGeneratingMap={isGeneratingMap}
-            />
+            <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4">
+                <WorshipDisplay
+                    godName={cityGameState.god}
+                    playerReligion={cityGameState.playerInfo.religion}
+                    worship={cityGameState.worship}
+                    buildings={cityGameState.buildings}
+                    onOpenPowers={onOpenPowers}
+                    onOpenSettings={onOpenSettings}
+                    onOpenCheats={onOpenCheats}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
+                    onOpenManagementPanel={onOpenManagementPanel}
+                    handleOpenEvents={handleOpenEvents}
+                />
+                <HeroDisplay
+                    heroes={cityGameState.heroes}
+                    agents={cityGameState.agents}
+                    movements={movements}
+                    activeCityId={activeCityId}
+                />
+                <TroopDisplay units={cityGameState.units || {}} />
+            </div>
         </main>
     );
 };
