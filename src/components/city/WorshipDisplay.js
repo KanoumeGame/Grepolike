@@ -28,8 +28,8 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
     return (
         <div
             ref={menuRef}
-            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[180%] -right-1 -translate-x[5%] 
-                       bg-gray-900/90 border border-gray-700 rounded-2xl p-3 shadow-2xl backdrop-blur-md"
+            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[185%] -right-1.5 -translate-x[5%] 
+                       bg-gray-900/90 border border-gray-700 rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
         >
             {buttons.map((btn, idx) => (
                 <div key={idx} className="relative group">
@@ -38,7 +38,7 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
                             btn.action();
                             setIsCheatsMenuOpen(false);
                         }}
-                        className="flex items-center justify-center w-9 h-9 rounded-xl 
+                        className="flex items-center justify-center w-10 h-10 rounded-xl 
                                    bg-gray-800 border border-gray-700 
                                    shadow-md hover:bg-gray-700 hover:scale-105 
                                    transition-all duration-200 ease-out"
@@ -47,7 +47,7 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
                     </button>
                     {/* Tooltip */}
                     <span
-                        className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-md 
+                        className="absolute top-2 -translate-y-[165%] -right-3 -translate-x[5%] ml-2 px-2 py-1 rounded-md 
                                    text-xs bg-black/90 text-gray-200 opacity-0 group-hover:opacity-100 
                                    pointer-events-none transition-opacity duration-200 shadow-lg whitespace-nowrap"
                     >

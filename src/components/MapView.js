@@ -1,5 +1,5 @@
 // src/components/MapView.js
-import React, { useMemo,  useEffect, useState, useRef } from 'react';
+import React, { useMemo,  useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
@@ -20,6 +20,7 @@ import { useMapActions } from '../hooks/useMapActions';
 import { useCityState } from '../hooks/useCityState';
 import { useMapClickHandler } from '../hooks/useMapClickHandler';
 import PhaserMap from './map/PhaserMappls'; // Import the new PhaserMap component
+import { useDivineActions } from '../hooks/actions/useDivineActions';
 
 const MapView = ({
     showCity,
@@ -50,12 +51,12 @@ const MapView = ({
     onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
-    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
+    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints, setGameState } = useGame();
     const { playerAlliance } = useAlliance();
     const viewportRef = useRef(null);
     const [message, setMessage] = useState('');
     const { travelTimeInfo, setTravelTimeInfo, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity, handleActionClick } = useMapActions(openModal, closeModal, showCity, () => {}, setMessage);
-    const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, getProductionRates, getWarehouseCapacity } = useCityState(worldId);
+    const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, getProductionRates, getWarehouseCapacity, saveGameState } = useCityState(worldId);
     const [allCitySlots, setAllCitySlots] = useState({});
     const [godTowns, setGodTowns] = useState({});
     const [villages, setVillages] = useState({});
@@ -67,6 +68,18 @@ const MapView = ({
     const [allWonders, setAllWonders] = useState([]);
     const [wonderSpots, setWonderSpots] = useState({});
     const [controlledIslands, setControlledIslands] = useState({});
+
+    const { handleCastSpell } = useDivineActions({
+        cityGameState: gameState,
+        setCityGameState: setGameState,
+        saveGameState,
+        worldId,
+        currentUser,
+        userProfile,
+        playerCity,
+        closeModal: () => closeModal('divinePowers'),
+        setMessage
+    });
 
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
@@ -369,7 +382,7 @@ const MapView = ({
                 combinedSlots={combinedSlots}
                 villages={villages}
                 userProfile={userProfile}
-                onCastSpell={() => {}}
+                onCastSpell={handleCastSpell}
                 onActionClick={handleMessageAction}
                 marketCapacity={marketCapacity}
                 onEnterCity={handleEnterCity}
@@ -377,7 +390,7 @@ const MapView = ({
                 onWithdraw={(city) => openModal('withdraw', city)}
                 onFoundCity={handleFoundCity}
             />
-             {modalState.isDivinePowersOpen && <DivinePowers godName={gameState.god} playerReligion={gameState.playerInfo.religion} favor={gameState.worship[gameState.god] || 0} onCastSpell={() => {}} onClose={() => closeModal('divinePowers')} targetType={modalState.divinePowersTarget ? 'other' : 'self'} />}
+             {modalState.isDivinePowersOpen && <DivinePowers godName={gameState.god} playerReligion={gameState.playerInfo.religion} favor={gameState.worship[gameState.god] || 0} onCastSpell={handleCastSpell} onClose={() => closeModal('divinePowers')} targetType={modalState.divinePowersTarget ? 'other' : 'self'} />}
              {modalState.isWithdrawModalOpen && (
                 <WithdrawModal
                     city={modalState.withdrawModalData}
@@ -391,3 +404,4 @@ const MapView = ({
     );
 };
 export default MapView;
+

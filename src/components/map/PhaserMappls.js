@@ -32,9 +32,9 @@ class MapScene extends Phaser.Scene {
             city: 0.3,
             village: 0.5,
             ruin: 0.25,
-            god_town: 0.5,
+            god_town: 0.1,
             constructing_wonder: 0.5,
-            wreckage: 0.5,
+            wreckage: 0.05,
             alliance_wonders: 0.5
         };
     }

@@ -52,6 +52,34 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     </div>
 );
 
+// # A modal for choosing which reports to delete
+const DeleteOptionsModal = ({ onConfirmDeleteTab, onConfirmDeleteAll, onCancel, tabName, tabReportCount, allReportCount }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1002]">
+        <div className="bg-gray-800 p-6 rounded-lg text-white text-center">
+            <h3 className="text-lg font-bold mb-4">Delete Reports</h3>
+            <p className="mb-6">What would you like to delete?</p>
+            <div className="flex flex-col gap-4">
+                <button 
+                    onClick={onConfirmDeleteTab} 
+                    className="btn btn-danger w-full"
+                    disabled={tabReportCount === 0}
+                >
+                    Delete {tabReportCount} reports in '{tabName}' tab
+                </button>
+                <button 
+                    onClick={onConfirmDeleteAll} 
+                    className="btn btn-danger w-full"
+                >
+                    Delete ALL {allReportCount} reports
+                </button>
+                <button onClick={onCancel} className="btn btn-secondary w-full mt-2">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 
 const ReportsView = ({ onClose, onActionClick }) => {
     const { currentUser } = useAuth();
@@ -67,7 +95,8 @@ const ReportsView = ({ onClose, onActionClick }) => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmAction] = useState(null);
+    const [isDeleteOptionsOpen, setIsDeleteOptionsOpen] = useState(false);
 
     const tabs = {
         'Combat': ['attack', 'attack_village', 'attack_ruin', 'attack_god_town'],
@@ -207,32 +236,63 @@ const ReportsView = ({ onClose, onActionClick }) => {
             setMessage("Could not mark all as read.");
         }
     };
+    
+    // # opens the delete options modal
+    const openDeleteOptions = () => {
+        if (reports.length === 0) {
+            setMessage("There are no reports to delete.");
+            setTimeout(() => setMessage(''), 3000);
+            return;
+        }
+        setIsDeleteOptionsOpen(true);
+    };
 
-    const handleDeleteAll = () => {
-        if (filteredReports.length === 0) return;
-        
-        setConfirmAction({
-            message: `Are you sure you want to delete all ${filteredReports.length} reports in the "${activeTab}" tab?`,
-            onConfirm: async () => {
-                const batch = writeBatch(db);
-                filteredReports.forEach(report => {
-                    const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
-                    batch.delete(reportRef);
-                });
+    // # deletes all reports in the current tab
+    const handleDeleteTabReports = async () => {
+        setIsDeleteOptionsOpen(false);
+        if (filteredReports.length === 0) {
+            setMessage("No reports in this tab to delete.");
+            return;
+        }
 
-                try {
-                    await batch.commit();
-                    setSelectedReport(null);
-                } catch (error)
-                 {
-                    console.error("Error deleting all reports:", error);
-                    setMessage("Could not delete all reports.");
-                } finally {
-                    setConfirmAction(null);
-                }
-            },
-            onCancel: () => setConfirmAction(null)
+        const batch = writeBatch(db);
+        filteredReports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.delete(reportRef);
         });
+
+        try {
+            await batch.commit();
+            setSelectedReport(null);
+            setMessage(`Deleted ${filteredReports.length} reports from '${activeTab}' tab.`);
+        } catch (error) {
+            console.error("Error deleting tab reports:", error);
+            setMessage("Could not delete tab reports.");
+        }
+    };
+
+    // # deletes all reports
+    const handleDeleteAllReports = async () => {
+        setIsDeleteOptionsOpen(false);
+        if (reports.length === 0) {
+            setMessage("There are no reports to delete.");
+            return;
+        }
+
+        const batch = writeBatch(db);
+        reports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.delete(reportRef);
+        });
+
+        try {
+            await batch.commit();
+            setSelectedReport(null);
+            setMessage(`Deleted all ${reports.length} reports.`);
+        } catch (error) {
+            console.error("Error deleting all reports:", error);
+            setMessage("Could not delete all reports.");
+        }
     };
 
     //  This function handles clicks inside the report content area for BBCode actions
@@ -602,6 +662,16 @@ const ReportsView = ({ onClose, onActionClick }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
             {confirmAction && <ConfirmationModal {...confirmAction} />}
+            {isDeleteOptionsOpen && (
+                <DeleteOptionsModal
+                    onConfirmDeleteTab={handleDeleteTabReports}
+                    onConfirmDeleteAll={handleDeleteAllReports}
+                    onCancel={() => setIsDeleteOptionsOpen(false)}
+                    tabName={activeTab}
+                    tabReportCount={filteredReports.length}
+                    allReportCount={reports.length}
+                />
+            )}
             <div
                 ref={reportsRef}
                 className="reports-container"
@@ -669,7 +739,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
                         </ul>
                         <div className="p-2 border-t-2 border-[#8B4513] flex justify-around">
                             <button onClick={handleReadAll} className="text-sm papyrus-btn">Mark All as Read</button>
-                            <button onClick={handleDeleteAll} className="text-sm papyrus-btn">Delete All in Tab</button>
+                            <button onClick={openDeleteOptions} className="text-sm papyrus-btn">Delete...</button>
                         </div>
                     </div>
                     <div className="w-2/3 p-4 overflow-y-auto report-outcome-container" onClick={handleContentClick}>
@@ -694,4 +764,3 @@ const ReportsView = ({ onClose, onActionClick }) => {
 };
 
 export default ReportsView;
-

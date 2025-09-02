@@ -7258,7 +7258,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import unitConfig from '../../gameData/units.json';
 import UnitQueue from './UnitQueue';
 import Modal from '../shared/Modal';
-import { useGame } from '../../contexts/GameContext';
 
 const unitImages = {};
 const imageContext = require.context('../../images/troops', false, /\.(png|jpe?g|svg)$/);
@@ -7277,8 +7276,7 @@ const UnitStats = ({ unit }) => (
 );
 
 const DivineTempleMenu = ({ resources, availablePopulation, onTrain, onClose, cityGameState, unitQueue, onCancelTrain, onSpeedUp }) => {
-    const { gameState } = useGame();
-    const worshippedGod = gameState?.god;
+    const worshippedGod = cityGameState?.god;
 
     const templeRef = useRef(null);
     const [position, setPosition] = useState({ 
@@ -11378,20 +11376,49 @@ const imageMap = images.keys().reduce((acc, item) => {
     return acc;
 }, {});
 
-const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => (
-    <div className="flex flex-row items-center gap-2 absolute top-1/2 -translate-y-1/2 -left-2 -translate-x-full" ref={menuRef}>
-        <button onClick={() => { onOpenManagementPanel(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Manager">
-            <img src={managerIcon} alt="Manager" className="w-6 h-6 object-contain" />
-        </button>
-        <button onClick={() => { handleOpenEvents(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Events">
-            <img src={eventsIcon} alt="Events" className="w-6 h-6 object-contain" />
-        </button>
-        <button onClick={() => { onOpenCheats(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Admin Cheats">
-            <img src={cheatsIcon} alt="Admin Cheats" className="w-6 h-6 object-contain" />
-        </button>
-    </div>
-);
+// --- Admin Cheats Floating Menu ---
+const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => {
+    const buttons = [
+        { action: onOpenManagementPanel, icon: managerIcon, label: "Manager" },
+        { action: handleOpenEvents, icon: eventsIcon, label: "Events" },
+        { action: onOpenCheats, icon: cheatsIcon, label: "Admin Cheats" },
+    ];
 
+    return (
+        <div
+            ref={menuRef}
+            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[180%] -right-1 -translate-x[5%] 
+                       bg-gray-900/90 border border-gray-700 rounded-2xl p-3 shadow-2xl backdrop-blur-md"
+        >
+            {buttons.map((btn, idx) => (
+                <div key={idx} className="relative group">
+                    <button
+                        onClick={() => {
+                            btn.action();
+                            setIsCheatsMenuOpen(false);
+                        }}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl 
+                                   bg-gray-800 border border-gray-700 
+                                   shadow-md hover:bg-gray-700 hover:scale-105 
+                                   transition-all duration-200 ease-out"
+                    >
+                        <img src={btn.icon} alt={btn.label} className="w-6 h-6 object-contain" />
+                    </button>
+                    {/* Tooltip */}
+                    <span
+                        className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-md 
+                                   text-xs bg-black/90 text-gray-200 opacity-0 group-hover:opacity-100 
+                                   pointer-events-none transition-opacity duration-200 shadow-lg whitespace-nowrap"
+                    >
+                        {btn.label}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// --- Worship Display ---
 const WorshipDisplay = ({ 
     godName, playerReligion, worship, buildings, onOpenPowers,
     onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents
@@ -11420,7 +11447,8 @@ const WorshipDisplay = ({
     // Effect to close admin menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (cheatsMenuRef.current && !cheatsMenuRef.current.contains(event.target) && cheatsButtonRef.current && !cheatsButtonRef.current.contains(event.target)) {
+            if (cheatsMenuRef.current && !cheatsMenuRef.current.contains(event.target) &&
+                cheatsButtonRef.current && !cheatsButtonRef.current.contains(event.target)) {
                 setIsCheatsMenuOpen(false);
             }
         };
@@ -11432,32 +11460,54 @@ const WorshipDisplay = ({
 
     return (
         <div className="worship-display-container">
-             <div className="flex justify-around items-center mb-2 relative">
+            <div className="flex justify-around items-center mb-2 relative">
+                {/* Settings */}
                 <button onClick={onOpenSettings} className="p-1" title="Settings">
                     <img src={settingsIcon} alt="Settings" className="w-8 h-8 object-contain" />
                 </button>
-                <button onClick={onGenerateMap} className="p-1 disabled:opacity-50" disabled={isGeneratingMap} title="Generate World Map Image">
+
+                {/* Generate World Map */}
+                <button 
+                    onClick={onGenerateMap} 
+                    className="p-1 disabled:opacity-50" 
+                    disabled={isGeneratingMap} 
+                    title="Generate World Map Image"
+                >
                     <img src={worldMapIcon} alt="World Map" className="w-8 h-8 object-contain"/>
                 </button>
+
+                {/* Admin Cheats */}
                 {isAdmin && (
                     <div className="relative">
-                        {isCheatsMenuOpen && <AdminCheatButtons 
-                            menuRef={cheatsMenuRef}
-                            onOpenManagementPanel={onOpenManagementPanel}
-                            handleOpenEvents={handleOpenEvents}
-                            onOpenCheats={onOpenCheats}
-                            setIsCheatsMenuOpen={setIsCheatsMenuOpen}
-                        />}
-                        <button ref={cheatsButtonRef} onClick={() => setIsCheatsMenuOpen(prev => !prev)} className="p-1" title="Cheats">
+                        {isCheatsMenuOpen && (
+                            <AdminCheatButtons 
+                                menuRef={cheatsMenuRef}
+                                onOpenManagementPanel={onOpenManagementPanel}
+                                handleOpenEvents={handleOpenEvents}
+                                onOpenCheats={onOpenCheats}
+                                setIsCheatsMenuOpen={setIsCheatsMenuOpen}
+                            />
+                        )}
+                        <button 
+                            ref={cheatsButtonRef} 
+                            onClick={() => setIsCheatsMenuOpen(prev => !prev)} 
+                            className="p-1" 
+                            title="Cheats"
+                        >
                             <img src={cheatsIcon} alt="Cheats" className="w-8 h-8 object-contain" />
                         </button>
                     </div>
                 )}
             </div>
+
+            {/* God Display */}
             {godName && godDetails ? (
                 <div className="text-center flex flex-col items-center">
                     <div className="worship-frame-bg">
-                        <div className="favor-progress-ring" style={{ background: `conic-gradient(#4285F4 ${favorPercentage}%, transparent ${favorPercentage}%)` }}>
+                        <div 
+                            className="favor-progress-ring" 
+                            style={{ background: `conic-gradient(#4285F4 ${favorPercentage}%, transparent ${favorPercentage}%)` }}
+                        >
                             <div className="favor-progress-fill"></div>
                         </div>
                         <img src={imageMap[godDetails.image]} alt={godDetails.name} className="god-avatar" />
@@ -18309,7 +18359,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
     );
 
     // Effect to close admin menu when clicking outside
-    useEffect(() => {
+        useEffect(() => {
         const handleClickOutside = (event) => {
             if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
                 setIsAdminMenuOpen(false);
@@ -18319,7 +18369,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [adminMenuRef]);
+    }, [adminMenuRef, setIsAdminMenuOpen]);
     
     return (
         <>
@@ -21637,7 +21687,7 @@ export default QuestsButton;
 # in whole or in part, is strictly prohibited without prior written permission.
 */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -21670,6 +21720,18 @@ imageContexts.forEach(context => {
     });
 });
 
+const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1002]">
+        <div className="bg-gray-800 p-6 rounded-lg text-white">
+            <p className="mb-4">{message}</p>
+            <div className="flex justify-end gap-2">
+                <button onClick={onCancel} className="btn btn-secondary">Cancel</button>
+                <button onClick={onConfirm} className="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+);
+
 
 const ReportsView = ({ onClose, onActionClick }) => {
     const { currentUser } = useAuth();
@@ -21685,6 +21747,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [confirmAction, setConfirmAction] = useState(null);
 
     const tabs = {
         'Combat': ['attack', 'attack_village', 'attack_ruin', 'attack_god_town'],
@@ -21692,6 +21755,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
         'Trade': ['trade'],
         'Scout': ['scout', 'spy_caught'],
         'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail', 'found_city_success', 'found_city_failed', 'assign_hero_failed', 'rescue_success', 'rescue_foiled', 'rescue_failure', 'rescue_thwarted'],
+       'Favorites': [], // Special category
     };
 
     // Handle dragging the modal window
@@ -21761,6 +21825,19 @@ const ReportsView = ({ onClose, onActionClick }) => {
         }
     };
 
+    // Handle toggling favorite status
+    const handleToggleFavorite = async (reportId, isCurrentlyFavorite) => {
+        const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', reportId);
+        try {
+            await updateDoc(reportRef, {
+                isFavorite: !isCurrentlyFavorite
+            });
+        } catch (error) {
+            console.error("Error toggling favorite status:", error);
+            setMessage("Could not update favorite status.");
+        }
+    };
+
     //  Handle sharing a report by creating a shared document and copying BBCode
     const handleShareReport = async (report) => {
         setMessage('');
@@ -21781,6 +21858,61 @@ const ReportsView = ({ onClose, onActionClick }) => {
     const handleTabClick = (tabName) => {
         setActiveTab(tabName);
         setSelectedReport(null);
+    };
+
+    const filteredReports = reports.filter(report => {
+        if (gameSettings.hideReturningReports && report.type === 'return') {
+            return false;
+        }
+        if (activeTab === 'Favorites') {
+            return report.isFavorite;
+        }
+        return tabs[activeTab]?.includes(report.type);
+    });
+
+    const handleReadAll = async () => {
+        const unreadReports = filteredReports.filter(r => !r.read);
+        if (unreadReports.length === 0) return;
+
+        const batch = writeBatch(db);
+        unreadReports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.update(reportRef, { read: true });
+        });
+
+        try {
+            await batch.commit();
+        } catch (error) {
+            console.error("Error marking all reports as read:", error);
+            setMessage("Could not mark all as read.");
+        }
+    };
+
+    const handleDeleteAll = () => {
+        if (filteredReports.length === 0) return;
+        
+        setConfirmAction({
+            message: `Are you sure you want to delete all ${filteredReports.length} reports in the "${activeTab}" tab?`,
+            onConfirm: async () => {
+                const batch = writeBatch(db);
+                filteredReports.forEach(report => {
+                    const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+                    batch.delete(reportRef);
+                });
+
+                try {
+                    await batch.commit();
+                    setSelectedReport(null);
+                } catch (error)
+                 {
+                    console.error("Error deleting all reports:", error);
+                    setMessage("Could not delete all reports.");
+                } finally {
+                    setConfirmAction(null);
+                }
+            },
+            onCancel: () => setConfirmAction(null)
+        });
     };
 
     //  This function handles clicks inside the report content area for BBCode actions
@@ -22147,15 +22279,9 @@ const ReportsView = ({ onClose, onActionClick }) => {
         }
     };
 
-    const filteredReports = reports.filter(report => {
-        if (gameSettings.hideReturningReports && report.type === 'return') {
-            return false;
-        }
-        return tabs[activeTab]?.includes(report.type);
-    });
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            {confirmAction && <ConfirmationModal {...confirmAction} />}
             <div
                 ref={reportsRef}
                 className="reports-container"
@@ -22171,7 +22297,12 @@ const ReportsView = ({ onClose, onActionClick }) => {
                     <div className="w-1/3 border-r-2 border-[#8B4513] flex flex-col">
                         <div className="reports-tabs">
                             {Object.keys(tabs).map(tabName => {
-                                const unreadCount = reports.filter(report => tabs[tabName].includes(report.type) && !report.read).length;
+                                let unreadCount;
+                                if (tabName === 'Favorites') {
+                                    unreadCount = reports.filter(report => report.isFavorite && !report.read).length;
+                                } else {
+                                    unreadCount = reports.filter(report => tabs[tabName].includes(report.type) && !report.read).length;
+                                }
                                 const hasUnread = unreadCount > 0;
                                 return (
                                     <button
@@ -22197,7 +22328,14 @@ const ReportsView = ({ onClose, onActionClick }) => {
                                             <span className={`truncate pr-2 ${getReportTitleColor(report)}`}>
                                                 {getReportTitle(report)}
                                             </span>
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleFavorite(report.id, report.isFavorite); }}
+                                                    className={`text-2xl ${report.isFavorite ? 'text-yellow-400' : 'text-gray-500'} hover:text-yellow-300`}
+                                                    title={report.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                                                >
+                                                    ★
+                                                </button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleShareReport(report); }} className="text-blue-500 hover:text-blue-400">Share</button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }} className="delete-btn">&times;</button>
                                             </div>
@@ -22209,6 +22347,10 @@ const ReportsView = ({ onClose, onActionClick }) => {
                                 <p className="p-4 text-center text-gray-500">No reports in this category.</p>
                             )}
                         </ul>
+                        <div className="p-2 border-t-2 border-[#8B4513] flex justify-around">
+                            <button onClick={handleReadAll} className="text-sm papyrus-btn">Mark All as Read</button>
+                            <button onClick={handleDeleteAll} className="text-sm papyrus-btn">Delete All in Tab</button>
+                        </div>
                     </div>
                     <div className="w-2/3 p-4 overflow-y-auto report-outcome-container" onClick={handleContentClick}>
                         {message && <p className="text-center text-green-500 mb-2">{message}</p>}
@@ -32594,56 +32736,43 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
         return () => unsubscribe();
     }, [currentUser, worldId, activeCityId]);
 
-    //  Effect for resource generation and queue processing
+    //  Effect for processing queues and resource generation
     useEffect(() => {
-        if (!activeCityId) return;
-        const interval = setInterval(() => {
-            setCityGameState(prevState => {
-                if (!prevState) return prevState;
-                const now = Date.now();
-                const lastUpdateTimestamp = prevState.lastUpdated?.toDate ? prevState.lastUpdated.toDate().getTime() : prevState.lastUpdated;
-                const lastUpdate = lastUpdateTimestamp || now;
-                const elapsedSeconds = (now - lastUpdate) / 1000;
-                if (elapsedSeconds < 0) return prevState;
-                const newState = JSON.parse(JSON.stringify(prevState));
-                const productionRates = getProductionRates(newState.buildings);
-                const capacity = getWarehouseCapacity(newState.buildings?.warehouse?.level);
-                newState.resources.wood = Math.min(capacity, (prevState.resources.wood || 0) + (productionRates.wood / 3600) * elapsedSeconds);
-                newState.resources.stone = Math.min(capacity, (prevState.resources.stone || 0) + (productionRates.stone / 3600) * elapsedSeconds);
-                newState.resources.silver = Math.min(capacity, (prevState.resources.silver || 0) + (productionRates.silver / 3600) * elapsedSeconds);
-                const templeLevel = newState.buildings.temple?.level || 0;
-                if (newState.god && templeLevel > 0) {
+    const processQueuesAndResources = async () => {
+        try {
+            const currentState = gameStateRef.current;
+            if (!currentUser || !worldId || !activeCityId || !currentState) return;
+            
+            const now = Date.now();
+            const lastUpdateTimestamp = currentState.lastUpdated?.toDate ? currentState.lastUpdated.toDate().getTime() : currentState.lastUpdated;
+            const lastUpdate = lastUpdateTimestamp || now;
+            const elapsedSeconds = (now - lastUpdate) / 1000;
+
+            let updates = {};
+            let hasUpdates = false;
+
+            // Resource Generation
+            if (elapsedSeconds > 0) {
+                const productionRates = getProductionRates(currentState.buildings);
+                const capacity = getWarehouseCapacity(currentState.buildings?.warehouse?.level);
+                updates.resources = { ...currentState.resources };
+                updates.resources.wood = Math.min(capacity, (currentState.resources.wood || 0) + (productionRates.wood / 3600) * elapsedSeconds);
+                updates.resources.stone = Math.min(capacity, (currentState.resources.stone || 0) + (productionRates.stone / 3600) * elapsedSeconds);
+                updates.resources.silver = Math.min(capacity, (currentState.resources.silver || 0) + (productionRates.silver / 3600) * elapsedSeconds);
+                
+                const templeLevel = currentState.buildings.temple?.level || 0;
+                if (currentState.god && templeLevel > 0) {
+                    updates.worship = { ...currentState.worship };
                     let favorPerSecond = templeLevel / 3600;
                     if (playerAlliance?.research) {
                         const favorBoostLevel = playerAlliance.research.divine_devotion?.level || 0;
                         favorPerSecond *= (1 + favorBoostLevel * 0.02);
                     }
                     const maxFavor = 100 + (templeLevel * 20);
-                    newState.worship[newState.god] = Math.min(maxFavor, (prevState.worship[newState.god] || 0) + favorPerSecond * elapsedSeconds);
+                    updates.worship[currentState.god] = Math.min(maxFavor, (currentState.worship[currentState.god] || 0) + favorPerSecond * elapsedSeconds);
                 }
-                newState.lastUpdated = now;
-                return newState;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [activeCityId, getProductionRates, getWarehouseCapacity, playerAlliance]);
-
-    useEffect(() => {
-    const processQueue = async () => {
-        try {
-            const currentState = gameStateRef.current;
-            if (!currentUser || !worldId || !activeCityId) return;
-            if (!currentState?.buildQueue?.length &&
-                !currentState?.barracksQueue?.length &&
-                !currentState?.shipyardQueue?.length &&
-                !currentState?.divineTempleQueue?.length &&
-                !currentState?.researchQueue?.length &&
-                !currentState?.healQueue?.length) {
-                return;
+                hasUpdates = true;
             }
-            const now = Date.now();
-            let updates = {};
-            let hasUpdates = false;
 
             const processSingleQueue = (queueName, processCompleted) => {
                 if (!currentState[queueName]?.length) return;
@@ -32722,7 +32851,6 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                         if (updates.buildings[task.buildingId]) {
                             updates.buildings[task.buildingId].level = task.level;
                         }
-                        //  Deactivate research if academy level is too low
                         if (task.buildingId === 'academy') {
                             const newAcademyLevel = task.level;
                             updates.research = updates.research || { ...currentState.research };
@@ -32744,7 +32872,6 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                             updates.buildings[task.buildingId] = { level: 0 };
                         }
                         updates.buildings[task.buildingId].level = task.level;
-                        //  Reactivate research if academy level is sufficient
                         if (task.buildingId === 'academy') {
                             const newAcademyLevel = task.level;
                             updates.research = updates.research || { ...currentState.research };
@@ -32801,12 +32928,12 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                 }, { merge: true });
             }
         } catch (error) {
-            console.error("Error in queue processing:", error);
+            console.error("Error in queue and resource processing:", error);
         }
     };
-    const interval = setInterval(processQueue, 1000);
+    const interval = setInterval(processQueuesAndResources, 1000);
     return () => clearInterval(interval);
-}, [currentUser, worldId, activeCityId, getUpgradeCost, addNotification, playerGameData]);
+}, [currentUser, worldId, activeCityId, getUpgradeCost, addNotification, playerGameData, getProductionRates, getWarehouseCapacity, playerAlliance]);
     
     return {
         cityGameState,
