@@ -17,20 +17,49 @@ const imageMap = images.keys().reduce((acc, item) => {
     return acc;
 }, {});
 
-const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => (
-    <div className="flex flex-row items-center gap-2 absolute top-1/2 -translate-y-1/2 -left-2 -translate-x-full p-1 rounded bg-gray-600 border border-gray-600" ref={menuRef}>
-        <button onClick={() => { onOpenManagementPanel(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Manager">
-            <img src={managerIcon} alt="Manager" className="w-6 h-6 object-contain" />
-        </button>
-        <button onClick={() => { handleOpenEvents(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Events">
-            <img src={eventsIcon} alt="Events" className="w-6 h-6 object-contain" />
-        </button>
-        <button onClick={() => { onOpenCheats(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Admin Cheats">
-            <img src={cheatsIcon} alt="Admin Cheats" className="w-6 h-6 object-contain" />
-        </button>
-    </div>
-);
+// --- Admin Cheats Floating Menu ---
+const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => {
+    const buttons = [
+        { action: onOpenManagementPanel, icon: managerIcon, label: "Manager" },
+        { action: handleOpenEvents, icon: eventsIcon, label: "Events" },
+        { action: onOpenCheats, icon: cheatsIcon, label: "Admin Cheats" },
+    ];
 
+    return (
+        <div
+            ref={menuRef}
+            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[180%] -right-1 -translate-x[5%] 
+                       bg-gray-900/90 border border-gray-700 rounded-2xl p-3 shadow-2xl backdrop-blur-md"
+        >
+            {buttons.map((btn, idx) => (
+                <div key={idx} className="relative group">
+                    <button
+                        onClick={() => {
+                            btn.action();
+                            setIsCheatsMenuOpen(false);
+                        }}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl 
+                                   bg-gray-800 border border-gray-700 
+                                   shadow-md hover:bg-gray-700 hover:scale-105 
+                                   transition-all duration-200 ease-out"
+                    >
+                        <img src={btn.icon} alt={btn.label} className="w-6 h-6 object-contain" />
+                    </button>
+                    {/* Tooltip */}
+                    <span
+                        className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-md 
+                                   text-xs bg-black/90 text-gray-200 opacity-0 group-hover:opacity-100 
+                                   pointer-events-none transition-opacity duration-200 shadow-lg whitespace-nowrap"
+                    >
+                        {btn.label}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// --- Worship Display ---
 const WorshipDisplay = ({ 
     godName, playerReligion, worship, buildings, onOpenPowers,
     onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents
@@ -59,7 +88,8 @@ const WorshipDisplay = ({
     // Effect to close admin menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (cheatsMenuRef.current && !cheatsMenuRef.current.contains(event.target) && cheatsButtonRef.current && !cheatsButtonRef.current.contains(event.target)) {
+            if (cheatsMenuRef.current && !cheatsMenuRef.current.contains(event.target) &&
+                cheatsButtonRef.current && !cheatsButtonRef.current.contains(event.target)) {
                 setIsCheatsMenuOpen(false);
             }
         };
@@ -71,32 +101,54 @@ const WorshipDisplay = ({
 
     return (
         <div className="worship-display-container">
-             <div className="flex justify-around items-center mb-2 relative">
+            <div className="flex justify-around items-center mb-2 relative">
+                {/* Settings */}
                 <button onClick={onOpenSettings} className="p-1" title="Settings">
                     <img src={settingsIcon} alt="Settings" className="w-8 h-8 object-contain" />
                 </button>
-                <button onClick={onGenerateMap} className="p-1 disabled:opacity-50" disabled={isGeneratingMap} title="Generate World Map Image">
+
+                {/* Generate World Map */}
+                <button 
+                    onClick={onGenerateMap} 
+                    className="p-1 disabled:opacity-50" 
+                    disabled={isGeneratingMap} 
+                    title="Generate World Map Image"
+                >
                     <img src={worldMapIcon} alt="World Map" className="w-8 h-8 object-contain"/>
                 </button>
+
+                {/* Admin Cheats */}
                 {isAdmin && (
                     <div className="relative">
-                        {isCheatsMenuOpen && <AdminCheatButtons 
-                            menuRef={cheatsMenuRef}
-                            onOpenManagementPanel={onOpenManagementPanel}
-                            handleOpenEvents={handleOpenEvents}
-                            onOpenCheats={onOpenCheats}
-                            setIsCheatsMenuOpen={setIsCheatsMenuOpen}
-                        />}
-                        <button ref={cheatsButtonRef} onClick={() => setIsCheatsMenuOpen(prev => !prev)} className="p-1" title="Cheats">
+                        {isCheatsMenuOpen && (
+                            <AdminCheatButtons 
+                                menuRef={cheatsMenuRef}
+                                onOpenManagementPanel={onOpenManagementPanel}
+                                handleOpenEvents={handleOpenEvents}
+                                onOpenCheats={onOpenCheats}
+                                setIsCheatsMenuOpen={setIsCheatsMenuOpen}
+                            />
+                        )}
+                        <button 
+                            ref={cheatsButtonRef} 
+                            onClick={() => setIsCheatsMenuOpen(prev => !prev)} 
+                            className="p-1" 
+                            title="Cheats"
+                        >
                             <img src={cheatsIcon} alt="Cheats" className="w-8 h-8 object-contain" />
                         </button>
                     </div>
                 )}
             </div>
+
+            {/* God Display */}
             {godName && godDetails ? (
                 <div className="text-center flex flex-col items-center">
                     <div className="worship-frame-bg">
-                        <div className="favor-progress-ring" style={{ background: `conic-gradient(#4285F4 ${favorPercentage}%, transparent ${favorPercentage}%)` }}>
+                        <div 
+                            className="favor-progress-ring" 
+                            style={{ background: `conic-gradient(#4285F4 ${favorPercentage}%, transparent ${favorPercentage}%)` }}
+                        >
                             <div className="favor-progress-fill"></div>
                         </div>
                         <img src={imageMap[godDetails.image]} alt={godDetails.name} className="god-avatar" />
@@ -117,4 +169,3 @@ const WorshipDisplay = ({
 };
 
 export default WorshipDisplay;
-

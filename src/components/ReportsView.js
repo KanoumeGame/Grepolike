@@ -7,7 +7,7 @@
 # in whole or in part, is strictly prohibited without prior written permission.
 */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -40,6 +40,18 @@ imageContexts.forEach(context => {
     });
 });
 
+const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1002]">
+        <div className="bg-gray-800 p-6 rounded-lg text-white">
+            <p className="mb-4">{message}</p>
+            <div className="flex justify-end gap-2">
+                <button onClick={onCancel} className="btn btn-secondary">Cancel</button>
+                <button onClick={onConfirm} className="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+);
+
 
 const ReportsView = ({ onClose, onActionClick }) => {
     const { currentUser } = useAuth();
@@ -55,6 +67,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [confirmAction, setConfirmAction] = useState(null);
 
     const tabs = {
         'Combat': ['attack', 'attack_village', 'attack_ruin', 'attack_god_town'],
@@ -62,6 +75,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
         'Trade': ['trade'],
         'Scout': ['scout', 'spy_caught'],
         'Misc': ['return', 'spell_cast', 'spell_received', 'spell_fail', 'found_city_success', 'found_city_failed', 'assign_hero_failed', 'rescue_success', 'rescue_foiled', 'rescue_failure', 'rescue_thwarted'],
+       'Favorites': [], // Special category
     };
 
     // Handle dragging the modal window
@@ -131,6 +145,19 @@ const ReportsView = ({ onClose, onActionClick }) => {
         }
     };
 
+    // Handle toggling favorite status
+    const handleToggleFavorite = async (reportId, isCurrentlyFavorite) => {
+        const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', reportId);
+        try {
+            await updateDoc(reportRef, {
+                isFavorite: !isCurrentlyFavorite
+            });
+        } catch (error) {
+            console.error("Error toggling favorite status:", error);
+            setMessage("Could not update favorite status.");
+        }
+    };
+
     //  Handle sharing a report by creating a shared document and copying BBCode
     const handleShareReport = async (report) => {
         setMessage('');
@@ -151,6 +178,61 @@ const ReportsView = ({ onClose, onActionClick }) => {
     const handleTabClick = (tabName) => {
         setActiveTab(tabName);
         setSelectedReport(null);
+    };
+
+    const filteredReports = reports.filter(report => {
+        if (gameSettings.hideReturningReports && report.type === 'return') {
+            return false;
+        }
+        if (activeTab === 'Favorites') {
+            return report.isFavorite;
+        }
+        return tabs[activeTab]?.includes(report.type);
+    });
+
+    const handleReadAll = async () => {
+        const unreadReports = filteredReports.filter(r => !r.read);
+        if (unreadReports.length === 0) return;
+
+        const batch = writeBatch(db);
+        unreadReports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.update(reportRef, { read: true });
+        });
+
+        try {
+            await batch.commit();
+        } catch (error) {
+            console.error("Error marking all reports as read:", error);
+            setMessage("Could not mark all as read.");
+        }
+    };
+
+    const handleDeleteAll = () => {
+        if (filteredReports.length === 0) return;
+        
+        setConfirmAction({
+            message: `Are you sure you want to delete all ${filteredReports.length} reports in the "${activeTab}" tab?`,
+            onConfirm: async () => {
+                const batch = writeBatch(db);
+                filteredReports.forEach(report => {
+                    const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+                    batch.delete(reportRef);
+                });
+
+                try {
+                    await batch.commit();
+                    setSelectedReport(null);
+                } catch (error)
+                 {
+                    console.error("Error deleting all reports:", error);
+                    setMessage("Could not delete all reports.");
+                } finally {
+                    setConfirmAction(null);
+                }
+            },
+            onCancel: () => setConfirmAction(null)
+        });
     };
 
     //  This function handles clicks inside the report content area for BBCode actions
@@ -517,15 +599,9 @@ const ReportsView = ({ onClose, onActionClick }) => {
         }
     };
 
-    const filteredReports = reports.filter(report => {
-        if (gameSettings.hideReturningReports && report.type === 'return') {
-            return false;
-        }
-        return tabs[activeTab]?.includes(report.type);
-    });
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            {confirmAction && <ConfirmationModal {...confirmAction} />}
             <div
                 ref={reportsRef}
                 className="reports-container"
@@ -541,7 +617,12 @@ const ReportsView = ({ onClose, onActionClick }) => {
                     <div className="w-1/3 border-r-2 border-[#8B4513] flex flex-col">
                         <div className="reports-tabs">
                             {Object.keys(tabs).map(tabName => {
-                                const unreadCount = reports.filter(report => tabs[tabName].includes(report.type) && !report.read).length;
+                                let unreadCount;
+                                if (tabName === 'Favorites') {
+                                    unreadCount = reports.filter(report => report.isFavorite && !report.read).length;
+                                } else {
+                                    unreadCount = reports.filter(report => tabs[tabName].includes(report.type) && !report.read).length;
+                                }
                                 const hasUnread = unreadCount > 0;
                                 return (
                                     <button
@@ -567,7 +648,14 @@ const ReportsView = ({ onClose, onActionClick }) => {
                                             <span className={`truncate pr-2 ${getReportTitleColor(report)}`}>
                                                 {getReportTitle(report)}
                                             </span>
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleFavorite(report.id, report.isFavorite); }}
+                                                    className={`text-2xl ${report.isFavorite ? 'text-yellow-400' : 'text-gray-500'} hover:text-yellow-300`}
+                                                    title={report.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                                                >
+                                                    ★
+                                                </button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleShareReport(report); }} className="text-blue-500 hover:text-blue-400">Share</button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }} className="delete-btn">&times;</button>
                                             </div>
@@ -579,6 +667,10 @@ const ReportsView = ({ onClose, onActionClick }) => {
                                 <p className="p-4 text-center text-gray-500">No reports in this category.</p>
                             )}
                         </ul>
+                        <div className="p-2 border-t-2 border-[#8B4513] flex justify-around">
+                            <button onClick={handleReadAll} className="text-sm papyrus-btn">Mark All as Read</button>
+                            <button onClick={handleDeleteAll} className="text-sm papyrus-btn">Delete All in Tab</button>
+                        </div>
                     </div>
                     <div className="w-2/3 p-4 overflow-y-auto report-outcome-container" onClick={handleContentClick}>
                         {message && <p className="text-center text-green-500 mb-2">{message}</p>}
@@ -602,3 +694,4 @@ const ReportsView = ({ onClose, onActionClick }) => {
 };
 
 export default ReportsView;
+
