@@ -44,7 +44,6 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
-    onGenerateMap,
     isGeneratingMap,
 }) => {
     const { currentUser, userProfile } = useAuth();
@@ -275,10 +274,8 @@ const MapView = ({
                     onOpenAlliance={handleOpenAlliance}
                     onOpenForum={() => openModal('allianceForum')}
                     onOpenMessages={() => openModal('messages')}
-                    onOpenSettings={() => openModal('settings')}
                     onOpenProfile={() => openModal('profile')}
                     onOpenLeaderboard={() => openModal('leaderboard')}
-                    onOpenQuests={() => openModal('quests')}
                     unreadReportsCount={unreadReportsCount}
                     unreadMessagesCount={unreadMessagesCount}
                     isAdmin={userProfile?.is_admin}
@@ -286,8 +283,6 @@ const MapView = ({
                     isAllianceMember={!!playerAlliance}
                     handleOpenEvents={handleOpenEvents}
                     onOpenManagementPanel={onOpenManagementPanel}
-                    onGenerateMap={onGenerateMap}
-                    isGeneratingMap={isGeneratingMap}
                 />
                 <div className="main-content flex-grow relative map-surface">
                     <TopBar

@@ -21,7 +21,7 @@ contexts.forEach(context => {
 const CITYSCAPE_WIDTH = 2000;
 const CITYSCAPE_HEIGHT = 1200;
 
-const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements }) => {
+const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap }) => {
     // Panning Logic (moved from CityView.js)
     const viewportRef = useRef(null);
     const cityContainerRef = useRef(null);
@@ -96,6 +96,10 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                     className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20" 
                     onOpenPowers={onOpenPowers}
                     movements={movements}
+                    onOpenSettings={onOpenSettings}
+                    onOpenCheats={onOpenCheats}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             </main>
         );
@@ -117,6 +121,10 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                 className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4" 
                 onOpenPowers={onOpenPowers}
                 movements={movements}
+                onOpenSettings={onOpenSettings}
+                onOpenCheats={onOpenCheats}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
             />
         </main>
     );

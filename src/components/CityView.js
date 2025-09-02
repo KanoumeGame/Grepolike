@@ -51,6 +51,8 @@ const CityView = ({
     onOpenNotes,
     onGenerateMap,
     isGeneratingMap,
+    onOpenSettings,
+    onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -107,21 +109,15 @@ const CityView = ({
                 onOpenAlliance={handleOpenAlliance}
                 onOpenForum={() => openModal('allianceForum')}
                 onOpenMessages={() => openModal('messages')}
-                onOpenSettings={() => openModal('settings')}
                 onOpenProfile={() => handleOpenProfile()}
                 onOpenLeaderboard={() => openModal('leaderboard')}
-                onOpenQuests={() => openModal('quests')}
                 unreadReportsCount={unreadReportsCount}
                 unreadMessagesCount={unreadMessagesCount}
                 isAdmin={userProfile?.is_admin}
                 onToggleDummyCityPlacement={() => {}}
-                onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 isAllianceMember={!!playerAlliance}
                 handleOpenEvents={handleOpenEvents}
-                onOpenHeroesAltar={() => openCityModal('isHeroesAltarOpen')}
                 onOpenManagementPanel={onOpenManagementPanel}
-                onGenerateMap={onGenerateMap}
-                isGeneratingMap={isGeneratingMap}
             />
             <div className="h-full w-full flex flex-col">
                 <TopBar
@@ -151,6 +147,10 @@ const CityView = ({
                     gameSettings={gameSettings}
                     onOpenSpecialBuildingMenu={() => openCityModal('isSpecialBuildingMenuOpen')}
                     movements={movements}
+                    onOpenSettings={onOpenSettings}
+                    onOpenCheats={onOpenCheats}
+                    onGenerateMap={onGenerateMap}
+                    isGeneratingMap={isGeneratingMap}
                 />
             </div>
             <CityModals

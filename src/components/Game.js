@@ -562,6 +562,8 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenNotes={() => setIsNotesOpen(true)}
                     onGenerateMap={handleGenerateMap}
                     isGeneratingMap={isGeneratingMap}
+                    onOpenSettings={() => openModal('settings')}
+                    onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
             {view === 'map' && (
