@@ -165,7 +165,7 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
                         <div className="p-3 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600">
                             <span className="text-2xl">🏛️</span>
                         </div>
-                        <span className="text-xs mt-1">Found City</span>
+                        <span className="text-xs mt-1">Found Cities</span>
                     </button>
                     <button onClick={handleCheat} className="flex flex-col items-center text-white hover:text-yellow-400 transition-colors" title="Apply Cheats">
                         <div className="p-3 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600">
