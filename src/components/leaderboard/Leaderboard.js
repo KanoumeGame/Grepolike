@@ -4,6 +4,7 @@ import { collection, getDocs, collectionGroup, query, where } from 'firebase/fir
 import { useGame } from '../../contexts/GameContext';
 import allianceResearch from '../../gameData/allianceResearch.json';
 import battlePointsImage from '../../images/battle_points.png';
+import pointsImage from '../../images/ui/points.png';
 import './Leaderboard.css';
 
 let leaderboardCache = {
@@ -195,7 +196,7 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
         }
     }, [worldId, fetchAllPlayerData]);
 
-    //  Render player table
+    // Render player table
     const renderPlayerTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -218,14 +219,17 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
                         </td>
                         <td className="text-left">{player.alliance}</td>
                         <td className="text-right">{player.cities}</td>
-                        <td className="text-right">{player.points.toLocaleString()}</td>
+                        <td className="text-right flex items-center justify-end">
+                            {player.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1 inline-block"/>
+                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
     );
 
-    //  Render fighters table
+    // Render fighters table
     const renderFightersTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -256,7 +260,7 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
         </table>
     );
 
-    //  Render alliance table
+    // Render alliance table
     const renderAllianceTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -281,14 +285,17 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
                         <td className="text-left">{alliance.tag}</td>
                         <td className="text-center">{alliance.memberCount}/{alliance.maxMembers}</td>
                         <td className="text-center">{alliance.cities}</td>
-                        <td className="text-right">{alliance.points.toLocaleString()}</td>
+                        <td className="text-right flex items-center justify-end">
+                            {alliance.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1 inline-block"/>
+                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
     );
 
-    //  Render content
+    // Render content
     const renderContent = () => {
         if (loading) {
             return <p>Loading leaderboard...</p>;

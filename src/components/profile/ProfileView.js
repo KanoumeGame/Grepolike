@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useGame } from '../../contexts/GameContext';
-import { useAlliance } from '../../contexts/AllianceContext';
+import { useAuth } from '../../contexts/AuthContext.js';
+import { useGame } from '../../contexts/GameContext.js';
+import { useAlliance } from '../../contexts/AllianceContext.js';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useCityState } from '../../hooks/useCityState';
+import { db } from '../../firebase/config.js';
+import { useCityState } from '../../hooks/useCityState.js';
 import unitConfig from '../../gameData/units.json';
 import './ProfileView.css';
-import TextEditor from '../shared/TextEditor';
+import TextEditor from '../shared/TextEditor.js';
 import placeholder_profile from '../../images/placeholder_profile.png';
+import pointsImage from '../../images/ui/points.png';
 
 const profileCache = {};
 export const clearProfileCache = () => {
@@ -86,7 +87,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
             setLoading(true);
             const userId = viewUserId || currentUser.uid;
             try {
-                //  Fetch user profile
+                // Fetch user profile
                 const userDocRef = doc(db, "users", userId);
                 const userDocSnap = await getDoc(userDocRef);
                 let userData = null;
@@ -96,12 +97,12 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
                     setNewDescription(userData.description || '');
                     setNewImageUrl(userData.imageUrl || '');
                 }
-                //  Fetch top-level game data (for alliance info)
+                // Fetch top-level game data (for alliance info)
                 const gameDocRef = doc(db, `users/${userId}/games`, worldId);
                 const gameDocSnap = await getDoc(gameDocRef);
                 const gameData = gameDocSnap.exists() ? gameDocSnap.data() : null;
                 setGameData(gameData);
-                //  Fetch all cities for the user in this world
+                // Fetch all cities for the user in this world
                 const citiesColRef = collection(db, `users/${userId}/games`, worldId, 'cities');
                 const citiesSnap = await getDocs(citiesColRef);
                 const citiesList = citiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -163,7 +164,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         }
     }, [viewUserId, currentUser.uid, worldId, calculateTotalPoints]);
 
-    //  handle update profile
+    // handle update profile
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         if (!isOwnProfile) return;
@@ -179,13 +180,13 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         }
     };
 
-    //  get ocean
+    // get ocean
     const getOcean = (x, y) => {
         if (x === undefined || y === undefined) return '?';
         return `${Math.floor(y / 10)}${Math.floor(x / 10)}`;
     };
 
-    //  check if can invite
+    // check if can invite
     const canInvite = (() => {
         if (!playerAlliance || isOwnProfile) {
             return false;
@@ -206,7 +207,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
 
     const displayProfile = isOwnProfile ? ownUserProfile : profileData;
 
-    //  Render player information
+    // Render player information
     const renderPlayerInfo = () => (
         <div className="profile-box">
             <div className="profile-box-header">
@@ -225,12 +226,18 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
             <div className="player-stats">
                 <div className="stat-item"><span>⚔️ Attack Points</span> <span>{totalAttack.toLocaleString()}</span></div>
                 <div className="stat-item"><span>🛡️ Defense Points</span> <span>{totalDefense.toLocaleString()}</span></div>
-                <div className="stat-item"><span>🏆 Total Points</span> <span>{points.toLocaleString()}</span></div>
+                <div className="stat-item">
+                    <span>🏆 Total Points</span>
+                    <span className="flex items-center">
+                        {points.toLocaleString()}
+                        <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1"/>
+                    </span>
+                </div>
             </div>
         </div>
     );
 
-    //  Render cities list
+    // Render cities list
     const renderCitiesList = () => (
         <div className="profile-box flex-grow min-h-0">
             <div className="profile-box-header flex justify-between items-center">
@@ -244,7 +251,11 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
                             <button onClick={() => onGoToCity(city.x, city.y)} className="city-name-btn">
                                 {city.cityName}
                             </button>
-                            <span>{calculateTotalPoints(city).toLocaleString()} points | Ocean {getOcean(city.x, city.y)}</span>
+                            <span className="flex items-center">
+                                {calculateTotalPoints(city).toLocaleString()}
+                                <img src={pointsImage} alt="Points" className="w-4 h-4 mx-1"/>
+                                | Ocean {getOcean(city.x, city.y)}
+                            </span>
                         </div>
                     ))
                 ) : (
@@ -254,7 +265,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         </div>
     );
 
-    //  Render profile description
+    // Render profile description
     const renderProfileDescription = () => (
         <div className="profile-box h-full">
             <div className="profile-box-header">Profile</div>

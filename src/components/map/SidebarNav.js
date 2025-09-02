@@ -8,15 +8,11 @@ import forumIcon from '../../images/ui/forum.png';
 import messagesIcon from '../../images/ui/messages.png';
 import leaderboardIcon from '../../images/ui/leaderboard.png';
 import profileIcon from '../../images/ui/profile.png';
-import managerIcon from '../../images/ui/manager.png';
-import cheatsIcon from '../../images/ui/cheats.png';
-import eventsIcon from '../../images/ui/events.png';
-import dummyIcon from '../../images/ui/dummy.png';
 
 const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, isAllianceMember, handleOpenEvents, onOpenManagementPanel }) => {
     
     const [isNavOpen, setIsNavOpen] = useState(true);
-    const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+    const [setIsAdminMenuOpen] = useState(false);
     const adminMenuRef = useRef(null);
 
     const NavButton = ({ imgSrc, text, onClick, notificationCount, glowing, disabled, title }) => (
@@ -66,27 +62,6 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
                 <NavButton imgSrc={messagesIcon} text="Messages" onClick={onOpenMessages} notificationCount={unreadMessagesCount} glowing={unreadMessagesCount > 0} />
                 <NavButton imgSrc={leaderboardIcon} text="Leaderboard" onClick={onOpenLeaderboard} />
                 <NavButton imgSrc={profileIcon} text="Profile" onClick={() => onOpenProfile()} />
-                {isAdmin && (
-                    <div ref={adminMenuRef} className="relative">
-                        <NavButton imgSrc={cheatsIcon} text="Admin" onClick={() => setIsAdminMenuOpen(prev => !prev)} />
-                        {isAdminMenuOpen && (
-                            <div className="absolute left-full top-0 ml-2 p-2 rounded-md bg-gray-800 border border-gray-600 w-48 shadow-lg flex flex-col gap-1">
-                                <button onClick={() => { onOpenManagementPanel(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                    <img src={managerIcon} alt="Manager" className="w-8 h-8 object-contain" />
-                                    <span className="button-text">Manager</span>
-                                </button>
-                                <button onClick={() => { handleOpenEvents(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                    <img src={eventsIcon} alt="Events" className="w-8 h-8 object-contain" />
-                                    <span className="button-text">Events</span>
-                                </button>
-                                <button onClick={() => { onToggleDummyCityPlacement(); setIsAdminMenuOpen(false); }} disabled={view !== 'map'} className="sidebar-button" title={view !== 'map' ? "Available in Map View only" : "Place Dummy City"}>
-                                     <img src={dummyIcon} alt="Place Dummy" className="w-8 h-8 object-contain" />
-                                     <span className="button-text">Place Dummy</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
             <button 
                 onClick={() => setIsNavOpen(!isNavOpen)} 

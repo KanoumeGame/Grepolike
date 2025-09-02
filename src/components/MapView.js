@@ -44,7 +44,10 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
     isGeneratingMap,
+    onOpenSettings,
+    onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
@@ -305,7 +308,18 @@ const MapView = ({
                         battlePoints={battlePoints}
                         onOpenNotes={onOpenNotes}
                     />
-                    <SideInfoPanel gameState={playerCity} className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4" onOpenPowers={() => openModal('divinePowers')} movements={movements} />
+                    <SideInfoPanel
+                        gameState={playerCity}
+                        className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4"
+                        onOpenPowers={() => openModal('divinePowers')}
+                        movements={movements}
+                        onOpenSettings={onOpenSettings}
+                        onOpenCheats={onOpenCheats}
+                        onGenerateMap={onGenerateMap}
+                        isGeneratingMap={isGeneratingMap}
+                        onOpenManagementPanel={onOpenManagementPanel}
+                        handleOpenEvents={handleOpenEvents}
+                    />
                     
                     <div className="map-viewport absolute inset-0" ref={viewportRef}>
                        {(worldState && combinedSlots) && (

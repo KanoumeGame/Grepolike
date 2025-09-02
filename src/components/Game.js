@@ -600,6 +600,8 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenNotes={() => setIsNotesOpen(true)}
                     onGenerateMap={handleGenerateMap}
                     isGeneratingMap={isGeneratingMap}
+                    onOpenSettings={() => openModal('settings')}
+                    onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
             {/* Global Modals */}
@@ -664,4 +666,3 @@ const Game = ({ onBackToWorlds }) => {
     );
 };
 export default Game;
-

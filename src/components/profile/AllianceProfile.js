@@ -3,8 +3,15 @@ import { doc, getDoc, collectionGroup, query, where, getDocs } from 'firebase/fi
 import { db } from '../../firebase/config';
 import { useGame } from '../../contexts/GameContext';
 import './AllianceProfile.css';
+import pointsImage from '../../images/ui/points.png';
 
 const allianceProfileCache = {};
+
+export const clearAllianceProfileCache = () => {
+    for (const key in allianceProfileCache) {
+        delete allianceProfileCache[key];
+    }
+};
 
 const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
     const { worldId, worldState } = useGame();
@@ -154,8 +161,14 @@ const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
                 Leader: <button onClick={() => onOpenProfile(allianceData.leader.uid)} className="text-blue-400 hover:underline font-bold">{allianceData.leader.username}</button>
             </div>
             <div className="player-stats">
-                <div className="stat-item"><span>👥 Members</span> <span>{allianceData.members.length}</span></div>
-                <div className="stat-item"><span>🏆 Total Points</span> <span>{totalPoints.toLocaleString()}</span></div>
+                <div className="stat-item"><span>Members</span> <span>{allianceData.members.length}</span></div>
+                <div className="stat-item">
+                    <span>Total Points</span>
+                    <span className="flex items-center">
+                        {totalPoints.toLocaleString()}
+                        <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1"/>
+                    </span>
+                </div>
             </div>
         </div>
     );
@@ -170,7 +183,10 @@ const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
                         <button onClick={() => onOpenProfile(member.uid)} className="city-name-btn">
                             {member.username} ({member.rank})
                         </button>
-                        <span>{member.points.toLocaleString()} points</span>
+                        <span className="flex items-center">
+                            {member.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-4 h-4 ml-1"/>
+                        </span>
                     </div>
                 ))}
             </div>
@@ -214,3 +230,4 @@ const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
 };
 
 export default AllianceProfile;
+

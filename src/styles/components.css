@@ -57,6 +57,7 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
     @apply absolute top-1/4 -translate-y-1/4 left-0 z-30; /* Adjusted vertical position */
     transition: transform 0.3s ease-in-out;
+    top: 20rem;
 }
 
 .sidebar.closed {
@@ -76,7 +77,7 @@
     border: 2px solid #8B4513;
     border-left: none;
     transition: left 0.3s ease-in-out;
-    top: 30rem;
+    top: 31rem;
     left: 0m;
 }
 

@@ -69,7 +69,7 @@ export const useAllianceActions = (playerAlliance) => {
                     diplomacy: { allies: [], enemies: [], requests: [] },
                     settings: {
                         status: 'open',
-                        description: `A new alliance, '${name}', has been formed!`,
+                        description: `The alliance, '${name}', hasn't set a description yet!`,
                         privateDescription: '',
                     },
                     ranks: [
