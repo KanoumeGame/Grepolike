@@ -18,7 +18,7 @@ const imageMap = images.keys().reduce((acc, item) => {
 }, {});
 
 const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => (
-    <div className="flex flex-row items-center gap-1 absolute bottom-full left-1/2 -translate-x-1/2 mb-2" ref={menuRef}>
+    <div className="flex flex-row items-center gap-2 absolute top-1/2 -translate-y-1/2 -left-2 -translate-x-full" ref={menuRef}>
         <button onClick={() => { onOpenManagementPanel(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Manager">
             <img src={managerIcon} alt="Manager" className="w-6 h-6 object-contain" />
         </button>

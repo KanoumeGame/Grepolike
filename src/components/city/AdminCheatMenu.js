@@ -160,15 +160,24 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
                         />
                     </div>
                 </div>
-                <div className="mt-4 flex-shrink-0">
-                    <button onClick={handleFoundCity} className="btn btn-primary w-full py-2 bg-yellow-600 hover:bg-yellow-500">
-                        Found Second City
+                <div className="mt-4 pt-4 border-t border-gray-600 flex justify-around items-center flex-shrink-0">
+                    <button onClick={handleFoundCity} className="flex flex-col items-center text-white hover:text-yellow-400 transition-colors" title="Found Second City">
+                        <div className="p-3 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600">
+                            <span className="text-2xl">🏛️</span>
+                        </div>
+                        <span className="text-xs mt-1">Found City</span>
                     </button>
-                    <button onClick={handleCheat} className="btn btn-primary w-full py-2 mt-2">
-                        Apply Cheats
+                    <button onClick={handleCheat} className="flex flex-col items-center text-white hover:text-yellow-400 transition-colors" title="Apply Cheats">
+                        <div className="p-3 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600">
+                            <span className="text-2xl">✅</span>
+                        </div>
+                        <span className="text-xs mt-1">Apply</span>
                     </button>
-                    <button onClick={handleForceRefresh} className="btn btn-secondary w-full py-2 mt-2 bg-blue-600 hover:bg-blue-500">
-                        Force Refresh Data
+                    <button onClick={handleForceRefresh} className="flex flex-col items-center text-white hover:text-yellow-400 transition-colors" title="Force Refresh Data">
+                        <div className="p-3 bg-gray-700 border border-gray-600 rounded-full hover:bg-gray-600">
+                            <span className="text-2xl">🔄</span>
+                        </div>
+                        <span className="text-xs mt-1">Refresh</span>
                     </button>
                 </div>
             </div>
