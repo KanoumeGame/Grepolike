@@ -12549,6 +12549,8 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenNotes={() => setIsNotesOpen(true)}
                     onGenerateMap={handleGenerateMap}
                     isGeneratingMap={isGeneratingMap}
+                    onOpenSettings={() => openModal('settings')}
+                    onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
             {/* Global Modals */}
@@ -12801,6 +12803,7 @@ import { collection, getDocs, collectionGroup, query, where } from 'firebase/fir
 import { useGame } from '../../contexts/GameContext';
 import allianceResearch from '../../gameData/allianceResearch.json';
 import battlePointsImage from '../../images/battle_points.png';
+import pointsImage from '../../images/ui/points.png';
 import './Leaderboard.css';
 
 let leaderboardCache = {
@@ -12992,7 +12995,7 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
         }
     }, [worldId, fetchAllPlayerData]);
 
-    //  Render player table
+    // Render player table
     const renderPlayerTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -13015,14 +13018,17 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
                         </td>
                         <td className="text-left">{player.alliance}</td>
                         <td className="text-right">{player.cities}</td>
-                        <td className="text-right">{player.points.toLocaleString()}</td>
+                        <td className="text-right flex items-center justify-end">
+                            {player.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1 inline-block"/>
+                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
     );
 
-    //  Render fighters table
+    // Render fighters table
     const renderFightersTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -13053,7 +13059,7 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
         </table>
     );
 
-    //  Render alliance table
+    // Render alliance table
     const renderAllianceTable = () => (
         <table className="leaderboard-table">
             <thead>
@@ -13078,14 +13084,17 @@ const Leaderboard = ({ onClose, onOpenProfile, onOpenAllianceProfile }) => {
                         <td className="text-left">{alliance.tag}</td>
                         <td className="text-center">{alliance.memberCount}/{alliance.maxMembers}</td>
                         <td className="text-center">{alliance.cities}</td>
-                        <td className="text-right">{alliance.points.toLocaleString()}</td>
+                        <td className="text-right flex items-center justify-end">
+                            {alliance.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1 inline-block"/>
+                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
     );
 
-    //  Render content
+    // Render content
     const renderContent = () => {
         if (loading) {
             return <p>Loading leaderboard...</p>;
@@ -18275,15 +18284,11 @@ import forumIcon from '../../images/ui/forum.png';
 import messagesIcon from '../../images/ui/messages.png';
 import leaderboardIcon from '../../images/ui/leaderboard.png';
 import profileIcon from '../../images/ui/profile.png';
-import managerIcon from '../../images/ui/manager.png';
-import cheatsIcon from '../../images/ui/cheats.png';
-import eventsIcon from '../../images/ui/events.png';
-import dummyIcon from '../../images/ui/dummy.png';
 
 const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenMessages, onOpenProfile, unreadReportsCount, unreadMessagesCount, isAdmin, onToggleDummyCityPlacement, onOpenForum, onOpenLeaderboard, isAllianceMember, handleOpenEvents, onOpenManagementPanel }) => {
     
     const [isNavOpen, setIsNavOpen] = useState(true);
-    const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+    const [setIsAdminMenuOpen] = useState(false);
     const adminMenuRef = useRef(null);
 
     const NavButton = ({ imgSrc, text, onClick, notificationCount, glowing, disabled, title }) => (
@@ -18333,27 +18338,6 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
                 <NavButton imgSrc={messagesIcon} text="Messages" onClick={onOpenMessages} notificationCount={unreadMessagesCount} glowing={unreadMessagesCount > 0} />
                 <NavButton imgSrc={leaderboardIcon} text="Leaderboard" onClick={onOpenLeaderboard} />
                 <NavButton imgSrc={profileIcon} text="Profile" onClick={() => onOpenProfile()} />
-                {isAdmin && (
-                    <div ref={adminMenuRef} className="relative">
-                        <NavButton imgSrc={cheatsIcon} text="Admin" onClick={() => setIsAdminMenuOpen(prev => !prev)} />
-                        {isAdminMenuOpen && (
-                            <div className="absolute left-full top-0 ml-2 p-2 rounded-md bg-gray-800 border border-gray-600 w-48 shadow-lg flex flex-col gap-1">
-                                <button onClick={() => { onOpenManagementPanel(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                    <img src={managerIcon} alt="Manager" className="w-8 h-8 object-contain" />
-                                    <span className="button-text">Manager</span>
-                                </button>
-                                <button onClick={() => { handleOpenEvents(); setIsAdminMenuOpen(false); }} className="sidebar-button">
-                                    <img src={eventsIcon} alt="Events" className="w-8 h-8 object-contain" />
-                                    <span className="button-text">Events</span>
-                                </button>
-                                <button onClick={() => { onToggleDummyCityPlacement(); setIsAdminMenuOpen(false); }} disabled={view !== 'map'} className="sidebar-button" title={view !== 'map' ? "Available in Map View only" : "Place Dummy City"}>
-                                     <img src={dummyIcon} alt="Place Dummy" className="w-8 h-8 object-contain" />
-                                     <span className="button-text">Place Dummy</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
             <button 
                 onClick={() => setIsNavOpen(!isNavOpen)} 
@@ -19310,7 +19294,10 @@ const MapView = ({
     battlePoints,
     onOpenManagementPanel,
     onOpenNotes,
+    onGenerateMap,
     isGeneratingMap,
+    onOpenSettings,
+    onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
@@ -19571,7 +19558,18 @@ const MapView = ({
                         battlePoints={battlePoints}
                         onOpenNotes={onOpenNotes}
                     />
-                    <SideInfoPanel gameState={playerCity} className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4" onOpenPowers={() => openModal('divinePowers')} movements={movements} />
+                    <SideInfoPanel
+                        gameState={playerCity}
+                        className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4"
+                        onOpenPowers={() => openModal('divinePowers')}
+                        movements={movements}
+                        onOpenSettings={onOpenSettings}
+                        onOpenCheats={onOpenCheats}
+                        onGenerateMap={onGenerateMap}
+                        isGeneratingMap={isGeneratingMap}
+                        onOpenManagementPanel={onOpenManagementPanel}
+                        handleOpenEvents={handleOpenEvents}
+                    />
                     
                     <div className="map-viewport absolute inset-0" ref={viewportRef}>
                        {(worldState && combinedSlots) && (
@@ -20449,8 +20447,15 @@ import { doc, getDoc, collectionGroup, query, where, getDocs } from 'firebase/fi
 import { db } from '../../firebase/config';
 import { useGame } from '../../contexts/GameContext';
 import './AllianceProfile.css';
+import pointsImage from '../../images/ui/points.png';
 
 const allianceProfileCache = {};
+
+export const clearAllianceProfileCache = () => {
+    for (const key in allianceProfileCache) {
+        delete allianceProfileCache[key];
+    }
+};
 
 const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
     const { worldId, worldState } = useGame();
@@ -20600,8 +20605,14 @@ const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
                 Leader: <button onClick={() => onOpenProfile(allianceData.leader.uid)} className="text-blue-400 hover:underline font-bold">{allianceData.leader.username}</button>
             </div>
             <div className="player-stats">
-                <div className="stat-item"><span>👥 Members</span> <span>{allianceData.members.length}</span></div>
-                <div className="stat-item"><span>🏆 Total Points</span> <span>{totalPoints.toLocaleString()}</span></div>
+                <div className="stat-item"><span>Members</span> <span>{allianceData.members.length}</span></div>
+                <div className="stat-item">
+                    <span>Total Points</span>
+                    <span className="flex items-center">
+                        {totalPoints.toLocaleString()}
+                        <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1"/>
+                    </span>
+                </div>
             </div>
         </div>
     );
@@ -20616,7 +20627,10 @@ const AllianceProfile = ({ allianceId, onClose, onOpenProfile }) => {
                         <button onClick={() => onOpenProfile(member.uid)} className="city-name-btn">
                             {member.username} ({member.rank})
                         </button>
-                        <span>{member.points.toLocaleString()} points</span>
+                        <span className="flex items-center">
+                            {member.points.toLocaleString()}
+                            <img src={pointsImage} alt="Points" className="w-4 h-4 ml-1"/>
+                        </span>
                     </div>
                 ))}
             </div>
@@ -20784,16 +20798,17 @@ export default AllianceProfile;
 
 <file path="src/components/profile/ProfileView.js">
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useGame } from '../../contexts/GameContext';
-import { useAlliance } from '../../contexts/AllianceContext';
+import { useAuth } from '../../contexts/AuthContext.js';
+import { useGame } from '../../contexts/GameContext.js';
+import { useAlliance } from '../../contexts/AllianceContext.js';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useCityState } from '../../hooks/useCityState';
+import { db } from '../../firebase/config.js';
+import { useCityState } from '../../hooks/useCityState.js';
 import unitConfig from '../../gameData/units.json';
 import './ProfileView.css';
-import TextEditor from '../shared/TextEditor';
+import TextEditor from '../shared/TextEditor.js';
 import placeholder_profile from '../../images/placeholder_profile.png';
+import pointsImage from '../../images/ui/points.png';
 
 const profileCache = {};
 export const clearProfileCache = () => {
@@ -20871,7 +20886,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
             setLoading(true);
             const userId = viewUserId || currentUser.uid;
             try {
-                //  Fetch user profile
+                // Fetch user profile
                 const userDocRef = doc(db, "users", userId);
                 const userDocSnap = await getDoc(userDocRef);
                 let userData = null;
@@ -20881,12 +20896,12 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
                     setNewDescription(userData.description || '');
                     setNewImageUrl(userData.imageUrl || '');
                 }
-                //  Fetch top-level game data (for alliance info)
+                // Fetch top-level game data (for alliance info)
                 const gameDocRef = doc(db, `users/${userId}/games`, worldId);
                 const gameDocSnap = await getDoc(gameDocRef);
                 const gameData = gameDocSnap.exists() ? gameDocSnap.data() : null;
                 setGameData(gameData);
-                //  Fetch all cities for the user in this world
+                // Fetch all cities for the user in this world
                 const citiesColRef = collection(db, `users/${userId}/games`, worldId, 'cities');
                 const citiesSnap = await getDocs(citiesColRef);
                 const citiesList = citiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -20948,7 +20963,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         }
     }, [viewUserId, currentUser.uid, worldId, calculateTotalPoints]);
 
-    //  handle update profile
+    // handle update profile
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         if (!isOwnProfile) return;
@@ -20964,13 +20979,13 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         }
     };
 
-    //  get ocean
+    // get ocean
     const getOcean = (x, y) => {
         if (x === undefined || y === undefined) return '?';
         return `${Math.floor(y / 10)}${Math.floor(x / 10)}`;
     };
 
-    //  check if can invite
+    // check if can invite
     const canInvite = (() => {
         if (!playerAlliance || isOwnProfile) {
             return false;
@@ -20991,7 +21006,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
 
     const displayProfile = isOwnProfile ? ownUserProfile : profileData;
 
-    //  Render player information
+    // Render player information
     const renderPlayerInfo = () => (
         <div className="profile-box">
             <div className="profile-box-header">
@@ -21010,12 +21025,18 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
             <div className="player-stats">
                 <div className="stat-item"><span>⚔️ Attack Points</span> <span>{totalAttack.toLocaleString()}</span></div>
                 <div className="stat-item"><span>🛡️ Defense Points</span> <span>{totalDefense.toLocaleString()}</span></div>
-                <div className="stat-item"><span>🏆 Total Points</span> <span>{points.toLocaleString()}</span></div>
+                <div className="stat-item">
+                    <span>🏆 Total Points</span>
+                    <span className="flex items-center">
+                        {points.toLocaleString()}
+                        <img src={pointsImage} alt="Points" className="w-5 h-5 ml-1"/>
+                    </span>
+                </div>
             </div>
         </div>
     );
 
-    //  Render cities list
+    // Render cities list
     const renderCitiesList = () => (
         <div className="profile-box flex-grow min-h-0">
             <div className="profile-box-header flex justify-between items-center">
@@ -21029,7 +21050,11 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
                             <button onClick={() => onGoToCity(city.x, city.y)} className="city-name-btn">
                                 {city.cityName}
                             </button>
-                            <span>{calculateTotalPoints(city).toLocaleString()} points | Ocean {getOcean(city.x, city.y)}</span>
+                            <span className="flex items-center">
+                                {calculateTotalPoints(city).toLocaleString()}
+                                <img src={pointsImage} alt="Points" className="w-4 h-4 mx-1"/>
+                                | Ocean {getOcean(city.x, city.y)}
+                            </span>
                         </div>
                     ))
                 ) : (
@@ -21039,7 +21064,7 @@ const ProfileView = ({ onClose, viewUserId, onGoToCity, onInviteToAlliance, onOp
         </div>
     );
 
-    //  Render profile description
+    // Render profile description
     const renderProfileDescription = () => (
         <div className="profile-box h-full">
             <div className="profile-box-header">Profile</div>
@@ -23918,54 +23943,6 @@ import WorshipDisplay from './city/WorshipDisplay';
 import TroopDisplay from './TroopDisplay';
 import HeroDisplay from './city/HeroDisplay';
 import { useGame } from '../contexts/GameContext';
-import { useAuth } from '../contexts/AuthContext';
-
-import settingsIcon from '../images/ui/settings.png';
-import cheatsIcon from '../images/ui/cheats.png';
-import worldMapIcon from '../images/ui/world_map.png';
-
-const ActionButtons = ({ onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap }) => {
-    const { userProfile } = useAuth();
-    const isAdmin = userProfile?.is_admin;
-
-    const buttonStyle = {
-        color: '#d4af37',
-        border: '1px solid',
-        borderImageSource: 'linear-gradient(to top, #d4af37, #b8860b)',
-        borderImageSlice: 1,
-        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
-        boxShadow: 'inset 0 2px 3px rgba(0, 0, 0, 0.5), 0 2px 2px rgba(255, 255, 255, 0.2)',
-    };
-
-    return (
-        <div className="w-40 p-1.5 flex flex-col gap-1.5" style={{
-            backgroundImage: `url(${require('../images/bg/right_background.png')})`,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            color: '#4a2c2a'
-        }}>
-            <h3 className="hero-display-header">Actions</h3>
-            <div className="flex flex-col gap-1">
-                <button onClick={onOpenSettings} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2" style={buttonStyle} title="Settings">
-                    <img src={settingsIcon} alt="Settings" className="w-8 h-8 object-contain" />
-                    <span>Settings</span>
-                </button>
-                <button onClick={onGenerateMap} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2 disabled:opacity-50" style={buttonStyle} disabled={isGeneratingMap} title="Generate World Map Image">
-                    <img src={worldMapIcon} alt="World Map" className="w-8 h-8 object-contain" />
-                    <span>World Map</span>
-                </button>
-                {isAdmin && (
-                    <button onClick={onOpenCheats} className="w-full relative flex items-center justify-start p-2 rounded-md transition-colors duration-200 font-semibold text-sm gap-2" style={buttonStyle} title="Open City Cheats">
-                        <img src={cheatsIcon} alt="Cheats" className="w-8 h-8 object-contain" />
-                        <span>Cheats</span>
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-};
-
 
 const SideInfoPanel = ({
     gameState,
@@ -23975,7 +23952,9 @@ const SideInfoPanel = ({
     onOpenSettings,
     onOpenCheats,
     onGenerateMap,
-    isGeneratingMap
+    isGeneratingMap,
+    onOpenManagementPanel,
+    handleOpenEvents
 }) => {
     const { activeCityId } = useGame();
     if (!gameState || !gameState.playerInfo) { //  Added a check for playerInfo
@@ -23983,18 +23962,18 @@ const SideInfoPanel = ({
     }
     return (
         <div className={className}>
-            <ActionButtons
-                onOpenSettings={onOpenSettings}
-                onOpenCheats={onOpenCheats}
-                onGenerateMap={onGenerateMap}
-                isGeneratingMap={isGeneratingMap}
-            />
             <WorshipDisplay
                 godName={gameState.god}
                 playerReligion={gameState.playerInfo.religion}
                 worship={gameState.worship}
                 buildings={gameState.buildings}
                 onOpenPowers={onOpenPowers}
+                onOpenSettings={onOpenSettings}
+                onOpenCheats={onOpenCheats}
+                onGenerateMap={onGenerateMap}
+                isGeneratingMap={isGeneratingMap}
+                onOpenManagementPanel={onOpenManagementPanel}
+                handleOpenEvents={handleOpenEvents}
             />
             <HeroDisplay
                 heroes={gameState.heroes}
@@ -28027,7 +28006,7 @@ export const useAllianceActions = (playerAlliance) => {
                     diplomacy: { allies: [], enemies: [], requests: [] },
                     settings: {
                         status: 'open',
-                        description: `A new alliance, '${name}', has been formed!`,
+                        description: `The alliance, '${name}', hasn't set a description yet!`,
                         privateDescription: '',
                     },
                     ranks: [
@@ -34707,6 +34686,7 @@ body {
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
     @apply absolute top-1/4 -translate-y-1/4 left-0 z-30; /* Adjusted vertical position */
     transition: transform 0.3s ease-in-out;
+    top: 20rem;
 }
 
 .sidebar.closed {
@@ -34726,7 +34706,7 @@ body {
     border: 2px solid #8B4513;
     border-left: none;
     transition: left 0.3s ease-in-out;
-    top: 30rem;
+    top: 31rem;
     left: 0m;
 }
 
@@ -35136,7 +35116,7 @@ body {
 /* New style for coordinate display */
 .minimap-coords-display {
     position: absolute;
-    top: 194px; /* 70px (minimap top) + 150px (minimap height) + 2px buffer */
+    top: 200px; /* 70px (minimap top) + 150px (minimap height) + 2px buffer */
     left: 2px;
     width: 150px;
     height: 39px;

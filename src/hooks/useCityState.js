@@ -359,56 +359,43 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
         return () => unsubscribe();
     }, [currentUser, worldId, activeCityId]);
 
-    //  Effect for resource generation and queue processing
+    //  Effect for processing queues and resource generation
     useEffect(() => {
-        if (!activeCityId) return;
-        const interval = setInterval(() => {
-            setCityGameState(prevState => {
-                if (!prevState) return prevState;
-                const now = Date.now();
-                const lastUpdateTimestamp = prevState.lastUpdated?.toDate ? prevState.lastUpdated.toDate().getTime() : prevState.lastUpdated;
-                const lastUpdate = lastUpdateTimestamp || now;
-                const elapsedSeconds = (now - lastUpdate) / 1000;
-                if (elapsedSeconds < 0) return prevState;
-                const newState = JSON.parse(JSON.stringify(prevState));
-                const productionRates = getProductionRates(newState.buildings);
-                const capacity = getWarehouseCapacity(newState.buildings?.warehouse?.level);
-                newState.resources.wood = Math.min(capacity, (prevState.resources.wood || 0) + (productionRates.wood / 3600) * elapsedSeconds);
-                newState.resources.stone = Math.min(capacity, (prevState.resources.stone || 0) + (productionRates.stone / 3600) * elapsedSeconds);
-                newState.resources.silver = Math.min(capacity, (prevState.resources.silver || 0) + (productionRates.silver / 3600) * elapsedSeconds);
-                const templeLevel = newState.buildings.temple?.level || 0;
-                if (newState.god && templeLevel > 0) {
+    const processQueuesAndResources = async () => {
+        try {
+            const currentState = gameStateRef.current;
+            if (!currentUser || !worldId || !activeCityId || !currentState) return;
+            
+            const now = Date.now();
+            const lastUpdateTimestamp = currentState.lastUpdated?.toDate ? currentState.lastUpdated.toDate().getTime() : currentState.lastUpdated;
+            const lastUpdate = lastUpdateTimestamp || now;
+            const elapsedSeconds = (now - lastUpdate) / 1000;
+
+            let updates = {};
+            let hasUpdates = false;
+
+            // Resource Generation
+            if (elapsedSeconds > 0) {
+                const productionRates = getProductionRates(currentState.buildings);
+                const capacity = getWarehouseCapacity(currentState.buildings?.warehouse?.level);
+                updates.resources = { ...currentState.resources };
+                updates.resources.wood = Math.min(capacity, (currentState.resources.wood || 0) + (productionRates.wood / 3600) * elapsedSeconds);
+                updates.resources.stone = Math.min(capacity, (currentState.resources.stone || 0) + (productionRates.stone / 3600) * elapsedSeconds);
+                updates.resources.silver = Math.min(capacity, (currentState.resources.silver || 0) + (productionRates.silver / 3600) * elapsedSeconds);
+                
+                const templeLevel = currentState.buildings.temple?.level || 0;
+                if (currentState.god && templeLevel > 0) {
+                    updates.worship = { ...currentState.worship };
                     let favorPerSecond = templeLevel / 3600;
                     if (playerAlliance?.research) {
                         const favorBoostLevel = playerAlliance.research.divine_devotion?.level || 0;
                         favorPerSecond *= (1 + favorBoostLevel * 0.02);
                     }
                     const maxFavor = 100 + (templeLevel * 20);
-                    newState.worship[newState.god] = Math.min(maxFavor, (prevState.worship[newState.god] || 0) + favorPerSecond * elapsedSeconds);
+                    updates.worship[currentState.god] = Math.min(maxFavor, (currentState.worship[currentState.god] || 0) + favorPerSecond * elapsedSeconds);
                 }
-                newState.lastUpdated = now;
-                return newState;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [activeCityId, getProductionRates, getWarehouseCapacity, playerAlliance]);
-
-    useEffect(() => {
-    const processQueue = async () => {
-        try {
-            const currentState = gameStateRef.current;
-            if (!currentUser || !worldId || !activeCityId) return;
-            if (!currentState?.buildQueue?.length &&
-                !currentState?.barracksQueue?.length &&
-                !currentState?.shipyardQueue?.length &&
-                !currentState?.divineTempleQueue?.length &&
-                !currentState?.researchQueue?.length &&
-                !currentState?.healQueue?.length) {
-                return;
+                hasUpdates = true;
             }
-            const now = Date.now();
-            let updates = {};
-            let hasUpdates = false;
 
             const processSingleQueue = (queueName, processCompleted) => {
                 if (!currentState[queueName]?.length) return;
@@ -487,7 +474,6 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                         if (updates.buildings[task.buildingId]) {
                             updates.buildings[task.buildingId].level = task.level;
                         }
-                        //  Deactivate research if academy level is too low
                         if (task.buildingId === 'academy') {
                             const newAcademyLevel = task.level;
                             updates.research = updates.research || { ...currentState.research };
@@ -509,7 +495,6 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                             updates.buildings[task.buildingId] = { level: 0 };
                         }
                         updates.buildings[task.buildingId].level = task.level;
-                        //  Reactivate research if academy level is sufficient
                         if (task.buildingId === 'academy') {
                             const newAcademyLevel = task.level;
                             updates.research = updates.research || { ...currentState.research };
@@ -566,12 +551,12 @@ export const useCityState = (worldId, isInstantBuild, isInstantResearch, isInsta
                 }, { merge: true });
             }
         } catch (error) {
-            console.error("Error in queue processing:", error);
+            console.error("Error in queue and resource processing:", error);
         }
     };
-    const interval = setInterval(processQueue, 1000);
+    const interval = setInterval(processQueuesAndResources, 1000);
     return () => clearInterval(interval);
-}, [currentUser, worldId, activeCityId, getUpgradeCost, addNotification, playerGameData]);
+}, [currentUser, worldId, activeCityId, getUpgradeCost, addNotification, playerGameData, getProductionRates, getWarehouseCapacity, playerAlliance]);
     
     return {
         cityGameState,

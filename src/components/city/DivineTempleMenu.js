@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import unitConfig from '../../gameData/units.json';
 import UnitQueue from './UnitQueue';
 import Modal from '../shared/Modal';
-import { useGame } from '../../contexts/GameContext';
 
 const unitImages = {};
 const imageContext = require.context('../../images/troops', false, /\.(png|jpe?g|svg)$/);
@@ -22,8 +21,7 @@ const UnitStats = ({ unit }) => (
 );
 
 const DivineTempleMenu = ({ resources, availablePopulation, onTrain, onClose, cityGameState, unitQueue, onCancelTrain, onSpeedUp }) => {
-    const { gameState } = useGame();
-    const worshippedGod = gameState?.god;
+    const worshippedGod = cityGameState?.god;
 
     const templeRef = useRef(null);
     const [position, setPosition] = useState({ 

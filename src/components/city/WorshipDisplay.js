@@ -18,14 +18,14 @@ const imageMap = images.keys().reduce((acc, item) => {
 }, {});
 
 const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, onOpenCheats, setIsCheatsMenuOpen }) => (
-    <div className="flex flex-row items-center gap-2 absolute top-1/2 -translate-y-1/2 -left-2 -translate-x-full" ref={menuRef}>
-        <button onClick={() => { onOpenManagementPanel(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Manager">
+    <div className="flex flex-row items-center gap-2 absolute top-1/2 -translate-y-1/2 -left-2 -translate-x-full p-1 rounded bg-gray-600 border border-gray-600" ref={menuRef}>
+        <button onClick={() => { onOpenManagementPanel(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Manager">
             <img src={managerIcon} alt="Manager" className="w-6 h-6 object-contain" />
         </button>
-        <button onClick={() => { handleOpenEvents(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Events">
+        <button onClick={() => { handleOpenEvents(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Events">
             <img src={eventsIcon} alt="Events" className="w-6 h-6 object-contain" />
         </button>
-        <button onClick={() => { onOpenCheats(); setIsCheatsMenuOpen(false); }} className="p-1.5 bg-gray-800 border border-gray-600 rounded-full hover:bg-gray-700" title="Admin Cheats">
+        <button onClick={() => { onOpenCheats(); setIsCheatsMenuOpen(false); }} className="p-1.5 w-16 bg-gray-800 border border-gray-600 rounded hover:bg-gray-700" title="Admin Cheats">
             <img src={cheatsIcon} alt="Admin Cheats" className="w-6 h-6 object-contain" />
         </button>
     </div>

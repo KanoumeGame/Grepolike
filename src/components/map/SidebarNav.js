@@ -33,7 +33,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
     );
 
     // Effect to close admin menu when clicking outside
-    useEffect(() => {
+        useEffect(() => {
         const handleClickOutside = (event) => {
             if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
                 setIsAdminMenuOpen(false);
@@ -43,7 +43,7 @@ const SidebarNav = ({ onToggleView, view, onOpenReports, onOpenAlliance, onOpenM
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [adminMenuRef]);
+    }, [adminMenuRef, setIsAdminMenuOpen]);
     
     return (
         <>
