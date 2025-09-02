@@ -5,7 +5,7 @@ import researchConfig from '../../gameData/research.json';
 import { useGame } from '../../contexts/GameContext';
 
 const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
-    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0});
+    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0 });
     const [troop, setTroop] = useState({ unit: 'swordsman', amount: 0 });
     const [warehouseLevels, setWarehouseLevels] = useState(0);
     const {isInstantBuild, setIsInstantBuild, isInstantResearch, setIsInstantResearch, isInstantUnits, setIsInstantUnits } = useGame();
@@ -186,3 +186,4 @@ const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
 };
 
 export default AdminCheatMenu;
+

@@ -12,6 +12,9 @@ import woodImage from '../../images/resources/wood.png';
 import stoneImage from '../../images/resources/stone.png';
 import silverImage from '../../images/resources/silver.png';
 import itemsConfig from '../../gameData/items.json';
+import RunecoinIcon from '../icons/RunecoinIcon';
+import shopItems from '../../gameData/shopItems';
+import { useShopActions } from '../../hooks/actions/useShopActions';
 
 const demandOptions = [
     { name: '5 minutes', duration: 300, multiplier: 0.125, happinessCost: 0 },
@@ -20,9 +23,227 @@ const demandOptions = [
     { name: '4 hours', duration: 14400, multiplier: 4, happinessCost: 10 },
 ];
 
+const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
+    const [currentItems, setCurrentItems] = useState([]);
+    const [nextRefresh, setNextRefresh] = useState(null);
+    const [autoRefreshTimeLeft, setAutoRefreshTimeLeft] = useState('');
+    const { purchaseItem, refreshShop, sellItem } = useShopActions();
+    const [message, setMessage] = useState('');
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Effect for manual daily refresh button state
+    useEffect(() => {
+        const lastManualRefresh = playerGameData?.lastManualShopRefresh?.toDate();
+        if (lastManualRefresh) {
+            const tomorrow = new Date(lastManualRefresh);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0); // Start of next day
+            setNextRefresh(tomorrow);
+        } else {
+            setNextRefresh(new Date()); // Can refresh now if never refreshed
+        }
+    }, [playerGameData]);
+    
+    // Effect for automatic 8-hour refresh timer display
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const now = new Date();
+            const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
+            const refreshInterval = 8 * 60 * 60 * 1000; // 8 hours
+            const nextAutoRefreshTime = lastRefreshTime + refreshInterval;
+
+            const remaining = Math.max(0, nextAutoRefreshTime - now.getTime());
+            const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((remaining / 1000 / 60) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            setAutoRefreshTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        calculateTimeLeft();
+        const interval = setInterval(calculateTimeLeft, 1000);
+        return () => clearInterval(interval);
+    }, [village.lastShopRefresh]);
+
+    // Effect to generate items based on the last refresh time
+    useEffect(() => {
+        const now = new Date();
+        const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
+        
+        console.log("Village Shop Debug:", {
+            rawTimestamp: village.lastShopRefresh,
+            isFirestoreTimestamp: !!village.lastShopRefresh?.toDate,
+            isNumber: typeof village.lastShopRefresh === 'number',
+            now: now.getTime(),
+            lastRefreshTime: lastRefreshTime,
+            villageId: village.id
+        });
+
+        const villageLevel = village.level || 1;
+        const seed = Math.floor(lastRefreshTime / 1000) + village.x + village.y;
+        const generatedItems = [];
+        const slots = 3 + Math.floor(villageLevel / 2);
+
+        for (let i = 0; i < slots; i++) {
+            const qualityRoll = Math.random() * 100;
+            let quality;
+            if (qualityRoll < 70) quality = 'common';
+            else if (qualityRoll < 95) quality = 'uncommon';
+            else quality = 'rare';
+
+            const availableForQuality = shopItems[quality];
+            if (availableForQuality.length > 0) {
+                const itemIndex = (seed + i) % availableForQuality.length;
+                generatedItems.push(availableForQuality[itemIndex]);
+            }
+        }
+        setCurrentItems(generatedItems);
+    }, [village.lastShopRefresh, village.level, village.x, village.y]);
+
+    const handlePurchase = async (item) => {
+        try {
+            await purchaseItem(item, village);
+            setMessage(`Successfully purchased ${itemsConfig[item.itemId].name}!`);
+        } catch (error) {
+            setMessage(`Purchase failed: ${error.message}`);
+        }
+    };
+
+    const handleSellItem = async (itemId) => {
+        try {
+            await sellItem(itemId, village);
+            setMessage(`Successfully sold item!`);
+        } catch (error) {
+            setMessage(`Sell failed: ${error.message}`);
+        }
+    };
+    
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        setMessage('');
+        try {
+            await refreshShop(village);
+            setMessage("Shop refreshed!");
+        } catch(error) {
+            setMessage(error.message);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+    
+    const canRefresh = nextRefresh && new Date() >= nextRefresh;
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-4">
+                <h4 className="font-bold text-lg text-center">Village Shop</h4>
+                <div className="flex items-center">
+                    <RunecoinIcon className="w-6 h-6 mr-2" />
+                    <span className="font-bold text-lg">{runecoinBalance}</span>
+                </div>
+            </div>
+             <div className="flex justify-between items-center mb-4">
+                <p className="text-sm text-gray-400">Items auto-refresh in: {autoRefreshTimeLeft}</p>
+                 <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-400">
+                        {canRefresh ? "Daily refresh available!" : `Next daily refresh: ${nextRefresh?.toLocaleDateString()}`}
+                    </p>
+                    <button 
+                        onClick={handleRefresh} 
+                        disabled={!canRefresh || isRefreshing}
+                        className="btn btn-primary text-sm py-1 px-3"
+                    >
+                        {isRefreshing ? '...' : 'Refresh'}
+                    </button>
+                 </div>
+            </div>
+            {message && <p className="text-center text-yellow-400 mb-4">{message}</p>}
+
+            <div className="grid grid-cols-2 gap-4">
+                {/* Left Column: Buy Items */}
+                <div>
+                    <h5 className="font-bold text-center mb-2">Items for Sale</h5>
+                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-2">
+                        {currentItems.map((item, index) => {
+                            const itemDetails = itemsConfig[item.itemId];
+                            const canAfford = runecoinBalance >= item.cost;
+                            return (
+                                <div key={index} className={`p-4 rounded-lg border-2 ${item.quality === 'rare' ? 'border-purple-500' : item.quality === 'uncommon' ? 'border-blue-500' : 'border-gray-500'}`}>
+                                    <h4 className="font-bold">{itemDetails.name}</h4>
+                                    <p className="text-xs text-gray-400">{itemDetails.description}</p>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="flex items-center">
+                                            <RunecoinIcon className="w-5 h-5 mr-1" />
+                                            <span>{item.cost}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handlePurchase(item)}
+                                            disabled={!canAfford}
+                                            className={`btn text-sm py-1 px-3 ${canAfford ? 'btn-confirm' : 'btn-disabled'}`}
+                                        >
+                                            Buy
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Right Column: Sell Items */}
+                <div>
+                    <h5 className="font-bold text-center mb-2">Your Inventory</h5>
+                    <div className="flex justify-center items-center mb-2 text-sm">
+                        <span className="mr-2">Village Funds:</span>
+                        <RunecoinIcon className="w-5 h-5 mr-1" />
+                        <span className="font-bold">{village.runecoinBalance || 0}</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-2">
+                        {Object.entries(playerGameData.items || {}).length > 0 ? Object.entries(playerGameData.items || {}).map(([itemId, count]) => {
+                            if (count === 0) return null;
+                            const itemDetails = itemsConfig[itemId];
+                            const sellInfo = Object.values(shopItems).flat().find(i => i.itemId === itemId);
+                            const sellPrice = sellInfo?.sellPrice;
+                            const canSell = sellPrice && (village.runecoinBalance || 0) >= sellPrice;
+                            
+                            return (
+                                <div key={itemId} className="p-2 rounded-lg border border-gray-600 bg-gray-900/50">
+                                    <h4 className="font-bold text-sm">{itemDetails.name} (x{count})</h4>
+                                    <p className="text-xs text-gray-400">{itemDetails.description}</p>
+                                    <div className="flex items-center justify-between mt-2">
+                                        {sellPrice ? (
+                                            <div className="flex items-center text-sm">
+                                                <span className="mr-1">Sell for:</span>
+                                                <RunecoinIcon className="w-4 h-4 mr-1" />
+                                                <span>{sellPrice}</span>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500">Cannot be sold</p>
+                                        )}
+                                        {sellPrice && (
+                                            <button
+                                                onClick={() => handleSellItem(itemId)}
+                                                disabled={!canSell}
+                                                className={`btn text-xs py-1 px-2 ${canSell ? 'btn-primary' : 'btn-disabled'}`}
+                                            >
+                                                Sell
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <p className="text-center text-gray-500 italic mt-8">Your inventory is empty.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, marketCapacity }) => {
     const { currentUser, userProfile } = useAuth();
-    const { gameState, setGameState, countCitiesOnIsland, activeCityId, addNotification } = useGame();
+    const { gameState, setGameState, countCitiesOnIsland, activeCityId, addNotification, playerGameData } = useGame();
     const { playerAlliance } = useAlliance();
     const [village, setVillage] = useState(initialVillage);
     const [baseVillageData, setBaseVillageData] = useState(initialVillage);
@@ -31,7 +252,9 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const [timeSinceCollection, setTimeSinceCollection] = useState(Infinity);
     const [activeTab, setActiveTab] = useState('demand');
     const [tradeAmount, setTradeAmount] = useState(0);
-    const [plunderTimeLeft, setPlunderTimeLeft] = useState(0); // State for plunder cooldown
+    const [plunderTimeLeft, setPlunderTimeLeft] = useState(0);
+
+    const runecoinBalance = playerGameData?.runecoins || 0;
 
     const resourceImages = {
         wood: woodImage,
@@ -99,7 +322,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         return () => clearInterval(interval);
     }, [worldId, village.id, baseVillageData]);
 
-    // This useEffect now handles happiness regeneration periodically.
     useEffect(() => {
         const happinessRegenInterval = setInterval(async () => {
             if (!worldId || !village?.id || !currentUser) return;
@@ -118,7 +340,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     const now = new Date();
                     const elapsedMinutes = (now.getTime() - lastUpdated.getTime()) / (1000 * 60);
                     
-                    const happinessToRegen = elapsedMinutes * (2 / 60); // 2 happiness per hour
+                    const happinessToRegen = elapsedMinutes * (2 / 60); 
     
                     if (happinessToRegen > 0) {
                         const newHappiness = Math.min(100, (villageData.happiness || 0) + happinessToRegen);
@@ -133,7 +355,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
             } catch (error) {
                 console.error("Error regenerating village happiness:", error);
             }
-        }, 60000); // Run every minute
+        }, 60000); 
     
         return () => clearInterval(happinessRegenInterval);
     }, [worldId, village?.id, currentUser]);
@@ -153,12 +375,11 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         }
     }, [village]);
 
-    //  New useEffect for plunder cooldown
     useEffect(() => {
         if (village && village.lastPlundered) {
             const updateTimer = () => {
                 const lastPlunderedTime = village.lastPlundered.toDate().getTime();
-                const cooldownEndTime = lastPlunderedTime + 20 * 60 * 1000; // 20 minutes
+                const cooldownEndTime = lastPlunderedTime + 20 * 60 * 1000; 
                 const remaining = Math.max(0, cooldownEndTime - Date.now());
                 setPlunderTimeLeft(remaining / 1000);
             };
@@ -176,7 +397,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
         silver: Math.floor(100 * Math.pow(1.8, level - 1)),
     });
 
-    //  Calculate the demand yields with a memoized hook to ensure the UI updates when the bonus changes.
     const demandYields = useMemo(() => {
         const citiesOnIsland = countCitiesOnIsland(village.islandId);
         const bonusMultiplier = citiesOnIsland > 1 ? 1.20 : 1.0;
@@ -204,7 +424,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     
         const playerVillageRef = doc(db, 'users', currentUser.uid, 'games', worldId, 'conqueredVillages', village.id);
         const cityDocRef = doc(db, 'users', currentUser.uid, 'games', worldId, 'cities', activeCityId);
-        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId); //  Reference to top-level game doc for items
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId); 
         
         const citiesOnIsland = countCitiesOnIsland(village.islandId);
         const hasBonus = citiesOnIsland > 1;
@@ -214,7 +434,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
             const updatedCityState = await runTransaction(db, async (transaction) => {
                 const playerVillageDoc = await transaction.get(playerVillageRef);
                 const cityDoc = await transaction.get(cityDocRef);
-                const gameDoc = await transaction.get(gameDocRef); //  Get game doc in transaction
+                const gameDoc = await transaction.get(gameDocRef); 
                 if (!playerVillageDoc.exists() || !cityDoc.exists() || !gameDoc.exists()) throw new Error("Your village, active city, or game state not found.");
     
                 const villageData = playerVillageDoc.data();
@@ -247,8 +467,7 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     happinessLastUpdated: serverTimestamp()
                 });
 
-                //  Item Find Logic
-                const itemFindChance = 0.02; // 2% chance
+                const itemFindChance = 0.02; 
                 if (Math.random() < itemFindChance) {
                     const commonItems = ["resource_boost_wood_25", "construction_speed_10", "research_speed_10"];
                     const foundItemId = commonItems[Math.floor(Math.random() * commonItems.length)];
@@ -256,7 +475,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     newItems[foundItemId] = (newItems[foundItemId] || 0) + 1;
                     transaction.update(gameDocRef, { items: newItems });
                     
-                    //  We'll use the addNotification function from GameContext to show a popup
                     setTimeout(() => addNotification(`You found a ${itemsConfig[foundItemId].name}!`, 'item', foundItemId), 500);
                 }
 
@@ -303,7 +521,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                 const baseData = baseVillageDoc.data();
                 const currentHappiness = villageData.happiness !== undefined ? villageData.happiness : 100;
                 
-                // Plunder always yields resources, regardless of revolt outcome
                 const plunderAmount = { wood: Math.floor((baseData.resources.wood || 0) * 0.5), stone: Math.floor((baseData.resources.stone || 0) * 0.5), silver: Math.floor((baseData.resources.silver || 0) * 0.5) };
                 const newPlayerResources = { ...cityData.resources };
                 const newVillageResources = { ...baseData.resources };
@@ -317,7 +534,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                 transaction.update(cityDocRef, { resources: newPlayerResources });
                 transaction.update(baseVillageRef, { resources: newVillageResources });
 
-                // Check for revolt: guaranteed if happiness is low
                 if (currentHappiness <= 40) {
                     const retaliationLosses = resolveVillageRetaliation(cityData.units);
                     const newUnits = { ...cityData.units };
@@ -351,12 +567,11 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     transaction.set(doc(reportsRef), report);
                     return { ...cityData, units: newUnits, resources: newPlayerResources };
                 } else {
-                    // Successful plunder, no revolt
                     const newHappiness = Math.max(0, currentHappiness - 40);
                     transaction.update(playerVillageRef, { 
                         happiness: newHappiness, 
                         happinessLastUpdated: serverTimestamp(),
-                        lastPlundered: serverTimestamp() // Set plunder cooldown
+                        lastPlundered: serverTimestamp() 
                     });
                     
                     const report = { 
@@ -484,7 +699,6 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     const maxTradeAmount = baseVillageData && gameState ? Math.min(gameState.resources[baseVillageData.demands] || 0, Math.floor((baseVillageData.resources?.[baseVillageData.supplies] || 0) * (baseVillageData.tradeRatio || 1)), marketCapacity || 0) : 0;
     const plunderCooldownEndTime = village.lastPlundered ? new Date(village.lastPlundered.toDate().getTime() + 20 * 60 * 1000) : null;
     
-    // # gets a text color based on happiness
     const getHappinessTextColor = (happiness) => {
         if (happiness === undefined || happiness === null) happiness = 100;
         if (happiness > 70) return 'text-green-400';
@@ -494,18 +708,25 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none" onClick={onClose}>
-            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center">
+            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-4xl h-[700px] flex flex-col text-center border border-gray-600 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center flex-shrink-0">
                     <h2 className="text-2xl font-bold text-yellow-400">{`Farming Village: ${baseVillageData?.name || village.name} (Level ${village.level})`}</h2>
-                    <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                     <div className="flex items-center gap-4">
+                        <div className="flex items-center">
+                            <RunecoinIcon className="w-6 h-6 mr-2" />
+                            <span className="font-bold text-lg text-yellow-300">{runecoinBalance}</span>
+                        </div>
+                        <h3 className="text-xl font-semibold text-white">Happiness: <span className={getHappinessTextColor(village.happiness)}>{Math.floor(village.happiness !== undefined ? village.happiness : 100)}%</span></h3>
+                    </div>
                 </div>
-                <div className="flex border-b border-gray-600 my-4">
+                <div className="flex border-b border-gray-600 my-4 flex-shrink-0">
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>
                     <button onClick={() => setActiveTab('plunder')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'plunder' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Plunder</button>
                     <button onClick={() => setActiveTab('trade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'trade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Trade</button>
                     <button onClick={() => setActiveTab('upgrade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'upgrade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Upgrade</button>
+                    <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                 </div>
-                <div className="p-4 text-white">
+                <div className="p-4 text-white flex-grow overflow-y-auto">
                     {activeTab === 'demand' && (
                         <div>
                             <h4 className="font-bold text-lg text-center mb-2">Demand Resources</h4>
@@ -599,12 +820,14 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                             <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
                         </div>
                     )}
+                    {activeTab === 'shop' && <VillageShop village={village} runecoinBalance={runecoinBalance} playerGameData={playerGameData} />}
                     {message && <p className="text-green-400 mt-4 text-center">{message}</p>}
                 </div>
-                 <button onClick={onClose} className="btn btn-primary px-6 py-2 mt-4">Close</button>
+                 <button onClick={onClose} className="btn btn-primary px-6 py-2 mt-auto flex-shrink-0">Close</button>
             </div>
         </div>
     );
 };
 
 export default FarmingVillageModal;
+

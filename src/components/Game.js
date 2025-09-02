@@ -49,6 +49,7 @@ import logoutIcon from '../images/logout.png';
 import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
 import MapImageViewer from './map/MapImageViewer';
+import { useVillageState } from '../hooks/useVillageState';
 
 let worldDataCache = {
     villages: null,
@@ -86,14 +87,15 @@ const Game = ({ onBackToWorlds }) => {
     const [godTowns, setGodTowns] = useState({});
     const prevActiveCityIdRef = useRef();
     const prevViewRef = useRef();
-    const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); //  State for ManagementPanel
-    const [isNotesOpen, setIsNotesOpen] = useState(false); //  State for Notes
+    const [isManagementPanelOpen, setIsManagementPanelOpen] = useState(false); 
+    const [isNotesOpen, setIsNotesOpen] = useState(false); 
     const [message, setMessage] = useState('');
     const [isGeneratingMap, setIsGeneratingMap] = useState(false);
     const [mapImageData, setMapImageData] = useState({ url: null, name: '' });
 
 
     useMovementProcessor(worldId);
+    useVillageState(worldId);
     const { modalState, openModal, closeModal } = useModalState();
     const { modalState: cityModalState, openModal: openCityModal, closeModal: closeCityModal, setModalState: setCityModalState } = useCityModalManager();
     const { unreadReportsCount, setUnreadReportsCount, unreadMessagesCount, setUnreadMessagesCount } = useMapState();
@@ -120,7 +122,6 @@ const Game = ({ onBackToWorlds }) => {
         setActiveCityId(cityId);
     }, [setActiveCityId]);
 
-    //  This effect pans the map to the active city only when the city ID or view actually changes.
     useEffect(() => {
         if (view === 'map') {
             const hasCityChanged = activeCityId !== prevActiveCityIdRef.current;
@@ -133,7 +134,6 @@ const Game = ({ onBackToWorlds }) => {
                 }
             }
         }
-        //  Update refs for the next render
         prevActiveCityIdRef.current = activeCityId;
         prevViewRef.current = view;
     }, [activeCityId, view, playerCities]);
@@ -424,22 +424,19 @@ const Game = ({ onBackToWorlds }) => {
             canvas.height = world.height * TILE_SCALE;
             const ctx = canvas.getContext('2d');
 
-            // Draw background
-            ctx.fillStyle = '#1e3a8a'; // Deep blue for water
+            ctx.fillStyle = '#1e3a8a'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw islands
-            ctx.fillStyle = '#228B22'; // Forest green for land
+            ctx.fillStyle = '#228B22'; 
             world.islands.forEach(island => {
                 ctx.beginPath();
                 ctx.arc(island.x * TILE_SCALE, island.y * TILE_SCALE, island.radius * TILE_SCALE, 0, 2 * Math.PI);
                 ctx.fill();
             });
 
-            // Draw cities
             citySlots.forEach(slot => {
                 if (slot.ownerId) {
-                    let color = '#A52A2A'; // Brown for no alliance
+                    let color = '#A52A2A'; 
                     if (slot.alliance && allianceColorMap[slot.alliance]) {
                         color = allianceColorMap[slot.alliance];
                     }
@@ -604,7 +601,6 @@ const Game = ({ onBackToWorlds }) => {
                     onOpenCheats={() => openCityModal('isCheatMenuOpen')}
                 />
             )}
-            {/* Global Modals */}
             {modalState.isReportsPanelOpen && <ReportsView onClose={() => closeModal('reports')} onActionClick={handleAction} />}
             {modalState.isMessagesPanelOpen && <MessagesView onClose={() => closeModal('messages')} onActionClick={handleAction} initialRecipientId={modalState.actionDetails?.city?.ownerId} initialRecipientUsername={modalState.actionDetails?.city?.ownerUsername} />}
             {modalState.isAllianceModalOpen && <AllianceModal onClose={() => closeModal('alliance')} onOpenAllianceProfile={handleOpenAllianceProfile} openModal={openModal} />}

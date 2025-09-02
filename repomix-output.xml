@@ -11387,8 +11387,8 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
     return (
         <div
             ref={menuRef}
-            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[180%] -right-1 -translate-x[5%] 
-                       bg-gray-900/90 border border-gray-700 rounded-2xl p-3 shadow-2xl backdrop-blur-md"
+            className="flex flex-row gap-3 absolute top-1/2 -translate-y-[185%] -right-1.5 -translate-x[5%] 
+                       bg-gray-900/90 border border-gray-700 rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
         >
             {buttons.map((btn, idx) => (
                 <div key={idx} className="relative group">
@@ -11397,7 +11397,7 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
                             btn.action();
                             setIsCheatsMenuOpen(false);
                         }}
-                        className="flex items-center justify-center w-9 h-9 rounded-xl 
+                        className="flex items-center justify-center w-10 h-10 rounded-xl 
                                    bg-gray-800 border border-gray-700 
                                    shadow-md hover:bg-gray-700 hover:scale-105 
                                    transition-all duration-200 ease-out"
@@ -11406,7 +11406,7 @@ const AdminCheatButtons = ({ menuRef, onOpenManagementPanel, handleOpenEvents, o
                     </button>
                     {/* Tooltip */}
                     <span
-                        className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-md 
+                        className="absolute top-2 -translate-y-[165%] -right-3 -translate-x[5%] ml-2 px-2 py-1 rounded-md 
                                    text-xs bg-black/90 text-gray-200 opacity-0 group-hover:opacity-100 
                                    pointer-events-none transition-opacity duration-200 shadow-lg whitespace-nowrap"
                     >
@@ -17570,9 +17570,9 @@ class MapScene extends Phaser.Scene {
             city: 0.3,
             village: 0.5,
             ruin: 0.25,
-            god_town: 0.5,
+            god_town: 0.1,
             constructing_wonder: 0.5,
-            wreckage: 0.5,
+            wreckage: 0.05,
             alliance_wonders: 0.5
         };
     }
@@ -19299,7 +19299,7 @@ export default WreckageModal;
 
 <file path="src/components/MapView.js">
 // src/components/MapView.js
-import React, { useMemo,  useEffect, useState, useRef } from 'react';
+import React, { useMemo,  useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
@@ -19320,6 +19320,7 @@ import { useMapActions } from '../hooks/useMapActions';
 import { useCityState } from '../hooks/useCityState';
 import { useMapClickHandler } from '../hooks/useMapClickHandler';
 import PhaserMap from './map/PhaserMappls'; // Import the new PhaserMap component
+import { useDivineActions } from '../hooks/actions/useDivineActions';
 
 const MapView = ({
     showCity,
@@ -19350,12 +19351,12 @@ const MapView = ({
     onOpenCheats,
 }) => {
     const { currentUser, userProfile } = useAuth();
-    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints } = useGame();
+    const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints, setGameState } = useGame();
     const { playerAlliance } = useAlliance();
     const viewportRef = useRef(null);
     const [message, setMessage] = useState('');
     const { travelTimeInfo, setTravelTimeInfo, handleSendMovement, handleCreateDummyCity, handleWithdrawTroops, handleFoundCity, handleActionClick } = useMapActions(openModal, closeModal, showCity, () => {}, setMessage);
-    const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, getProductionRates, getWarehouseCapacity } = useCityState(worldId);
+    const { getFarmCapacity, calculateUsedPopulation, calculateHappiness, getMarketCapacity, getProductionRates, getWarehouseCapacity, saveGameState } = useCityState(worldId);
     const [allCitySlots, setAllCitySlots] = useState({});
     const [godTowns, setGodTowns] = useState({});
     const [villages, setVillages] = useState({});
@@ -19367,6 +19368,18 @@ const MapView = ({
     const [allWonders, setAllWonders] = useState([]);
     const [wonderSpots, setWonderSpots] = useState({});
     const [controlledIslands, setControlledIslands] = useState({});
+
+    const { handleCastSpell } = useDivineActions({
+        cityGameState: gameState,
+        setCityGameState: setGameState,
+        saveGameState,
+        worldId,
+        currentUser,
+        userProfile,
+        playerCity,
+        closeModal: () => closeModal('divinePowers'),
+        setMessage
+    });
 
     const handleEnterCity = (cityId) => {
         onSwitchCity(cityId);
@@ -19669,7 +19682,7 @@ const MapView = ({
                 combinedSlots={combinedSlots}
                 villages={villages}
                 userProfile={userProfile}
-                onCastSpell={() => {}}
+                onCastSpell={handleCastSpell}
                 onActionClick={handleMessageAction}
                 marketCapacity={marketCapacity}
                 onEnterCity={handleEnterCity}
@@ -19677,7 +19690,7 @@ const MapView = ({
                 onWithdraw={(city) => openModal('withdraw', city)}
                 onFoundCity={handleFoundCity}
             />
-             {modalState.isDivinePowersOpen && <DivinePowers godName={gameState.god} playerReligion={gameState.playerInfo.religion} favor={gameState.worship[gameState.god] || 0} onCastSpell={() => {}} onClose={() => closeModal('divinePowers')} targetType={modalState.divinePowersTarget ? 'other' : 'self'} />}
+             {modalState.isDivinePowersOpen && <DivinePowers godName={gameState.god} playerReligion={gameState.playerInfo.religion} favor={gameState.worship[gameState.god] || 0} onCastSpell={handleCastSpell} onClose={() => closeModal('divinePowers')} targetType={modalState.divinePowersTarget ? 'other' : 'self'} />}
              {modalState.isWithdrawModalOpen && (
                 <WithdrawModal
                     city={modalState.withdrawModalData}
@@ -21732,6 +21745,34 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
     </div>
 );
 
+// # A modal for choosing which reports to delete
+const DeleteOptionsModal = ({ onConfirmDeleteTab, onConfirmDeleteAll, onCancel, tabName, tabReportCount, allReportCount }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1002]">
+        <div className="bg-gray-800 p-6 rounded-lg text-white text-center">
+            <h3 className="text-lg font-bold mb-4">Delete Reports</h3>
+            <p className="mb-6">What would you like to delete?</p>
+            <div className="flex flex-col gap-4">
+                <button 
+                    onClick={onConfirmDeleteTab} 
+                    className="btn btn-danger w-full"
+                    disabled={tabReportCount === 0}
+                >
+                    Delete {tabReportCount} reports in '{tabName}' tab
+                </button>
+                <button 
+                    onClick={onConfirmDeleteAll} 
+                    className="btn btn-danger w-full"
+                >
+                    Delete ALL {allReportCount} reports
+                </button>
+                <button onClick={onCancel} className="btn btn-secondary w-full mt-2">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 
 const ReportsView = ({ onClose, onActionClick }) => {
     const { currentUser } = useAuth();
@@ -21747,7 +21788,8 @@ const ReportsView = ({ onClose, onActionClick }) => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmAction] = useState(null);
+    const [isDeleteOptionsOpen, setIsDeleteOptionsOpen] = useState(false);
 
     const tabs = {
         'Combat': ['attack', 'attack_village', 'attack_ruin', 'attack_god_town'],
@@ -21887,32 +21929,63 @@ const ReportsView = ({ onClose, onActionClick }) => {
             setMessage("Could not mark all as read.");
         }
     };
+    
+    // # opens the delete options modal
+    const openDeleteOptions = () => {
+        if (reports.length === 0) {
+            setMessage("There are no reports to delete.");
+            setTimeout(() => setMessage(''), 3000);
+            return;
+        }
+        setIsDeleteOptionsOpen(true);
+    };
 
-    const handleDeleteAll = () => {
-        if (filteredReports.length === 0) return;
-        
-        setConfirmAction({
-            message: `Are you sure you want to delete all ${filteredReports.length} reports in the "${activeTab}" tab?`,
-            onConfirm: async () => {
-                const batch = writeBatch(db);
-                filteredReports.forEach(report => {
-                    const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
-                    batch.delete(reportRef);
-                });
+    // # deletes all reports in the current tab
+    const handleDeleteTabReports = async () => {
+        setIsDeleteOptionsOpen(false);
+        if (filteredReports.length === 0) {
+            setMessage("No reports in this tab to delete.");
+            return;
+        }
 
-                try {
-                    await batch.commit();
-                    setSelectedReport(null);
-                } catch (error)
-                 {
-                    console.error("Error deleting all reports:", error);
-                    setMessage("Could not delete all reports.");
-                } finally {
-                    setConfirmAction(null);
-                }
-            },
-            onCancel: () => setConfirmAction(null)
+        const batch = writeBatch(db);
+        filteredReports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.delete(reportRef);
         });
+
+        try {
+            await batch.commit();
+            setSelectedReport(null);
+            setMessage(`Deleted ${filteredReports.length} reports from '${activeTab}' tab.`);
+        } catch (error) {
+            console.error("Error deleting tab reports:", error);
+            setMessage("Could not delete tab reports.");
+        }
+    };
+
+    // # deletes all reports
+    const handleDeleteAllReports = async () => {
+        setIsDeleteOptionsOpen(false);
+        if (reports.length === 0) {
+            setMessage("There are no reports to delete.");
+            return;
+        }
+
+        const batch = writeBatch(db);
+        reports.forEach(report => {
+            const reportRef = doc(db, 'users', currentUser.uid, 'worlds', worldId, 'reports', report.id);
+            batch.delete(reportRef);
+        });
+
+        try {
+            await batch.commit();
+            setSelectedReport(null);
+            setMessage(`Deleted all ${reports.length} reports.`);
+        } catch (error) {
+            console.error("Error deleting all reports:", error);
+            setMessage("Could not delete all reports.");
+        }
     };
 
     //  This function handles clicks inside the report content area for BBCode actions
@@ -22282,6 +22355,16 @@ const ReportsView = ({ onClose, onActionClick }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
             {confirmAction && <ConfirmationModal {...confirmAction} />}
+            {isDeleteOptionsOpen && (
+                <DeleteOptionsModal
+                    onConfirmDeleteTab={handleDeleteTabReports}
+                    onConfirmDeleteAll={handleDeleteAllReports}
+                    onCancel={() => setIsDeleteOptionsOpen(false)}
+                    tabName={activeTab}
+                    tabReportCount={filteredReports.length}
+                    allReportCount={reports.length}
+                />
+            )}
             <div
                 ref={reportsRef}
                 className="reports-container"
@@ -22349,7 +22432,7 @@ const ReportsView = ({ onClose, onActionClick }) => {
                         </ul>
                         <div className="p-2 border-t-2 border-[#8B4513] flex justify-around">
                             <button onClick={handleReadAll} className="text-sm papyrus-btn">Mark All as Read</button>
-                            <button onClick={handleDeleteAll} className="text-sm papyrus-btn">Delete All in Tab</button>
+                            <button onClick={openDeleteOptions} className="text-sm papyrus-btn">Delete...</button>
                         </div>
                     </div>
                     <div className="w-2/3 p-4 overflow-y-auto report-outcome-container" onClick={handleContentClick}>
