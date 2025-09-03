@@ -82,12 +82,12 @@ const AcademyMenu = ({ cityGameState, onResearch, onClose, researchQueue, onCanc
     };
   }, [isDragging, handleMouseMove]);
 
-  //  check if player can afford research
+  // check if player can afford research
   const canAfford = (cost) => {
     return resources.wood >= cost.wood && resources.stone >= cost.stone && resources.silver >= cost.silver && researchPoints >= (cost.points || 0);
   };
 
-  //  check if player meets research requirements, including items in the queue
+  // check if player meets research requirements, including items in the queue
   const meetsRequirements = (reqs) => {
     if (!reqs) return true;
     if (reqs.academy && academyLevel < reqs.academy) {

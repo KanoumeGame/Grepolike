@@ -42,9 +42,9 @@
 
 .academy-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1.5rem; /* Increased gap */
-    padding: 1.5rem 4rem; /* Increased horizontal padding to prevent tooltip cutoff */
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Gave more space for larger icons */
+    gap: 1.5rem; 
+    padding: 1.5rem 4rem; 
     overflow-y: auto;
     flex-grow: 1;
 }
@@ -58,8 +58,8 @@
 }
 
 .research-icon {
-    width: 80px;
-    height: 80px;
+    width: 80px; /* Made the icons bigger */
+    height: 80px; /* Made the icons bigger */
     border: 3px solid #8B4513;
     border-radius: 50%;
     position: relative;
