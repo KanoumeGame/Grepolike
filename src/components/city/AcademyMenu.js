@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import researchConfig from '../../gameData/research.json';
 import ResearchQueue from './ResearchQueue';
 import './AcademyMenu.css';
+import researches1 from '../../images/research/researches_1.png';
+import researches2 from '../../images/research/researches_2.png';
 
-const researchImages = {};
-const imageContext = require.context('../../images/research', false, /\.(png|jpe?g|svg)$/);
-imageContext.keys().forEach((item) => {
-  const key = item.replace('./', '').replace('.png', '');
-  researchImages[key] = imageContext(item);
-});
+// Spritesheet mapping
+const researchSprites = {
+  'researches_1.png': researches1,
+  'researches_2.png': researches2,
+};
+
 
 // Tooltip component
 const Tooltip = ({ visible, x, y, children }) => {
@@ -137,6 +139,24 @@ const AcademyMenu = ({ cityGameState, onResearch, onClose, researchQueue, onCanc
   const hideTooltip = () => {
     setTooltip({ visible: false, x: 0, y: 0, content: null });
   };
+    
+  // Get style for research icon from spritesheet
+  const getIconStyle = (researchId) => {
+    const research = researchConfig[researchId];
+    if (!research || !research.sprite) return {};
+    const { sheet, x, y } = research.sprite;
+    const spriteSheetUrl = researchSprites[sheet];
+    if (!spriteSheetUrl) return {};
+    
+    const cols = 4;
+    const rows = 3;
+
+    return {
+        backgroundImage: `url(${spriteSheetUrl})`,
+        backgroundSize: `${cols * 100}% ${rows * 100}%`,
+        backgroundPosition: `${(x / (cols - 1)) * 100}% ${(y / (rows - 1)) * 100}%`,
+    };
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
@@ -195,7 +215,7 @@ const AcademyMenu = ({ cityGameState, onResearch, onClose, researchQueue, onCanc
               <div key={id} className={`research-card ${isResearched ? 'researched' : ''} ${!requirementsMet ? 'locked' : ''}`}>
                 <div
                   className="research-icon"
-                  style={{ backgroundImage: `url(${researchImages[id]})` }}
+                  style={getIconStyle(id)}
                   onMouseEnter={(e) => showTooltip(e, tooltipContent)}
                   onMouseLeave={hideTooltip}
                 />

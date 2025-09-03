@@ -5363,7 +5363,7 @@ import researchConfig from '../../gameData/research.json';
 import { useGame } from '../../contexts/GameContext';
 
 const AdminCheatMenu = ({ onCheat, onClose, InstantBuildActive}) => {
-    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0 });
+    const [amounts, setAmounts] = useState({ wood: 0, stone: 0, silver: 0, platinum: 0, runecoins: 0 });
     const [troop, setTroop] = useState({ unit: 'swordsman', amount: 0 });
     const [warehouseLevels, setWarehouseLevels] = useState(0);
     const {isInstantBuild, setIsInstantBuild, isInstantResearch, setIsInstantResearch, isInstantUnits, setIsInstantUnits } = useGame();
@@ -14602,8 +14602,7 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     const { purchaseItem, refreshShop, sellItem } = useShopActions();
     const [message, setMessage] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [hoveredBuyItem, setHoveredBuyItem] = useState(null);
-    const [hoveredSellItem, setHoveredSellItem] = useState(null);
+    const [hoveredItemDetails, setHoveredItemDetails] = useState(null);
 
     // Effect for manual daily refresh button state
     useEffect(() => {
@@ -14642,16 +14641,6 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
     useEffect(() => {
         const now = new Date();
         const lastRefreshTime = village.lastShopRefresh?.toDate ? village.lastShopRefresh.toDate().getTime() : village.lastShopRefresh || now.getTime();
-        
-        console.log("Village Shop Debug:", {
-            rawTimestamp: village.lastShopRefresh,
-            isFirestoreTimestamp: !!village.lastShopRefresh?.toDate,
-            isNumber: typeof village.lastShopRefresh === 'number',
-            now: now.getTime(),
-            lastRefreshTime: lastRefreshTime,
-            villageId: village.id
-        });
-
         const villageLevel = village.level || 1;
         const seed = Math.floor(lastRefreshTime / 1000) + village.x + village.y;
         const generatedItems = [];
@@ -14708,9 +14697,9 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
 
     const getQualityClass = (quality) => {
         switch(quality) {
-            case 'rare': return 'shop-item-card-rare';
-            case 'uncommon': return 'shop-item-card-uncommon';
-            default: return 'shop-item-card-common';
+            case 'rare': return 'shop-item-icon-rare';
+            case 'uncommon': return 'shop-item-icon-uncommon';
+            default: return 'shop-item-icon-common';
         }
     };
 
@@ -14749,41 +14738,44 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
             </div>
             {message && <p className="text-center text-yellow-600 mb-4">{message}</p>}
 
+            <div className="shop-info-panel">
+                {hoveredItemDetails ? (
+                    <>
+                        <h4 className="font-bold">{hoveredItemDetails.name}</h4>
+                        <p className="text-xs text-gray-700">{hoveredItemDetails.description}</p>
+                    </>
+                ) : (
+                    <p className="text-center text-gray-500 italic">Hover over an item to see details.</p>
+                )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                 {/* Left Column: Buy Items */}
                 <div className="shop-column">
                     <h5 className="shop-column-header">Items for Sale</h5>
-                    <div className="shop-item-grid">
+                    <div className="shop-item-list">
                         {currentItems.map((item, index) => {
                             const itemDetails = itemsConfig[item.itemId];
                             const canAfford = runecoinBalance >= item.cost;
                             return (
                                 <div
                                     key={index}
-                                    className="shop-item-wrapper"
-                                    onMouseEnter={() => setHoveredBuyItem({ ...item, itemDetails })}
-                                    onMouseLeave={() => setHoveredBuyItem(null)}
+                                    className="shop-list-item"
+                                    onMouseEnter={() => setHoveredItemDetails(itemDetails)}
+                                    onMouseLeave={() => setHoveredItemDetails(null)}
                                 >
-                                    <div className={`shop-item-icon ${getQualityClass(item.quality)}`} style={getItemIconStyle(itemDetails)}></div>
-                                    {hoveredBuyItem?.itemId === item.itemId && (
-                                        <div className="shop-item-tooltip">
-                                            <h4 className="font-bold">{itemDetails.name}</h4>
-                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
-                                            <div className="flex items-center justify-between mt-4">
-                                                <div className="flex items-center">
-                                                    <RunecoinIcon className="w-5 h-5 mr-1" />
-                                                    <span>{item.cost}</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handlePurchase(item)}
-                                                    disabled={!canAfford}
-                                                    className={`btn text-sm py-1 px-3 shop-button ${!canAfford && 'btn-disabled'}`}
-                                                >
-                                                    Buy
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className={`shop-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}></div>
+                                    <div className="shop-item-price">
+                                        <RunecoinIcon className="w-4 h-4 mr-1" />
+                                        <span>{item.cost}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handlePurchase(item)}
+                                        disabled={!canAfford}
+                                        className={`shop-button buy-button ${!canAfford && 'btn-disabled'}`}
+                                    >
+                                        Buy
+                                    </button>
                                 </div>
                             );
                         })}
@@ -14798,7 +14790,7 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                         <RunecoinIcon className="w-5 h-5 mr-1" />
                         <span className="font-bold">{village.runecoinBalance || 0}</span>
                     </div>
-                    <div className="shop-item-grid">
+                    <div className="shop-item-list">
                         {Object.entries(playerGameData.items || {}).length > 0 ? Object.entries(playerGameData.items || {}).map(([itemId, count]) => {
                             if (count === 0) return null;
                             const itemDetails = itemsConfig[itemId];
@@ -14807,39 +14799,31 @@ const VillageShop = ({ village, runecoinBalance, playerGameData }) => {
                             return (
                                 <div
                                     key={itemId}
-                                    className="shop-item-wrapper"
-                                    onMouseEnter={() => setHoveredSellItem({ itemId, count, itemDetails, sellPrice })}
-                                    onMouseLeave={() => setHoveredSellItem(null)}
+                                    className="shop-list-item"
+                                    onMouseEnter={() => setHoveredItemDetails(itemDetails)}
+                                    onMouseLeave={() => setHoveredItemDetails(null)}
                                 >
-                                    <div className="shop-item-icon border-gray-500" style={getItemIconStyle(itemDetails)}>
-                                        <span className="absolute bottom-1 right-1 text-white bg-black/70 px-1 text-sm rounded">{count}</span>
+                                    <div className={`shop-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}>
+                                        <span className="shop-item-count">{count}</span>
                                     </div>
-                                    {hoveredSellItem?.itemId === itemId && (
-                                        <div className="shop-item-tooltip">
-                                            <h4 className="font-bold">{itemDetails.name} (x{count})</h4>
-                                            <p className="text-xs text-gray-700">{itemDetails.description}</p>
-                                            <div className="flex items-center justify-between mt-2">
-                                                {sellPrice ? (
-                                                    <div className="flex items-center text-sm">
-                                                        <span className="mr-1">Sell for:</span>
-                                                        <RunecoinIcon className="w-4 h-4 mr-1" />
-                                                        <span>{sellPrice}</span>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs text-gray-500">Cannot be sold</p>
-                                                )}
-                                                {sellPrice && (
-                                                    <button
-                                                        onClick={() => handleSellItem(itemId)}
-                                                        disabled={!((village.runecoinBalance || 0) >= sellPrice)}
-                                                        className={`btn text-xs py-1 px-2 shop-button ${!((village.runecoinBalance || 0) >= sellPrice) && 'btn-disabled'}`}
-                                                    >
-                                                        Sell
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className="shop-item-price">
+                                         {sellPrice ? (
+                                            <>
+                                                <span className="mr-1 text-xs">Sell:</span>
+                                                <RunecoinIcon className="w-4 h-4 mr-1" />
+                                                <span>{sellPrice}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-xs">Unsellable</span>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => handleSellItem(itemId)}
+                                        disabled={!sellPrice || !((village.runecoinBalance || 0) >= sellPrice)}
+                                        className={`shop-button sell-button ${(!sellPrice || !((village.runecoinBalance || 0) >= sellPrice)) && 'btn-disabled'}`}
+                                    >
+                                        Sell
+                                    </button>
                                 </div>
                             );
                         }) : (
@@ -15334,8 +15318,8 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                     <button onClick={() => setActiveTab('demand')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'demand' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Demand</button>
                     <button onClick={() => setActiveTab('plunder')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'plunder' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Plunder</button>
                     <button onClick={() => setActiveTab('trade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'trade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Trade</button>
+                     <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                     <button onClick={() => setActiveTab('upgrade')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'upgrade' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Upgrade</button>
-                    <button onClick={() => setActiveTab('shop')} className={`flex-1 p-2 text-lg font-bold transition-colors ${activeTab === 'shop' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>Shop</button>
                 </div>
                 <div className="p-4 text-white flex-grow overflow-y-auto">
                     {activeTab === 'demand' && (
@@ -19560,81 +19544,121 @@ export default TradesTooltip;
     text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.shop-item-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    max-height: 24rem; /* 384px */
-    overflow-y: auto;
-    padding-right: 0.5rem;
+/* New info panel for tooltips */
+.shop-info-panel {
+    background-color: rgba(245, 222, 179, 0.9);
+    padding: 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #a17c48;
+    margin-bottom: 1rem;
+    min-height: 60px; /* To prevent layout shift */
+    text-align: center;
 }
 
-/* Custom scrollbar for webkit browsers */
-.shop-item-list::-webkit-scrollbar {
-    width: 6px;
+/* Changed from grid to horizontal flexbox */
+.shop-item-list {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto; /* Horizontal scroll */
+    padding: 0.5rem;
+    /* Add some scrollbar styling for better look */
+    scrollbar-width: thin;
+    scrollbar-color: #8B4513 #e6cba8;
 }
+
+.shop-item-list::-webkit-scrollbar {
+    height: 8px;
+}
+
 .shop-item-list::-webkit-scrollbar-track {
     background: #e6cba8;
     border-radius: 10px;
 }
+
 .shop-item-list::-webkit-scrollbar-thumb {
     background: #8B4513;
     border-radius: 10px;
 }
-.shop-item-list::-webkit-scrollbar-thumb:hover {
-    background: #A0522D;
-}
 
-
-.shop-item-card {
-    padding: 1rem;
+/* New list item styling */
+.shop-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(0,0,0,0.05);
     border-radius: 4px;
-    background-color: rgba(253, 230, 138, 0.2); /* amber-200 with opacity */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    min-width: 80px; /* Give items a minimum width */
 }
 
-.shop-item-card-rare {
-    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
-    border-image-slice: 1;
-    border-width: 2px;
-    border-style: solid;
-}
-.shop-item-card-uncommon {
-    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
-    border-image-slice: 1;
-    border-width: 2px;
-    border-style: solid;
-}
-.shop-item-card-common {
-    border: 2px solid #a1a1aa; /* stone-400 */
+.shop-item-icon {
+    width: 56px;
+    height: 56px;
+    background-image: url('../../images/items.png');
+    background-size: 400% 400%;
+    border-radius: 4px;
+    position: relative;
+    transition: transform 0.2s;
+    flex-shrink: 0;
 }
 
-.shop-item-card h4 {
+.shop-item-icon:hover {
+    transform: scale(1.1);
+}
+
+/* New price display */
+.shop-item-price {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
     font-weight: bold;
-    color: #4a2c2a;
-}
-.shop-item-card p {
-    font-size: 0.8rem;
-    color: #6b4a2b; /* Darker brown for description */
 }
 
-.shop-button {
-    background: linear-gradient(to bottom, #d2b48c, #a17c48); /* Tan gradient */
+/* Count for inventory items */
+.shop-item-count {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: white;
+    background-color: rgba(0,0,0,0.7);
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.shop-button.buy-button, .shop-button.sell-button {
+    background: linear-gradient(to bottom, #d2b48c, #a17c48);
     color: #4a2c2a;
     border: 1px solid #4a2c2a;
     font-weight: bold;
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.2);
     box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    width: 100%;
 }
+
 .shop-button:hover:not(:disabled) {
     background: linear-gradient(to bottom, #e6cba8, #b8986d);
 }
 
-.inventory-item-card {
-    padding: 0.5rem;
-    border-radius: 4px;
-    background-color: rgba(0,0,0,0.1);
-    border: 1px solid #a17c48;
+/* Rarity Borders for Item Icons */
+.shop-item-icon-rare {
+    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-icon-uncommon {
+    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.shop-item-icon-common {
+    border: 2px solid #a1a1aa; /* stone-400 */
 }
 </file>
 
@@ -20661,6 +20685,7 @@ export default MessagesView;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    position: relative; /* Added for tooltip positioning context */
 }
 
 .pouch-header {
@@ -20708,7 +20733,6 @@ export default MessagesView;
     height: 64px;
     background-image: url('../images/items.png');
     background-size: 400% 400%;
-    border: 2px solid #8B4513;
     border-radius: 4px;
     cursor: pointer;
     position: relative;
@@ -20733,9 +20757,6 @@ export default MessagesView;
 
 .pouch-item-tooltip {
     position: absolute;
-    left: 105%;
-    top: 50%;
-    transform: translateY(-50%);
     width: 250px;
     z-index: 10;
     padding: 1rem;
@@ -20743,6 +20764,7 @@ export default MessagesView;
     background-color: #fdf6e7;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     border: 2px solid #a17c48;
+    pointer-events: none; /* Prevents flickering on hover */
 }
 
 .use-item-btn {
@@ -20757,16 +20779,34 @@ export default MessagesView;
     flex-shrink: 0;
     width: 100%;
     margin-top: 0.75rem;
+    pointer-events: auto; /* Re-enable pointer events for the button */
 }
 
 .use-item-btn:hover:not(:disabled) {
     background: linear-gradient(to bottom, #fff2b2, #d6914d);
 }
+
+/* Rarity Borders for Item Icons */
+.pouch-item-icon-rare {
+    border-image-source: linear-gradient(to top right, #a855f7, #d946ef);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.pouch-item-icon-uncommon {
+    border-image-source: linear-gradient(to top right, #3b82f6, #60a5fa);
+    border-image-slice: 1;
+    border-width: 2px;
+    border-style: solid;
+}
+.pouch-item-icon-common {
+    border: 2px solid #a1a1aa; /* stone-400 */
+}
 </file>
 
 <file path="src/components/Pouch.js">
 // src/components/Pouch.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import itemsConfig from '../gameData/items.json';
 import { useItemActions } from '../hooks/actions/useItemActions';
 import './Pouch.css';
@@ -20775,6 +20815,8 @@ const Pouch = ({ items, onClose }) => {
     const { activateItem } = useItemActions();
     const [isUsingItemId, setIsUsingItemId] = useState(null);
     const [hoveredItemId, setHoveredItemId] = useState(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const pouchContainerRef = useRef(null);
 
     const handleUseItem = async (itemId) => {
         if (isUsingItemId) return;
@@ -20797,9 +20839,37 @@ const Pouch = ({ items, onClose }) => {
         };
     };
 
+    const getQualityClass = (quality) => {
+        switch(quality) {
+            case 'rare': return 'pouch-item-icon-rare';
+            case 'uncommon': return 'pouch-item-icon-uncommon';
+            default: return 'pouch-item-icon-common';
+        }
+    };
+
+    const handleMouseEnter = (e, itemId) => {
+        const itemDetails = itemsConfig[itemId];
+        if (!itemDetails) return;
+    
+        setHoveredItemId(itemId);
+        if (e.currentTarget && pouchContainerRef.current) {
+            const itemRect = e.currentTarget.getBoundingClientRect();
+            const containerRect = pouchContainerRef.current.getBoundingClientRect();
+            
+            setTooltipPosition({
+                top: itemRect.top - containerRect.top + (itemRect.height / 2),
+                left: itemRect.left - containerRect.left + itemRect.width + 10,
+            });
+        }
+    };
+    
+    const handleMouseLeave = () => {
+        setHoveredItemId(null);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
-            <div className="pouch-container" onClick={e => e.stopPropagation()}>
+            <div ref={pouchContainerRef} className="pouch-container" onClick={e => e.stopPropagation()}>
                 <div className="pouch-header">
                     <h2>Pouch</h2>
                     <button onClick={onClose} className="close-btn">&times;</button>
@@ -20811,30 +20881,16 @@ const Pouch = ({ items, onClose }) => {
                                 if (count === 0) return null;
                                 const itemDetails = itemsConfig[itemId];
                                 if (!itemDetails) return null;
-                                const isUsingThisItem = isUsingItemId === itemId;
                                 return (
                                     <div
                                         key={itemId}
                                         className="pouch-item-wrapper"
-                                        onMouseEnter={() => setHoveredItemId(itemId)}
-                                        onMouseLeave={() => setHoveredItemId(null)}
+                                        onMouseEnter={(e) => handleMouseEnter(e, itemId)}
+                                        onMouseLeave={handleMouseLeave}
                                     >
-                                        <div className="pouch-item-icon" style={getItemIconStyle(itemDetails)}>
+                                        <div className={`pouch-item-icon ${getQualityClass(itemDetails.quality)}`} style={getItemIconStyle(itemDetails)}>
                                             <span className="pouch-item-count">{count}</span>
                                         </div>
-                                        {hoveredItemId === itemId && (
-                                            <div className="pouch-item-tooltip">
-                                                <h4 className="item-name">{itemDetails.name}</h4>
-                                                <p className="item-description">{itemDetails.description}</p>
-                                                <button
-                                                    onClick={() => handleUseItem(itemId)}
-                                                    className="use-item-btn"
-                                                    disabled={isUsingThisItem}
-                                                >
-                                                    {isUsingThisItem ? 'Using...' : 'Use'}
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -20843,6 +20899,26 @@ const Pouch = ({ items, onClose }) => {
                         <p className="text-center p-4">Your pouch is empty.</p>
                     )}
                 </div>
+                 {hoveredItemId && itemsConfig[hoveredItemId] && (
+                    <div 
+                        className="pouch-item-tooltip" 
+                        style={{ 
+                            top: `${tooltipPosition.top}px`, 
+                            left: `${tooltipPosition.left}px`,
+                            transform: 'translateY(-50%)' 
+                        }}
+                    >
+                        <h4 className="item-name">{itemsConfig[hoveredItemId].name}</h4>
+                        <p className="item-description">{itemsConfig[hoveredItemId].description}</p>
+                        <button
+                            onClick={() => handleUseItem(hoveredItemId)}
+                            className="use-item-btn"
+                            disabled={isUsingItemId === hoveredItemId}
+                        >
+                            {isUsingItemId === hoveredItemId ? 'Using...' : 'Use'}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -26999,6 +27075,7 @@ export default app;
     "name": "Lumberjack's Blessing",
     "description": "Increases wood production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "wood",
@@ -27011,6 +27088,7 @@ export default app;
     "name": "Mason's Focus",
     "description": "Increases stone production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "stone",
@@ -27023,6 +27101,7 @@ export default app;
     "name": "Midas' Touch",
     "description": "Increases silver production by 25% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "production_boost",
       "resource": "silver",
@@ -27035,6 +27114,7 @@ export default app;
     "name": "Architect's Draft",
     "description": "Reduces construction time by 10% for all buildings for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "construction_speed",
       "value": 0.10,
@@ -27046,6 +27126,7 @@ export default app;
     "name": "Scholar's Insight",
     "description": "Reduces research time by 10% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "research_speed",
       "value": 0.10,
@@ -27057,6 +27138,7 @@ export default app;
     "name": "Trainer's Whip",
     "description": "Reduces unit training time by 10% for 1 hour.",
     "type": "boost",
+    "quality": "common",
     "effect": {
       "type": "training_speed",
       "value": 0.10,
@@ -27068,6 +27150,7 @@ export default app;
     "name": "Potion of Attack",
     "description": "Increases the attack of all units by 5% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "attack_boost",
       "value": 0.05,
@@ -27079,6 +27162,7 @@ export default app;
     "name": "Potion of Defense",
     "description": "Increases the defense of all units by 5% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "defense_boost",
       "value": 0.05,
@@ -27090,6 +27174,7 @@ export default app;
     "name": "Winds of Haste",
     "description": "Increases the speed of all troops by 10% for 1 hour.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "movement_speed",
       "value": 0.10,
@@ -27101,6 +27186,7 @@ export default app;
     "name": "Bundle of Logs",
     "description": "Instantly adds 500 wood to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "wood",
@@ -27112,6 +27198,7 @@ export default app;
     "name": "Pile of Rocks",
     "description": "Instantly adds 500 stone to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "stone",
@@ -27123,6 +27210,7 @@ export default app;
     "name": "Sack of Coins",
     "description": "Instantly adds 250 silver to your warehouse.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_resource",
       "resource": "silver",
@@ -27134,6 +27222,7 @@ export default app;
     "name": "Soulstone",
     "description": "A mystical gem that can instantly revive one of your executed heroes from the dead.",
     "type": "special",
+    "quality": "rare",
     "effect": {
       "type": "revive_hero"
     },
@@ -27143,6 +27232,7 @@ export default app;
     "name": "Offering to the Gods",
     "description": "Increases favor production by 10% for 2 hours.",
     "type": "boost",
+    "quality": "uncommon",
     "effect": {
       "type": "favor_production",
       "value": 0.10,
@@ -27154,6 +27244,7 @@ export default app;
     "name": "Call to the People",
     "description": "Instantly adds 200 population to your city, temporarily exceeding your farm's capacity if needed.",
     "type": "instant",
+    "quality": "common",
     "effect": {
       "type": "add_population",
       "value": 200
@@ -27164,6 +27255,7 @@ export default app;
     "name": "Oracle's Vision",
     "description": "Reveals the size and composition of one incoming attack against your city.",
     "type": "special",
+    "quality": "rare",
     "effect": {
       "type": "reveal_attack"
     },
@@ -28524,6 +28616,21 @@ export const useAdminActions = ({
                 console.error(error);
             }
         }
+        
+        if (amounts.runecoins && amounts.runecoins > 0) {
+            const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const gameDoc = await transaction.get(gameDocRef);
+                    if (!gameDoc.exists()) throw new Error("Game data not found.");
+                    const currentRunecoins = gameDoc.data().runecoins || 0;
+                    transaction.update(gameDocRef, { runecoins: currentRunecoins + amounts.runecoins });
+                });
+            } catch (error) {
+                setMessage(`Failed to add runecoins: ${error.message}`);
+                console.error(error);
+            }
+        }
 
         if (farmLevels > 0) {
             newGameState.buildings.farm.level = farmLevels;
@@ -28555,7 +28662,7 @@ export const useAdminActions = ({
             await saveGameState(newGameState);
         }
         
-        if (otherCheatsApplied || (amounts.platinum && amounts.platinum > 0)) {
+        if (otherCheatsApplied || (amounts.platinum && amounts.platinum > 0) || (amounts.runecoins && amounts.runecoins > 0)) {
              setMessage("Admin cheat applied!");
         }
     };
