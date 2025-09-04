@@ -206,7 +206,7 @@ class MapScene extends Phaser.Scene {
                     if (slot.ownerId === this.auth.currentUser.uid) {
                         color = 0xffff00; // # Own city (Yellow)
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
-                        color = 0x00ff00; // # Ally/Same Alliance (Green)
+                        color = 0x3b82f6; // # Ally/Same Alliance (Blue)
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
                         color = 0xff0000; // # Enemy (Red)
                     }
@@ -274,9 +274,9 @@ class MapScene extends Phaser.Scene {
                     if (data.ownerId === this.auth.currentUser.uid) {
                         gameObject.setTint(0xffff00);
                     } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
-                        gameObject.setTint(0x00ff00); // # Changed to Green for same alliance
+                        gameObject.setTint(0x3b82f6); // # Changed to Blue for same alliance
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
-                        gameObject.setTint(0x00ff00);
+                        gameObject.setTint(0x3b82f6);
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
                         gameObject.setTint(0xff0000);
                     } else {

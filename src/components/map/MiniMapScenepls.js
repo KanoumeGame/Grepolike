@@ -154,7 +154,7 @@ class MinimapScene extends Phaser.Scene {
                 if (slot.ownerId === this.mainScene.auth.currentUser.uid) {
                     color = 0xffff00; // Your city
                 } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
-                    color = 0x00ff00; // Ally
+                    color = 0x3b82f6; // Ally
                 } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
                     color = 0xff0000; // Enemy
                 }
@@ -168,4 +168,3 @@ class MinimapScene extends Phaser.Scene {
 }
 
 export default MinimapScene;
-

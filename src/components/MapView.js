@@ -1,5 +1,5 @@
 // src/components/MapView.js
-import React, { useMemo,  useEffect, useState, useRef, useCallback } from 'react';
+import React, { useMemo,  useEffect, useState, useRef} from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';

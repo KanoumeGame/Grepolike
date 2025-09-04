@@ -633,6 +633,10 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     
     const handleUpgrade = async () => {
         if (isProcessing) return;
+         if (village.level >= 6) {
+            setMessage("Village is already at maximum level.");
+            return;
+        }
         setIsProcessing(true);
         setMessage('');
 
@@ -821,27 +825,33 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                             ) : (<p className="text-center text-gray-400 p-8">Loading trade information...</p>)}
                         </div>
                     )}
-                     {activeTab === 'upgrade' && (
+                                         {activeTab === 'upgrade' && (
                         <div>
-                           <p className="mb-4 text-center">Invest resources to upgrade this village for better yields.</p>
-                            <div className="bg-gray-700 p-3 rounded-lg mb-4">
-                                <h4 className="font-bold text-lg">Cost to Upgrade to Level {village.level + 1}:</h4>
-                                <div className="flex justify-center items-center space-x-4 mt-2 text-yellow-300">
-                                    <div className="flex items-center gap-1">
-                                        <img src={woodImage} alt="Wood" className="w-6 h-6" />
-                                        <span>{cost.wood}</span>
+                           {village.level < 6 ? (
+                                <>
+                                   <p className="mb-4 text-center">Invest resources to upgrade this village for better yields.</p>
+                                    <div className="bg-gray-700 p-3 rounded-lg mb-4">
+                                        <h4 className="font-bold text-lg">Cost to Upgrade to Level {village.level + 1}:</h4>
+                                        <div className="flex justify-center items-center space-x-4 mt-2 text-yellow-300">
+                                            <div className="flex items-center gap-1">
+                                                <img src={woodImage} alt="Wood" className="w-6 h-6" />
+                                                <span>{cost.wood}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <img src={stoneImage} alt="Stone" className="w-6 h-6" />
+                                                <span>{cost.stone}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <img src={silverImage} alt="Silver" className="w-6 h-6" />
+                                                <span>{cost.silver}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <img src={stoneImage} alt="Stone" className="w-6 h-6" />
-                                        <span>{cost.stone}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <img src={silverImage} alt="Silver" className="w-6 h-6" />
-                                        <span>{cost.silver}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
+                                    <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
+                                </>
+                            ) : (
+                                <p className="text-center text-xl font-bold text-green-400">Max Level Reached</p>
+                            )}
                         </div>
                     )}
                     {activeTab === 'shop' && <VillageShop village={village} runecoinBalance={runecoinBalance} playerGameData={playerGameData} />}

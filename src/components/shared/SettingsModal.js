@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../firebase/config';
-import { doc, writeBatch, collection, getDocs, query} from 'firebase/firestore';
+import { doc, writeBatch, collection, getDocs, query, getDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
@@ -63,10 +63,34 @@ const SettingsModal = ({ onClose }) => {
             setConfirmAction(null);
             return;
         }
-
+    
         const batch = writeBatch(db);
-
-
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+        const gameDocSnap = await getDoc(gameDocRef);
+    
+        if (gameDocSnap.exists()) {
+            const gameData = gameDocSnap.data();
+            if (gameData.alliance) {
+                const allianceId = gameData.alliance;
+                const allianceRef = doc(db, 'worlds', worldId, 'alliances', allianceId);
+                const allianceSnap = await getDoc(allianceRef);
+                if (allianceSnap.exists()) {
+                    const allianceData = allianceSnap.data();
+                    if (allianceData.leader.uid === currentUser.uid && allianceData.members.length > 1) {
+                        setMessage("As the leader, you must pass leadership to another member before you can reset your game.");
+                        setConfirmAction(null);
+                        return;
+                    }
+                    const newMembers = allianceData.members.filter(m => m.uid !== currentUser.uid);
+                    if (newMembers.length > 0) {
+                        batch.update(allianceRef, { members: newMembers });
+                    } else {
+                        batch.delete(allianceRef);
+                    }
+                }
+            }
+        }
+    
         const ruinId = uuidv4();
         const ruinDocRef = doc(db, 'worlds', worldId, 'ruins', ruinId);
         const newRuinData = {
@@ -84,8 +108,7 @@ const SettingsModal = ({ onClose }) => {
             researchReward: `qol_research_${Math.floor(Math.random() * 3)}`
         };
         batch.set(ruinDocRef, newRuinData);
-
-
+    
         const citySlotRef = doc(db, 'worlds', worldId, 'citySlots', playerCity.slotId);
         batch.update(citySlotRef, {
             ownerId: null,
@@ -95,10 +118,7 @@ const SettingsModal = ({ onClose }) => {
             alliance: null,
             allianceName: null
         });
-
-        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
-
-
+    
         const deleteSubcollection = async (subcollectionPath) => {
             const collectionRef = collection(gameDocRef, subcollectionPath);
             const q = query(collectionRef);
@@ -107,16 +127,14 @@ const SettingsModal = ({ onClose }) => {
                 batch.delete(doc.ref);
             });
         };
-
+    
         await deleteSubcollection('cities');
         await deleteSubcollection('conqueredVillages');
         await deleteSubcollection('conqueredRuins');
         await deleteSubcollection('quests');
-
-
+    
         batch.delete(gameDocRef);
-
-
+    
         try {
             await batch.commit();
             setConfirmAction(null);
