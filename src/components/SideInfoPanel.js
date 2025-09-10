@@ -47,3 +47,4 @@ const SideInfoPanel = ({
 };
 
 export default SideInfoPanel;
+

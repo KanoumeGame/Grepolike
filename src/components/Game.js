@@ -1,12 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
-
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -51,6 +42,7 @@ import Modal from './shared/Modal';
 import MapImageViewer from './map/MapImageViewer';
 import { useVillageState } from '../hooks/useVillageState';
 import { useTaskGiverManager } from '../hooks/useTaskGiverManager';
+import ActiveTaskModal from './tasks/ActiveTaskModal';
 
 let worldDataCache = {
     villages: null,
@@ -72,7 +64,7 @@ const getWarehouseCapacity = (level) => {
 };
 
 const Game = ({ onBackToWorlds }) => {
-    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData, worldState } = useGame();
+    const { activeCityId, setActiveCityId, worldId, loading, gameState, playerCities, conqueredVillages, renameCity, playerCity, playerGameData, worldState, playerTasks } = useGame();
     const { currentUser, userProfile } = useAuth();
     const { acceptAllianceInvitation, declineAllianceInvitation, sendAllianceInvitation } = useAlliance();
     const [view, setView] = useState('city');
@@ -93,6 +85,7 @@ const Game = ({ onBackToWorlds }) => {
     const [message, setMessage] = useState('');
     const [isGeneratingMap, setIsGeneratingMap] = useState(false);
     const [mapImageData, setMapImageData] = useState({ url: null, name: '' });
+    const [activeTaskForModal, setActiveTaskForModal] = useState(null);
 
 
     useMovementProcessor(worldId);
@@ -100,7 +93,7 @@ const Game = ({ onBackToWorlds }) => {
     const { modalState, openModal, closeModal } = useModalState();
     const { modalState: cityModalState, openModal: openCityModal, closeModal: closeCityModal, setModalState: setCityModalState } = useCityModalManager();
     const { unreadReportsCount, setUnreadReportsCount, unreadMessagesCount, setUnreadMessagesCount } = useMapState();
-    const { activeNPCs, onAcceptTask } = useTaskGiverManager();
+    const { activeNPCs, onAcceptTask, completePlayerTask, abandonPlayerTask } = useTaskGiverManager();
 
     const handleOpenTaskGiver = (npc) => {
         openCityModal('isTaskGiverOpen', npc);
@@ -537,6 +530,14 @@ const Game = ({ onBackToWorlds }) => {
                     onClose={() => setMapImageData({ url: null, name: '' })}
                 />
             )}
+            {activeTaskForModal && (
+                <ActiveTaskModal
+                    activeTask={activeTaskForModal}
+                    onClose={() => setActiveTaskForModal(null)}
+                    onComplete={completePlayerTask}
+                    onAbandon={abandonPlayerTask}
+                />
+            )}
             {view === 'city' && (
                 <CityView
                     showMap={showMap}
@@ -570,6 +571,8 @@ const Game = ({ onBackToWorlds }) => {
                     activeNPCs={activeNPCs}
                     handleOpenTaskGiver={handleOpenTaskGiver}
                     onAcceptTask={onAcceptTask}
+                    playerTasks={playerTasks}
+                    onOpenTaskModal={setActiveTaskForModal}
                 />
             )}
             {view === 'map' && (
@@ -671,4 +674,3 @@ const Game = ({ onBackToWorlds }) => {
     );
 };
 export default Game;
-

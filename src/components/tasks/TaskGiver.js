@@ -8,7 +8,7 @@ const TaskGiver = ({ npc, onClose, onAcceptTask }) => {
     const task = tasks[npc.taskId];
 
     const handleAccept = () => {
-        onAcceptTask(npc.id, task);
+        onAcceptTask(npc);
         onClose();
     };
 

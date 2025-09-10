@@ -1,12 +1,3 @@
-/* # Copyright (c) 2025 Jane Doe
-# All rights reserved.
-#
-# This file is part of "Spolkip".
-#
-# Unauthorized copying, modification, distribution, or use of this file,
-# in whole or in part, is strictly prohibited without prior written permission.
-*/
-
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from './shared/Modal';
@@ -23,6 +14,7 @@ import SidebarNav from './map/SidebarNav';
 import TopBar from './map/TopBar';
 import QuestsButton from './QuestsButton';
 import { useAlliance } from '../contexts/AllianceContext';
+import ActiveTaskDisplay from './tasks/ActiveTaskDisplay';
 
 const CityView = ({
     showMap,
@@ -56,6 +48,8 @@ const CityView = ({
     activeNPCs,
     handleOpenTaskGiver,
     onAcceptTask,
+    playerTasks,
+    onOpenTaskModal
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -105,6 +99,7 @@ const CityView = ({
                 onOpenQuests={() => openModal('quests')}
                 quests={quests}
             />
+            <ActiveTaskDisplay activeTasks={playerTasks} onOpenTaskModal={onOpenTaskModal} />
             <SidebarNav
                 onToggleView={showMap}
                 view="city"
@@ -224,4 +219,3 @@ const CityView = ({
 };
 
 export default CityView;
-

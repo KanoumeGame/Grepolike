@@ -100,6 +100,7 @@ src/components/city/HeroesAltar.js
 src/components/city/HospitalMenu.js
 src/components/city/MarketMenu.css
 src/components/city/MarketMenu.js
+src/components/city/NpcSprite.js
 src/components/city/PrisonMenu.css
 src/components/city/PrisonMenu.js
 src/components/city/RecruitmentPanel.css
@@ -197,6 +198,7 @@ src/components/shared/TextEditor.js
 src/components/SharedNoteView.js
 src/components/SharedReportView.js
 src/components/SideInfoPanel.js
+src/components/tasks/TaskGiver.js
 src/components/Temple.js
 src/components/TroopDisplay.js
 src/components/VipDisplay.css
@@ -224,6 +226,7 @@ src/gameData/research.json
 src/gameData/ruinsResearch.json
 src/gameData/shopItems.js
 src/gameData/specialBuildings.json
+src/gameData/tasks.json
 src/gameData/units.json
 src/gameData/vip.json
 src/hooks/actions/useAdminActions.js
@@ -264,6 +267,7 @@ src/hooks/useMapState.js
 src/hooks/useModalState.js
 src/hooks/useMovementProcessor.js
 src/hooks/useQuestTracker.js
+src/hooks/useTaskGiverManager.js
 src/hooks/useVillageState.js
 src/hooks/useWorldClock.js
 src/index.css
@@ -6489,6 +6493,7 @@ import SpecialBuildingMenu from './SpecialBuildingMenu';
 import SpecialBuildingPanel from './SpecialBuildingPanel';
 import HeroesAltar from './HeroesAltar';
 import PrisonMenu from './PrisonMenu';
+import TaskGiver from '../tasks/TaskGiver';
 
 const CityModals = ({
   cityGameState,
@@ -6538,6 +6543,7 @@ const CityModals = ({
   onAssignAgent,
   movements,
   premiumActions,
+  onAcceptTask,
 }) => {
   const {
     selectedBuildingId,
@@ -6555,6 +6561,8 @@ const CityModals = ({
     isSpecialBuildingPanelOpen,
     isHeroesAltarOpen,
     isPrisonMenuOpen,
+    isTaskGiverOpen,
+    taskGiverNpc,
   } = modalState;
 
   if (!cityGameState) return null;
@@ -6733,6 +6741,13 @@ const CityModals = ({
           onSpawnGodTown={handleSpawnGodTown}
         />
       )}
+      {isTaskGiverOpen && (
+          <TaskGiver
+              npc={taskGiverNpc}
+              onClose={() => closeModal('isTaskGiverOpen')}
+              onAcceptTask={onAcceptTask}
+          />
+      )}
     </>
   );
 };
@@ -6798,32 +6813,46 @@ export default Cityscape;
 
 <file path="src/components/city/CityViewContent.js">
 // src/components/city/CityViewContent.js
-import React, { useRef, useEffect, useCallback, useLayoutEffect, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useLayoutEffect, useState, useMemo } from 'react';
 import Cityscape from './Cityscape';
 import buildingConfig from '../../gameData/buildings.json';
 import WorshipDisplay from './WorshipDisplay';
 import TroopDisplay from '../TroopDisplay';
 import HeroDisplay from './HeroDisplay';
 import { useGame } from '../../contexts/GameContext';
+import NpcSprite from './NpcSprite'; // Import the new component
 
-//  Dynamically import all building and special building images
+//  Dynamically import all building, special building, and guest images
 const buildingImages = {};
 const contexts = [
     require.context('../../images/buildings', false, /\.(png|jpe?g|svg)$/),
-    require.context('../../images/special_buildings', false, /\.(png|jpe?g|svg)$/)
+    require.context('../../images/special_buildings', false, /\.(png|jpe?g|svg)$/),
+    require.context('../../images/guests', false, /\.(png|jpe?g|svg)$/) // Added guests
 ];
 
 contexts.forEach(context => {
     context.keys().forEach((item) => {
         const key = item.replace('./', '');
-        buildingImages[key] = context(item);
+        // Handle subdirectory for guests
+        const finalKey = context.id.includes('/guests') ? `guests/${key}` : key;
+        buildingImages[finalKey] = context(item);
     });
 });
 
 const CITYSCAPE_WIDTH = 2000;
 const CITYSCAPE_HEIGHT = 1200;
 
-const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents }) => {
+// Define valid spawn points for NPCs to avoid buildings
+const npcSpawnPoints = [
+    { top: 550, left: 400 },
+    { top: 600, left: 600 },
+    { top: 450, left: 800 },
+    { top: 300, left: 1300 },
+    { top: 650, left: 1450 },
+    { top: 200, left: 500 },
+];
+
+const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents, activeNPCs, handleOpenTaskGiver }) => {
     // Panning Logic (moved from CityView.js)
     const viewportRef = useRef(null);
     const cityContainerRef = useRef(null);
@@ -6877,6 +6906,15 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
     }, [isPanning, startPos, clampPan]);
 
     const { activeCityId } = useGame();
+    
+    // Memoize the positions to prevent re-shuffling on every render
+    const npcPositions = useMemo(() => {
+        // Assign positions based on index to prevent flickering when the array changes
+        return activeNPCs.map((npc, index) => ({
+            ...npc,
+            position: npcSpawnPoints[index % npcSpawnPoints.length]
+        }));
+    }, [activeNPCs]);
 
     if (!cityGameState || !cityGameState.playerInfo) {
         return null;
@@ -6935,6 +6973,14 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                     cityGameState={cityGameState} 
                     onOpenSpecialBuildingMenu={onOpenSpecialBuildingMenu} 
                 />
+                {npcPositions.map(npc => (
+                    <NpcSprite
+                        key={npc.id}
+                        npc={npc}
+                        handleOpenTaskGiver={handleOpenTaskGiver}
+                        buildingImages={buildingImages}
+                    />
+                ))}
             </div>
             <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4">
                 <WorshipDisplay
@@ -8860,6 +8906,60 @@ const MarketMenu = ({ onClose, cityGameState, worldId, marketCapacity }) => {
 };
 
 export default MarketMenu;
+</file>
+
+<file path="src/components/city/NpcSprite.js">
+import React, { useState, useEffect } from 'react';
+
+// # Component to render an animated NPC sprite
+const NpcSprite = ({ npc, handleOpenTaskGiver, buildingImages }) => {
+    const [currentFrame, setCurrentFrame] = useState(0);
+
+    // This effect creates an interval to animate the sprite
+    useEffect(() => {
+        const animationInterval = setInterval(() => {
+            // Toggles the frame between 0 and 1
+            setCurrentFrame(prevFrame => (prevFrame + 1) % 2); 
+        }, 800); // Change frame every 800ms for a slow walking animation
+
+        // Cleanup the interval when the component unmounts
+        return () => clearInterval(animationInterval);
+    }, []);
+
+    // Don't render if sprite or position data is missing
+    if (!npc.sprite || !npc.position) return null;
+
+    const { sheet } = npc.sprite;
+    const spriteSheetUrl = buildingImages[sheet];
+    
+    if (!spriteSheetUrl) return null;
+
+    // Style object for the sprite div
+    const spriteStyle = {
+        top: `${npc.position.top}px`,
+        left: `${npc.position.left}px`,
+        backgroundImage: `url(${spriteSheetUrl})`,
+        // The spritesheet has 2 frames horizontally.
+        // The background is 200% wide to contain both frames.
+        // We switch between 0% and 100% position to show the correct frame.
+        backgroundPosition: `${currentFrame * 100}% 0%`,
+        backgroundSize: '200% 100%',
+        width: '64px', // Width of a single frame
+        height: '64px', // Height of a single frame
+    };
+
+    return (
+        <div 
+            key={npc.id}
+            className="absolute cursor-pointer hover:animate-pulse z-10"
+            style={spriteStyle}
+            onClick={() => handleOpenTaskGiver(npc)}
+            title="A mysterious stranger has a task for you."
+        />
+    );
+};
+
+export default NpcSprite;
 </file>
 
 <file path="src/components/city/PrisonMenu.css">
@@ -11854,6 +11954,9 @@ const CityView = ({
     isGeneratingMap,
     onOpenSettings,
     onOpenCheats,
+    activeNPCs,
+    handleOpenTaskGiver,
+    onAcceptTask,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -11954,6 +12057,8 @@ const CityView = ({
                     isGeneratingMap={isGeneratingMap}
                     onOpenManagementPanel={onOpenManagementPanel}
                     handleOpenEvents={handleOpenEvents}
+                    activeNPCs={activeNPCs}
+                    handleOpenTaskGiver={handleOpenTaskGiver}
                 />
             </div>
             <CityModals
@@ -12004,6 +12109,7 @@ const CityView = ({
                 onAssignAgent={onAssignAgent}
                 movements={movements}
                 premiumActions={premiumActions} // Pass premium actions down
+                onAcceptTask={onAcceptTask}
             />
             {cityModalState.isDivinePowersOpen && (
                 <DivinePowers
@@ -12074,6 +12180,7 @@ import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
 import MapImageViewer from './map/MapImageViewer';
 import { useVillageState } from '../hooks/useVillageState';
+import { useTaskGiverManager } from '../hooks/useTaskGiverManager';
 
 let worldDataCache = {
     villages: null,
@@ -12123,6 +12230,11 @@ const Game = ({ onBackToWorlds }) => {
     const { modalState, openModal, closeModal } = useModalState();
     const { modalState: cityModalState, openModal: openCityModal, closeModal: closeCityModal, setModalState: setCityModalState } = useCityModalManager();
     const { unreadReportsCount, setUnreadReportsCount, unreadMessagesCount, setUnreadMessagesCount } = useMapState();
+    const { activeNPCs, onAcceptTask } = useTaskGiverManager();
+
+    const handleOpenTaskGiver = (npc) => {
+        openCityModal('isTaskGiverOpen', npc);
+    };
 
     const showMap = () => setView('map');
     const showCity = useCallback((cityId) => {
@@ -12585,6 +12697,9 @@ const Game = ({ onBackToWorlds }) => {
                     isGeneratingMap={isGeneratingMap}
                     onOpenSettings={() => openModal('settings')}
                     onOpenCheats={() => openCityModal('isCheatMenuOpen')}
+                    activeNPCs={activeNPCs}
+                    handleOpenTaskGiver={handleOpenTaskGiver}
+                    onAcceptTask={onAcceptTask}
                 />
             )}
             {view === 'map' && (
@@ -24779,6 +24894,57 @@ const SideInfoPanel = ({
 export default SideInfoPanel;
 </file>
 
+<file path="src/components/tasks/TaskGiver.js">
+import React, { useState } from 'react';
+import tasks from '../../gameData/tasks.json';
+import PlatinumIcon from '../icons/PlatinumIcon';
+import RunecoinIcon from '../icons/RunecoinIcon';
+
+const TaskGiver = ({ npc, onClose, onAcceptTask }) => {
+    const [selectedTask, setSelectedTask] = useState(null);
+    const task = tasks[npc.taskId];
+
+    const handleAccept = () => {
+        onAcceptTask(npc.id, task);
+        onClose();
+    };
+
+    const renderReward = () => {
+        if (!task.reward) return null;
+        const { type, amount } = task.reward;
+        switch (type) {
+            case 'resources':
+                return <span>{amount.wood} Wood, {amount.stone} Stone, {amount.silver} Silver</span>;
+            case 'platinum':
+                return <span className="flex items-center">{amount} <PlatinumIcon className="w-4 h-4 ml-1" /></span>;
+            case 'runecoins':
+                return <span className="flex items-center">{amount} <RunecoinIcon className="w-4 h-4 ml-1" /></span>;
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={onClose}>
+            <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border-2 border-gray-600 text-white" onClick={e => e.stopPropagation()}>
+                <h3 className="font-title text-2xl text-white mb-4">A Task from a Stranger</h3>
+                <p className="text-gray-400 mb-4">{task.description}</p>
+                <div className="bg-gray-700 p-3 rounded-lg mb-4">
+                    <p><strong>Requires:</strong> {task.requirement.amount} {task.requirement.type}</p>
+                    <p><strong>Reward:</strong> {renderReward()}</p>
+                </div>
+                <div className="flex justify-end space-x-4">
+                    <button onClick={onClose} className="btn btn-secondary">Decline</button>
+                    <button onClick={handleAccept} className="btn btn-primary">Accept Task</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default TaskGiver;
+</file>
+
 <file path="src/components/Temple.js">
 /* # Copyright (c) 2025 Jane Doe
 # All rights reserved.
@@ -26036,6 +26202,7 @@ export const GameProvider = ({ children, worldId }) => {
     const [conqueredVillages, setConqueredVillages] = useState({});
     const [conqueredRuins, setConqueredRuins] = useState({});
     const [playerCityPoints, setPlayerCityPoints] = useState({}); // State for player's city points
+    const [playerTasks, setPlayerTasks] = useState([]); // Added state for active tasks
     const [gameSettings, setGameSettings] = useState({
         animations: true,
         confirmActions: true,
@@ -26140,6 +26307,14 @@ export const GameProvider = ({ children, worldId }) => {
             });
             setConqueredRuins(ruinsData);
         });
+        
+        // # Listener for player's active tasks
+        const playerTasksRef = collection(db, `users/${currentUser.uid}/games`, worldId, 'playerTasks');
+        const unsubscribeTasks = onSnapshot(playerTasksRef, (snapshot) => {
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setPlayerTasks(tasksData);
+        });
+
 
         return () => {
             unsubscribeWorld();
@@ -26147,6 +26322,7 @@ export const GameProvider = ({ children, worldId }) => {
             unsubscribeCities();
             unsubscribeVillages();
             unsubscribeRuins();
+            unsubscribeTasks(); // Cleanup tasks listener
         };
     }, [currentUser, worldId]);
 
@@ -26248,6 +26424,7 @@ export const GameProvider = ({ children, worldId }) => {
         loading,
         conqueredVillages,
         conqueredRuins,
+        playerTasks, // Expose player tasks
         gameSettings,
         setGameSettings,
         countCitiesOnIsland,
@@ -28068,6 +28245,41 @@ export default shopItems;
     "name": "Alliance Wonders",
     "description": "A special building only available to alliances that control an entire island.",
     "image": "alliance_wonders.png"
+  }
+}
+</file>
+
+<file path="src/gameData/tasks.json">
+{
+  "resource_gather_1": {
+    "description": "A local merchant needs a large shipment of wood. Can you provide it?",
+    "requirement": { "type": "wood", "amount": 10000 },
+    "reward": { "type": "runecoins", "amount": 50 },
+    "rarity": "common"
+  },
+  "resource_gather_2": {
+    "description": "The quarry master requires more stone for a city project.",
+    "requirement": { "type": "stone", "amount": 10000 },
+    "reward": { "type": "runecoins", "amount": 50 },
+    "rarity": "common"
+  },
+  "resource_gather_3": {
+    "description": "The mint is running low on silver. A generous reward is offered for a quick supply.",
+    "requirement": { "type": "silver", "amount": 5000 },
+    "reward": { "type": "runecoins", "amount": 75 },
+    "rarity": "common"
+  },
+  "military_dispatch": {
+    "description": "A nearby garrison is under-staffed. They need troops urgently and will reward you handsomely.",
+    "requirement": { "type": "hoplite", "amount": 100 },
+    "reward": { "type": "resources", "amount": { "wood": 5000, "stone": 5000, "silver": 5000 } },
+    "rarity": "uncommon"
+  },
+  "platinum_quest_1": {
+    "description": "A king from a distant land has a perilous request. He needs a vast amount of resources for a secret war effort and offers rare platinum in return.",
+    "requirement": { "type": "wood", "amount": 100000, "stone": 100000, "silver": 50000 },
+    "reward": { "type": "platinum", "amount": 10 },
+    "rarity": "rare"
   }
 }
 </file>
@@ -33117,7 +33329,7 @@ import { useUnitActions } from './actions/useUnitActions';
 import { useWorkerActions } from './actions/useWorkerActions';
 
 /**
- *  A custom hook to aggregate all city-related actions from smaller, focused hooks.
+ * A custom hook to aggregate all city-related actions from smaller, focused hooks.
  */
 export const useCityActions = (props) => {
     const { cityGameState, openModal, setModalState } = props;
@@ -33169,6 +33381,11 @@ export const useCityActions = (props) => {
             default: setModalState(prev => ({ ...prev, selectedBuildingId: buildingId })); break;
         }
     };
+    
+    // # opens the task giver modal
+    const handleOpenTaskGiver = (npc) => {
+        openModal('isTaskGiverOpen', npc);
+    };
 
     // Combine all actions into a single object
     return {
@@ -33179,6 +33396,7 @@ export const useCityActions = (props) => {
         ...unitActions,
         ...workerActions,
         handlePlotClick,
+        handleOpenTaskGiver,
     };
 };
 </file>
@@ -33196,7 +33414,7 @@ export const useCityActions = (props) => {
 import { useState } from 'react';
 
 /**
- *  Manages the state of all modals within the CityView.
+ * Manages the state of all modals within the CityView.
  */
 export const useCityModalManager = () => {
     const [modalState, setModalState] = useState({
@@ -33217,10 +33435,25 @@ export const useCityModalManager = () => {
         isHeroesAltarOpen: false,
         isWorkerPresetPanelOpen: false,
         isPrisonMenuOpen: false, //  Add state for the prison menu
+        isTaskGiverOpen: false, // Added for task giver
+        taskGiverNpc: null, // Added to hold NPC data
     });
 
-    const openModal = (modalKey) => setModalState(prev => ({ ...prev, [modalKey]: true }));
-    const closeModal = (modalKey) => setModalState(prev => ({ ...prev, [modalKey]: false, selectedBuildingId: null }));
+    const openModal = (modalKey, data = null) => {
+        const update = { [modalKey]: true };
+        if (modalKey === 'isTaskGiverOpen') {
+            update.taskGiverNpc = data;
+        }
+        setModalState(prev => ({ ...prev, ...update }));
+    };
+
+    const closeModal = (modalKey) => {
+        const update = { [modalKey]: false, selectedBuildingId: null };
+         if (modalKey === 'isTaskGiverOpen') {
+            update.taskGiverNpc = null;
+        }
+        setModalState(prev => ({ ...prev, ...update }));
+    };
 
     return { modalState, setModalState, openModal, closeModal };
 };
@@ -35348,6 +35581,124 @@ export const useQuestTracker = (cityState) => {
     }, [currentUser, worldId, activeCityId, quests, isClaiming]);
 
     return { quests, claimReward, isClaiming };
+};
+</file>
+
+<file path="src/hooks/useTaskGiverManager.js">
+import { useState, useEffect, useCallback } from 'react';
+import { db } from '../firebase/config';
+import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, writeBatch, runTransaction } from 'firebase/firestore';
+import tasks from '../gameData/tasks.json';
+import { useAuth } from '../contexts/AuthContext';
+import { useGame } from '../contexts/GameContext';
+import { useNotification } from '../contexts/NotificationContext';
+
+export const useTaskGiverManager = () => {
+    const { currentUser } = useAuth();
+    const { worldId } = useGame();
+    const { addNotification } = useNotification();
+    const [activeNPCs, setActiveNPCs] = useState([]);
+
+    // # Spawns a new task-giving NPC if none are present
+    const spawnNPC = useCallback(async () => {
+        if (!currentUser || !worldId) return;
+
+        const npcsRef = collection(db, 'users', currentUser.uid, 'games', worldId, 'npcs');
+        const npcsSnapshot = await getDocs(npcsRef);
+        
+        const batch = writeBatch(db);
+        let activeNpcFound = false;
+        
+        // # First, clean up any expired NPCs
+        npcsSnapshot.forEach(doc => {
+            const npc = doc.data();
+            const expiresAt = npc.expiresAt?.toDate ? npc.expiresAt.toDate() : new Date(npc.expiresAt);
+            if (new Date() > expiresAt) {
+                batch.delete(doc.ref);
+            } else {
+                activeNpcFound = true;
+            }
+        });
+        await batch.commit();
+
+        // # If after cleanup no active NPC is found, spawn a new one
+        if (!activeNpcFound) {
+            const rand = Math.random();
+            let taskType;
+
+            if (rand < 0.05) { // 5% chance for a rare (platinum) quest
+                taskType = 'rare';
+            } else if (rand < 0.30) { // 25% chance for an uncommon quest
+                taskType = 'uncommon';
+            } else { // 70% chance for a common quest
+                taskType = 'common';
+            }
+
+            const availableTasks = Object.keys(tasks).filter(id => tasks[id].rarity === taskType);
+            if (availableTasks.length === 0) return;
+
+            const taskId = availableTasks[Math.floor(Math.random() * availableTasks.length)];
+            const npcId = `npc-${Date.now()}`;
+            const newNpc = {
+                id: npcId,
+                taskId: taskId,
+                spawnedAt: serverTimestamp(),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+                sprite: {
+                    sheet: 'guests/person_placeholder.png',
+                    y: 0  
+                }
+            };
+            
+            await setDoc(doc(npcsRef, npcId), newNpc);
+        }
+        
+        // # Finally, reload the active NPCs into state
+        const finalNpcsSnapshot = await getDocs(npcsRef);
+        setActiveNPCs(finalNpcsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+    }, [currentUser, worldId]);
+
+    useEffect(() => {
+        // # Check for new NPCs every 5 minutes
+        const interval = setInterval(spawnNPC, 5 * 60 * 1000); 
+        spawnNPC(); // Initial spawn check
+
+        return () => clearInterval(interval);
+    }, [spawnNPC]);
+    
+    // # Handles the logic when a player accepts a task
+    const onAcceptTask = async (npc) => {
+        if (!npc || !npc.id || !npc.taskId) return;
+
+        const task = tasks[npc.taskId];
+        console.log("Accepted task:", task.description);
+
+        const playerTaskRef = doc(db, `users/${currentUser.uid}/games/${worldId}/playerTasks`, npc.taskId);
+        const npcRef = doc(db, 'users', currentUser.uid, 'games', worldId, 'npcs', npc.id);
+
+        try {
+            // # Add the task to the player's active tasks and remove the NPC
+            await runTransaction(db, async (transaction) => {
+                transaction.set(playerTaskRef, {
+                    taskId: npc.taskId,
+                    status: 'in_progress',
+                    startedAt: serverTimestamp()
+                });
+                transaction.delete(npcRef);
+            });
+            
+            // # Update local state and notify the player
+            setActiveNPCs(prev => prev.filter(n => n.id !== npc.id));
+            addNotification(`New task started: ${task.title}`, 'quest');
+
+        } catch (error) {
+            console.error("Error accepting task:", error);
+            addNotification("Could not accept the task.", 'error');
+        }
+    };
+
+    return { activeNPCs, onAcceptTask };
 };
 </file>
 

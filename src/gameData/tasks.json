@@ -1,32 +1,42 @@
 {
   "resource_gather_1": {
+    "title": "Lumber for a Merchant",
     "description": "A local merchant needs a large shipment of wood. Can you provide it?",
     "requirement": { "type": "wood", "amount": 10000 },
     "reward": { "type": "runecoins", "amount": 50 },
-    "rarity": "common"
+    "rarity": "common",
+    "timeLimit": 3600
   },
   "resource_gather_2": {
+    "title": "Stone for the Quarry",
     "description": "The quarry master requires more stone for a city project.",
     "requirement": { "type": "stone", "amount": 10000 },
     "reward": { "type": "runecoins", "amount": 50 },
-    "rarity": "common"
+    "rarity": "common",
+    "timeLimit": 3600
   },
   "resource_gather_3": {
+    "title": "A Coin Shortage",
     "description": "The mint is running low on silver. A generous reward is offered for a quick supply.",
     "requirement": { "type": "silver", "amount": 5000 },
     "reward": { "type": "runecoins", "amount": 75 },
-    "rarity": "common"
+    "rarity": "common",
+    "timeLimit": 3600
   },
   "military_dispatch": {
+    "title": "Reinforce the Garrison",
     "description": "A nearby garrison is under-staffed. They need troops urgently and will reward you handsomely.",
     "requirement": { "type": "hoplite", "amount": 100 },
     "reward": { "type": "resources", "amount": { "wood": 5000, "stone": 5000, "silver": 5000 } },
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "timeLimit": 7200
   },
   "platinum_quest_1": {
+    "title": "A King's Ransom",
     "description": "A king from a distant land has a perilous request. He needs a vast amount of resources for a secret war effort and offers rare platinum in return.",
     "requirement": { "type": "wood", "amount": 100000, "stone": 100000, "silver": 50000 },
     "reward": { "type": "platinum", "amount": 10 },
-    "rarity": "rare"
+    "rarity": "rare",
+    "timeLimit": 86400
   }
 }

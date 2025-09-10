@@ -21,6 +21,7 @@ import { useCityState } from '../hooks/useCityState';
 import { useMapClickHandler } from '../hooks/useMapClickHandler';
 import PhaserMap from './map/PhaserMappls'; // Import the new PhaserMap component
 import { useDivineActions } from '../hooks/actions/useDivineActions';
+import ActiveTaskDisplay from './tasks/ActiveTaskDisplay';
 
 const MapView = ({
     showCity,
@@ -49,6 +50,8 @@ const MapView = ({
     isGeneratingMap,
     onOpenSettings,
     onOpenCheats,
+    playerTasks,
+    onOpenTaskModal
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { worldState, gameState, worldId, playerCity, playerCities, conqueredVillages, conqueredRuins,playerCityPoints, setGameState } = useGame();
@@ -321,6 +324,9 @@ const MapView = ({
                         battlePoints={battlePoints}
                         onOpenNotes={onOpenNotes}
                     />
+                    <div className="absolute top-14 left-1/2 -translate-x-1/2 z-20">
+                         <ActiveTaskDisplay activeTasks={playerTasks} onOpenTaskModal={onOpenTaskModal} />
+                    </div>
                     <SideInfoPanel
                         gameState={playerCity}
                         className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4"
@@ -404,4 +410,3 @@ const MapView = ({
     );
 };
 export default MapView;
-
