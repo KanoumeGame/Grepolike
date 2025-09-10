@@ -1,3 +1,12 @@
+/* # Copyright (c) 2025 Jane Doe
+# All rights reserved.
+#
+# This file is part of "Spolkip".
+#
+# Unauthorized copying, modification, distribution, or use of this file,
+# in whole or in part, is strictly prohibited without prior written permission.
+*/
+
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
@@ -611,6 +620,8 @@ const Game = ({ onBackToWorlds }) => {
                     isGeneratingMap={isGeneratingMap}
                     onOpenSettings={() => openModal('settings')}
                     onOpenCheats={() => openCityModal('isCheatMenuOpen')}
+                    playerTasks={playerTasks}
+                    onOpenTaskModal={setActiveTaskForModal}
                 />
             )}
             {modalState.isReportsPanelOpen && <ReportsView onClose={() => closeModal('reports')} onActionClick={handleAction} />}
@@ -674,3 +685,4 @@ const Game = ({ onBackToWorlds }) => {
     );
 };
 export default Game;
+
