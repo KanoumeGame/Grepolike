@@ -53,6 +53,9 @@ const CityView = ({
     isGeneratingMap,
     onOpenSettings,
     onOpenCheats,
+    activeNPCs,
+    handleOpenTaskGiver,
+    onAcceptTask,
 }) => {
     const { currentUser, userProfile } = useAuth();
     const { gameSettings, worldState } = useGame();
@@ -153,6 +156,8 @@ const CityView = ({
                     isGeneratingMap={isGeneratingMap}
                     onOpenManagementPanel={onOpenManagementPanel}
                     handleOpenEvents={handleOpenEvents}
+                    activeNPCs={activeNPCs}
+                    handleOpenTaskGiver={handleOpenTaskGiver}
                 />
             </div>
             <CityModals
@@ -203,6 +208,7 @@ const CityView = ({
                 onAssignAgent={onAssignAgent}
                 movements={movements}
                 premiumActions={premiumActions} // Pass premium actions down
+                onAcceptTask={onAcceptTask}
             />
             {cityModalState.isDivinePowersOpen && (
                 <DivinePowers
@@ -218,3 +224,4 @@ const CityView = ({
 };
 
 export default CityView;
+

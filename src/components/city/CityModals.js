@@ -15,6 +15,7 @@ import SpecialBuildingMenu from './SpecialBuildingMenu';
 import SpecialBuildingPanel from './SpecialBuildingPanel';
 import HeroesAltar from './HeroesAltar';
 import PrisonMenu from './PrisonMenu';
+import TaskGiver from '../tasks/TaskGiver';
 
 const CityModals = ({
   cityGameState,
@@ -64,6 +65,7 @@ const CityModals = ({
   onAssignAgent,
   movements,
   premiumActions,
+  onAcceptTask,
 }) => {
   const {
     selectedBuildingId,
@@ -81,6 +83,8 @@ const CityModals = ({
     isSpecialBuildingPanelOpen,
     isHeroesAltarOpen,
     isPrisonMenuOpen,
+    isTaskGiverOpen,
+    taskGiverNpc,
   } = modalState;
 
   if (!cityGameState) return null;
@@ -259,7 +263,15 @@ const CityModals = ({
           onSpawnGodTown={handleSpawnGodTown}
         />
       )}
+      {isTaskGiverOpen && (
+          <TaskGiver
+              npc={taskGiverNpc}
+              onClose={() => closeModal('isTaskGiverOpen')}
+              onAcceptTask={onAcceptTask}
+          />
+      )}
     </>
   );
 };
 export default CityModals;
+

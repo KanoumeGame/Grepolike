@@ -10,7 +10,7 @@
 import { useState } from 'react';
 
 /**
- *  Manages the state of all modals within the CityView.
+ * Manages the state of all modals within the CityView.
  */
 export const useCityModalManager = () => {
     const [modalState, setModalState] = useState({
@@ -31,10 +31,25 @@ export const useCityModalManager = () => {
         isHeroesAltarOpen: false,
         isWorkerPresetPanelOpen: false,
         isPrisonMenuOpen: false, //  Add state for the prison menu
+        isTaskGiverOpen: false, // Added for task giver
+        taskGiverNpc: null, // Added to hold NPC data
     });
 
-    const openModal = (modalKey) => setModalState(prev => ({ ...prev, [modalKey]: true }));
-    const closeModal = (modalKey) => setModalState(prev => ({ ...prev, [modalKey]: false, selectedBuildingId: null }));
+    const openModal = (modalKey, data = null) => {
+        const update = { [modalKey]: true };
+        if (modalKey === 'isTaskGiverOpen') {
+            update.taskGiverNpc = data;
+        }
+        setModalState(prev => ({ ...prev, ...update }));
+    };
+
+    const closeModal = (modalKey) => {
+        const update = { [modalKey]: false, selectedBuildingId: null };
+         if (modalKey === 'isTaskGiverOpen') {
+            update.taskGiverNpc = null;
+        }
+        setModalState(prev => ({ ...prev, ...update }));
+    };
 
     return { modalState, setModalState, openModal, closeModal };
 };

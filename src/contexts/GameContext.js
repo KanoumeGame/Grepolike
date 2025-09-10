@@ -30,6 +30,7 @@ export const GameProvider = ({ children, worldId }) => {
     const [conqueredVillages, setConqueredVillages] = useState({});
     const [conqueredRuins, setConqueredRuins] = useState({});
     const [playerCityPoints, setPlayerCityPoints] = useState({}); // State for player's city points
+    const [playerTasks, setPlayerTasks] = useState([]); // Added state for active tasks
     const [gameSettings, setGameSettings] = useState({
         animations: true,
         confirmActions: true,
@@ -134,6 +135,14 @@ export const GameProvider = ({ children, worldId }) => {
             });
             setConqueredRuins(ruinsData);
         });
+        
+        // # Listener for player's active tasks
+        const playerTasksRef = collection(db, `users/${currentUser.uid}/games`, worldId, 'playerTasks');
+        const unsubscribeTasks = onSnapshot(playerTasksRef, (snapshot) => {
+            const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setPlayerTasks(tasksData);
+        });
+
 
         return () => {
             unsubscribeWorld();
@@ -141,6 +150,7 @@ export const GameProvider = ({ children, worldId }) => {
             unsubscribeCities();
             unsubscribeVillages();
             unsubscribeRuins();
+            unsubscribeTasks(); // Cleanup tasks listener
         };
     }, [currentUser, worldId]);
 
@@ -242,6 +252,7 @@ export const GameProvider = ({ children, worldId }) => {
         loading,
         conqueredVillages,
         conqueredRuins,
+        playerTasks, // Expose player tasks
         gameSettings,
         setGameSettings,
         countCitiesOnIsland,

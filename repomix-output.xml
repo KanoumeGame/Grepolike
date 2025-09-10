@@ -12448,7 +12448,7 @@ const Game = ({ onBackToWorlds }) => {
             canvas.height = world.height * TILE_SCALE;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#1e3a8a'; 
+            ctx.fillStyle = '#0011ffff'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = '#228B22'; 
@@ -15224,6 +15224,10 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
     
     const handleUpgrade = async () => {
         if (isProcessing) return;
+         if (village.level >= 6) {
+            setMessage("Village is already at maximum level.");
+            return;
+        }
         setIsProcessing(true);
         setMessage('');
 
@@ -15412,27 +15416,33 @@ const FarmingVillageModal = ({ village: initialVillage, onClose, worldId, market
                             ) : (<p className="text-center text-gray-400 p-8">Loading trade information...</p>)}
                         </div>
                     )}
-                     {activeTab === 'upgrade' && (
+                                         {activeTab === 'upgrade' && (
                         <div>
-                           <p className="mb-4 text-center">Invest resources to upgrade this village for better yields.</p>
-                            <div className="bg-gray-700 p-3 rounded-lg mb-4">
-                                <h4 className="font-bold text-lg">Cost to Upgrade to Level {village.level + 1}:</h4>
-                                <div className="flex justify-center items-center space-x-4 mt-2 text-yellow-300">
-                                    <div className="flex items-center gap-1">
-                                        <img src={woodImage} alt="Wood" className="w-6 h-6" />
-                                        <span>{cost.wood}</span>
+                           {village.level < 6 ? (
+                                <>
+                                   <p className="mb-4 text-center">Invest resources to upgrade this village for better yields.</p>
+                                    <div className="bg-gray-700 p-3 rounded-lg mb-4">
+                                        <h4 className="font-bold text-lg">Cost to Upgrade to Level {village.level + 1}:</h4>
+                                        <div className="flex justify-center items-center space-x-4 mt-2 text-yellow-300">
+                                            <div className="flex items-center gap-1">
+                                                <img src={woodImage} alt="Wood" className="w-6 h-6" />
+                                                <span>{cost.wood}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <img src={stoneImage} alt="Stone" className="w-6 h-6" />
+                                                <span>{cost.stone}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <img src={silverImage} alt="Silver" className="w-6 h-6" />
+                                                <span>{cost.silver}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <img src={stoneImage} alt="Stone" className="w-6 h-6" />
-                                        <span>{cost.stone}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <img src={silverImage} alt="Silver" className="w-6 h-6" />
-                                        <span>{cost.silver}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
+                                    <button onClick={handleUpgrade} disabled={isProcessing || !canAffordUpgrade} className="btn btn-primary py-3 px-4 w-40">{isProcessing ? 'Processing...' : 'Upgrade Village'}</button>
+                                </>
+                            ) : (
+                                <p className="text-center text-xl font-bold text-green-400">Max Level Reached</p>
+                            )}
                         </div>
                     )}
                     {activeTab === 'shop' && <VillageShop village={village} runecoinBalance={runecoinBalance} playerGameData={playerGameData} />}
@@ -15976,7 +15986,7 @@ class MinimapScene extends Phaser.Scene {
                 if (slot.ownerId === this.mainScene.auth.currentUser.uid) {
                     color = 0xffff00; // Your city
                 } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
-                    color = 0x00ff00; // Ally
+                    color = 0x3b82f6; // Ally
                 } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
                     color = 0xff0000; // Enemy
                 }
@@ -18041,7 +18051,7 @@ class MapScene extends Phaser.Scene {
                     if (slot.ownerId === this.auth.currentUser.uid) {
                         color = 0xffff00; // # Own city (Yellow)
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === slot.alliance) || (this.props.playerAlliance && slot.alliance === this.props.playerAlliance.tag)) {
-                        color = 0x00ff00; // # Ally/Same Alliance (Green)
+                        color = 0x3b82f6; // # Ally/Same Alliance (Blue)
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === slot.alliance)) {
                         color = 0xff0000; // # Enemy (Red)
                     }
@@ -18109,9 +18119,9 @@ class MapScene extends Phaser.Scene {
                     if (data.ownerId === this.auth.currentUser.uid) {
                         gameObject.setTint(0xffff00);
                     } else if (this.props.playerAlliance && data.alliance === this.props.playerAlliance.tag) {
-                        gameObject.setTint(0x00ff00); // # Changed to Green for same alliance
+                        gameObject.setTint(0x3b82f6); // # Changed to Blue for same alliance
                     } else if (this.props.playerAlliance?.diplomacy?.allies?.some(a => a.tag === data.alliance)) {
-                        gameObject.setTint(0x00ff00);
+                        gameObject.setTint(0x3b82f6);
                     } else if (this.props.playerAlliance?.diplomacy?.enemies?.some(e => e.tag === data.alliance)) {
                         gameObject.setTint(0xff0000);
                     } else {
@@ -19745,7 +19755,7 @@ export default WreckageModal;
 
 <file path="src/components/MapView.js">
 // src/components/MapView.js
-import React, { useMemo,  useEffect, useState, useRef, useCallback } from 'react';
+import React, { useMemo,  useEffect, useState, useRef} from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useGame } from '../contexts/GameContext';
 import { useAlliance } from '../contexts/AllianceContext';
@@ -23461,7 +23471,7 @@ import React, { useState } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../firebase/config';
-import { doc, writeBatch, collection, getDocs, query} from 'firebase/firestore';
+import { doc, writeBatch, collection, getDocs, query, getDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) => {
@@ -23514,10 +23524,34 @@ const SettingsModal = ({ onClose }) => {
             setConfirmAction(null);
             return;
         }
-
+    
         const batch = writeBatch(db);
-
-
+        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
+        const gameDocSnap = await getDoc(gameDocRef);
+    
+        if (gameDocSnap.exists()) {
+            const gameData = gameDocSnap.data();
+            if (gameData.alliance) {
+                const allianceId = gameData.alliance;
+                const allianceRef = doc(db, 'worlds', worldId, 'alliances', allianceId);
+                const allianceSnap = await getDoc(allianceRef);
+                if (allianceSnap.exists()) {
+                    const allianceData = allianceSnap.data();
+                    if (allianceData.leader.uid === currentUser.uid && allianceData.members.length > 1) {
+                        setMessage("As the leader, you must pass leadership to another member before you can reset your game.");
+                        setConfirmAction(null);
+                        return;
+                    }
+                    const newMembers = allianceData.members.filter(m => m.uid !== currentUser.uid);
+                    if (newMembers.length > 0) {
+                        batch.update(allianceRef, { members: newMembers });
+                    } else {
+                        batch.delete(allianceRef);
+                    }
+                }
+            }
+        }
+    
         const ruinId = uuidv4();
         const ruinDocRef = doc(db, 'worlds', worldId, 'ruins', ruinId);
         const newRuinData = {
@@ -23535,8 +23569,7 @@ const SettingsModal = ({ onClose }) => {
             researchReward: `qol_research_${Math.floor(Math.random() * 3)}`
         };
         batch.set(ruinDocRef, newRuinData);
-
-
+    
         const citySlotRef = doc(db, 'worlds', worldId, 'citySlots', playerCity.slotId);
         batch.update(citySlotRef, {
             ownerId: null,
@@ -23546,10 +23579,7 @@ const SettingsModal = ({ onClose }) => {
             alliance: null,
             allianceName: null
         });
-
-        const gameDocRef = doc(db, `users/${currentUser.uid}/games`, worldId);
-
-
+    
         const deleteSubcollection = async (subcollectionPath) => {
             const collectionRef = collection(gameDocRef, subcollectionPath);
             const q = query(collectionRef);
@@ -23558,16 +23588,14 @@ const SettingsModal = ({ onClose }) => {
                 batch.delete(doc.ref);
             });
         };
-
+    
         await deleteSubcollection('cities');
         await deleteSubcollection('conqueredVillages');
         await deleteSubcollection('conqueredRuins');
         await deleteSubcollection('quests');
-
-
+    
         batch.delete(gameDocRef);
-
-
+    
         try {
             await batch.commit();
             setConfirmAction(null);

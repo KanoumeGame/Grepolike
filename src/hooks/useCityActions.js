@@ -15,7 +15,7 @@ import { useUnitActions } from './actions/useUnitActions';
 import { useWorkerActions } from './actions/useWorkerActions';
 
 /**
- *  A custom hook to aggregate all city-related actions from smaller, focused hooks.
+ * A custom hook to aggregate all city-related actions from smaller, focused hooks.
  */
 export const useCityActions = (props) => {
     const { cityGameState, openModal, setModalState } = props;
@@ -67,6 +67,11 @@ export const useCityActions = (props) => {
             default: setModalState(prev => ({ ...prev, selectedBuildingId: buildingId })); break;
         }
     };
+    
+    // # opens the task giver modal
+    const handleOpenTaskGiver = (npc) => {
+        openModal('isTaskGiverOpen', npc);
+    };
 
     // Combine all actions into a single object
     return {
@@ -77,5 +82,6 @@ export const useCityActions = (props) => {
         ...unitActions,
         ...workerActions,
         handlePlotClick,
+        handleOpenTaskGiver,
     };
 };

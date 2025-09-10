@@ -1,30 +1,44 @@
 // src/components/city/CityViewContent.js
-import React, { useRef, useEffect, useCallback, useLayoutEffect, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useLayoutEffect, useState, useMemo } from 'react';
 import Cityscape from './Cityscape';
 import buildingConfig from '../../gameData/buildings.json';
 import WorshipDisplay from './WorshipDisplay';
 import TroopDisplay from '../TroopDisplay';
 import HeroDisplay from './HeroDisplay';
 import { useGame } from '../../contexts/GameContext';
+import NpcSprite from './NpcSprite'; // Import the new component
 
-//  Dynamically import all building and special building images
+//  Dynamically import all building, special building, and guest images
 const buildingImages = {};
 const contexts = [
     require.context('../../images/buildings', false, /\.(png|jpe?g|svg)$/),
-    require.context('../../images/special_buildings', false, /\.(png|jpe?g|svg)$/)
+    require.context('../../images/special_buildings', false, /\.(png|jpe?g|svg)$/),
+    require.context('../../images/guests', false, /\.(png|jpe?g|svg)$/) // Added guests
 ];
 
 contexts.forEach(context => {
     context.keys().forEach((item) => {
         const key = item.replace('./', '');
-        buildingImages[key] = context(item);
+        // Handle subdirectory for guests
+        const finalKey = context.id.includes('/guests') ? `guests/${key}` : key;
+        buildingImages[finalKey] = context(item);
     });
 });
 
 const CITYSCAPE_WIDTH = 2000;
 const CITYSCAPE_HEIGHT = 1200;
 
-const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents }) => {
+// Define valid spawn points for NPCs to avoid buildings
+const npcSpawnPoints = [
+    { top: 550, left: 400 },
+    { top: 600, left: 600 },
+    { top: 450, left: 800 },
+    { top: 300, left: 1300 },
+    { top: 650, left: 1450 },
+    { top: 200, left: 500 },
+];
+
+const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSettings, onOpenSpecialBuildingMenu, movements, onOpenSettings, onOpenCheats, onGenerateMap, isGeneratingMap, onOpenManagementPanel, handleOpenEvents, activeNPCs, handleOpenTaskGiver }) => {
     // Panning Logic (moved from CityView.js)
     const viewportRef = useRef(null);
     const cityContainerRef = useRef(null);
@@ -78,6 +92,15 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
     }, [isPanning, startPos, clampPan]);
 
     const { activeCityId } = useGame();
+    
+    // Memoize the positions to prevent re-shuffling on every render
+    const npcPositions = useMemo(() => {
+        // Assign positions based on index to prevent flickering when the array changes
+        return activeNPCs.map((npc, index) => ({
+            ...npc,
+            position: npcSpawnPoints[index % npcSpawnPoints.length]
+        }));
+    }, [activeNPCs]);
 
     if (!cityGameState || !cityGameState.playerInfo) {
         return null;
@@ -136,6 +159,14 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
                     cityGameState={cityGameState} 
                     onOpenSpecialBuildingMenu={onOpenSpecialBuildingMenu} 
                 />
+                {npcPositions.map(npc => (
+                    <NpcSprite
+                        key={npc.id}
+                        npc={npc}
+                        handleOpenTaskGiver={handleOpenTaskGiver}
+                        buildingImages={buildingImages}
+                    />
+                ))}
             </div>
             <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 flex flex-col gap-4">
                 <WorshipDisplay
@@ -164,3 +195,4 @@ const CityViewContent = ({ cityGameState, handlePlotClick, onOpenPowers, gameSet
 };
 
 export default CityViewContent;
+

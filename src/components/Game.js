@@ -50,6 +50,7 @@ import worldIcon from '../images/world_selection.png';
 import Modal from './shared/Modal';
 import MapImageViewer from './map/MapImageViewer';
 import { useVillageState } from '../hooks/useVillageState';
+import { useTaskGiverManager } from '../hooks/useTaskGiverManager';
 
 let worldDataCache = {
     villages: null,
@@ -99,6 +100,11 @@ const Game = ({ onBackToWorlds }) => {
     const { modalState, openModal, closeModal } = useModalState();
     const { modalState: cityModalState, openModal: openCityModal, closeModal: closeCityModal, setModalState: setCityModalState } = useCityModalManager();
     const { unreadReportsCount, setUnreadReportsCount, unreadMessagesCount, setUnreadMessagesCount } = useMapState();
+    const { activeNPCs, onAcceptTask } = useTaskGiverManager();
+
+    const handleOpenTaskGiver = (npc) => {
+        openCityModal('isTaskGiverOpen', npc);
+    };
 
     const showMap = () => setView('map');
     const showCity = useCallback((cityId) => {
@@ -561,6 +567,9 @@ const Game = ({ onBackToWorlds }) => {
                     isGeneratingMap={isGeneratingMap}
                     onOpenSettings={() => openModal('settings')}
                     onOpenCheats={() => openCityModal('isCheatMenuOpen')}
+                    activeNPCs={activeNPCs}
+                    handleOpenTaskGiver={handleOpenTaskGiver}
+                    onAcceptTask={onAcceptTask}
                 />
             )}
             {view === 'map' && (
@@ -662,3 +671,4 @@ const Game = ({ onBackToWorlds }) => {
     );
 };
 export default Game;
+
